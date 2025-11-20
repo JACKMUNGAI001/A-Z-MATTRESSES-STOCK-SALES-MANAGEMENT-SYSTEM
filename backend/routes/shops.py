@@ -1,22 +1,7 @@
-from flask import Blueprint, request, jsonify
-from extensions import db
-from models import Shop
+from flask import Blueprint
+from controllers.shop_controller import list_shops, create_shop
 
 bp = Blueprint("shops", __name__)
 
-@bp.route("/", methods=["GET"])
-def list_shops():
-    shops = Shop.query.all()
-    out = [{"id":s.id,"name":s.name,"address":s.address} for s in shops]
-    return jsonify(out), 200
-
-@bp.route("/", methods=["POST"])
-def create_shop():
-    data = request.get_json() or {}
-    name = data.get("name")
-    if not name:
-        return jsonify({"msg":"name required"}), 400
-    s = Shop(name=name, address=data.get("address"))
-    db.session.add(s)
-    db.session.commit()
-    return jsonify({"id":s.id,"name":s.name}), 201
+bp.add_url_rule("/", "list_shops", list_shops, methods=["GET"])
+bp.add_url_rule("/", "create_shop", create_shop, methods=["POST"])
