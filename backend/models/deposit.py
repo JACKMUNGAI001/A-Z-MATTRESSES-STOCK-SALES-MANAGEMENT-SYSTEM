@@ -1,0 +1,28 @@
+import uuid
+from datetime import datetime
+from extensions import db
+
+class DepositSale(db.Model):
+    __tablename__ = "deposit_sales"
+    id = db.Column(db.Integer, primary_key=True)
+    uuid = db.Column(db.String(64), default=lambda: str(uuid.uuid4()), unique=True)
+    shop_id = db.Column(db.Integer)
+    item_id = db.Column(db.Integer)
+    item_size_id = db.Column(db.Integer)
+    buyer_name = db.Column(db.String(255))
+    buyer_phone = db.Column(db.String(50))
+    selling_price = db.Column(db.Numeric(12,2))
+    created_by = db.Column(db.Integer)
+    status = db.Column(db.String(20), default="active") # active, complete, cancelled
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    payments = db.relationship("DepositPayment", backref="deposit", lazy=True)
+
+class DepositPayment(db.Model):
+    __tablename__ = "deposit_payments"
+    id = db.Column(db.Integer, primary_key=True)
+    deposit_id = db.Column(db.Integer, db.ForeignKey("deposit_sales.id"))
+    amount = db.Column(db.Numeric(12,2))
+    payment_method = db.Column(db.String(50))
+    recorded_by = db.Column(db.Integer)
+    paid_on = db.Column(db.DateTime, default=datetime.utcnow)
