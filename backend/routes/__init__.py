@@ -8,7 +8,6 @@ from .deposits import bp as deposits_bp
 from .transfers import bp as transfers_bp
 from .expenses import bp as expenses_bp
 from .receipts import bp as receipts_bp
-from .notifications import bp as notifications_bp
 
 def register_blueprints(app):
     app.register_blueprint(auth_bp, url_prefix="/auth")
@@ -21,4 +20,3 @@ def register_blueprints(app):
     app.register_blueprint(transfers_bp, url_prefix="/transfers")
     app.register_blueprint(expenses_bp, url_prefix="/expenses")
     app.register_blueprint(receipts_bp, url_prefix="/receipts")
-    app.register_blueprint(notifications_bp, url_prefix="/notifications")
