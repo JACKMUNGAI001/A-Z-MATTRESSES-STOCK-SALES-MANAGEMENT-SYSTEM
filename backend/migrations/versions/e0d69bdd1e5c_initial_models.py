@@ -1,8 +1,8 @@
 """initial models
 
-Revision ID: 7e8782e4eb5d
+Revision ID: e0d69bdd1e5c
 Revises: 
-Create Date: 2025-11-20 21:50:01.873067
+Create Date: 2025-11-21 02:20:06.062440
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '7e8782e4eb5d'
+revision = 'e0d69bdd1e5c'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -67,10 +67,33 @@ def upgrade():
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('uuid')
     )
+    op.create_table('sales',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('shop_id', sa.Integer(), nullable=True),
+    sa.Column('user_id', sa.Integer(), nullable=True),
+    sa.Column('total_amount', sa.Numeric(precision=12, scale=2), nullable=True),
+    sa.Column('payment_type', sa.String(length=50), nullable=True),
+    sa.Column('created_at', sa.DateTime(), nullable=True),
+    sa.PrimaryKeyConstraint('id')
+    )
     op.create_table('shops',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('name', sa.String(length=255), nullable=False),
     sa.Column('address', sa.Text(), nullable=True),
+    sa.Column('created_at', sa.DateTime(), nullable=True),
+    sa.PrimaryKeyConstraint('id')
+    )
+    op.create_table('stock_movements',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('shop_id', sa.Integer(), nullable=True),
+    sa.Column('item_id', sa.Integer(), nullable=True),
+    sa.Column('item_size_id', sa.Integer(), nullable=True),
+    sa.Column('movement_type', sa.String(length=50), nullable=True),
+    sa.Column('qty', sa.Integer(), nullable=True),
+    sa.Column('unit_buy_price', sa.Numeric(precision=10, scale=2), nullable=True),
+    sa.Column('unit_sell_price', sa.Numeric(precision=10, scale=2), nullable=True),
+    sa.Column('user_id', sa.Integer(), nullable=True),
+    sa.Column('reference', sa.Text(), nullable=True),
     sa.Column('created_at', sa.DateTime(), nullable=True),
     sa.PrimaryKeyConstraint('id')
     )
@@ -98,14 +121,25 @@ def upgrade():
     sa.Column('sku', sa.String(length=64), nullable=True),
     sa.Column('name', sa.String(length=255), nullable=False),
     sa.Column('category_id', sa.Integer(), nullable=False),
+    sa.Column('brand', sa.String(length=255), nullable=True),
     sa.Column('default_buy_price', sa.Numeric(precision=10, scale=2), nullable=True),
     sa.Column('default_sell_price', sa.Numeric(precision=10, scale=2), nullable=True),
-    sa.Column('brand', sa.String(length=255), nullable=True),
     sa.Column('description', sa.Text(), nullable=True),
     sa.Column('created_at', sa.DateTime(), nullable=True),
     sa.ForeignKeyConstraint(['category_id'], ['categories.id'], ),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('sku')
+    )
+    op.create_table('sale_items',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('sale_id', sa.Integer(), nullable=True),
+    sa.Column('item_id', sa.Integer(), nullable=True),
+    sa.Column('item_size_id', sa.Integer(), nullable=True),
+    sa.Column('qty', sa.Integer(), nullable=True),
+    sa.Column('unit_price', sa.Numeric(precision=10, scale=2), nullable=True),
+    sa.Column('unit_cost', sa.Numeric(precision=10, scale=2), nullable=True),
+    sa.ForeignKeyConstraint(['sale_id'], ['sales.id'], ),
+    sa.PrimaryKeyConstraint('id')
     )
     op.create_table('transfer_items',
     sa.Column('id', sa.Integer(), nullable=False),
@@ -138,45 +172,6 @@ def upgrade():
     sa.ForeignKeyConstraint(['item_id'], ['items.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
-    op.create_table('sales',
-    sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('shop_id', sa.Integer(), nullable=True),
-    sa.Column('user_id', sa.Integer(), nullable=True),
-    sa.Column('total_amount', sa.Numeric(precision=12, scale=2), nullable=True),
-    sa.Column('payment_type', sa.String(length=50), nullable=True),
-    sa.Column('created_at', sa.DateTime(), nullable=True),
-    sa.ForeignKeyConstraint(['shop_id'], ['shops.id'], ),
-    sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
-    sa.PrimaryKeyConstraint('id')
-    )
-    op.create_table('stock_movements',
-    sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('shop_id', sa.Integer(), nullable=True),
-    sa.Column('item_id', sa.Integer(), nullable=True),
-    sa.Column('item_size_id', sa.Integer(), nullable=True),
-    sa.Column('movement_type', sa.String(length=50), nullable=True),
-    sa.Column('qty', sa.Integer(), nullable=True),
-    sa.Column('unit_buy_price', sa.Numeric(precision=10, scale=2), nullable=True),
-    sa.Column('unit_sell_price', sa.Numeric(precision=10, scale=2), nullable=True),
-    sa.Column('user_id', sa.Integer(), nullable=True),
-    sa.Column('reference', sa.Text(), nullable=True),
-    sa.Column('created_at', sa.DateTime(), nullable=True),
-    sa.ForeignKeyConstraint(['item_id'], ['items.id'], ),
-    sa.ForeignKeyConstraint(['shop_id'], ['shops.id'], ),
-    sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
-    sa.PrimaryKeyConstraint('id')
-    )
-    op.create_table('sale_items',
-    sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('sale_id', sa.Integer(), nullable=True),
-    sa.Column('item_id', sa.Integer(), nullable=True),
-    sa.Column('item_size_id', sa.Integer(), nullable=True),
-    sa.Column('qty', sa.Integer(), nullable=True),
-    sa.Column('unit_price', sa.Numeric(precision=10, scale=2), nullable=True),
-    sa.Column('unit_cost', sa.Numeric(precision=10, scale=2), nullable=True),
-    sa.ForeignKeyConstraint(['sale_id'], ['sales.id'], ),
-    sa.PrimaryKeyConstraint('id')
-    )
     op.create_table('shop_stocks',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('shop_id', sa.Integer(), nullable=False),
@@ -197,16 +192,16 @@ def upgrade():
 def downgrade():
     # ### commands auto generated by Alembic - please adjust! ###
     op.drop_table('shop_stocks')
-    op.drop_table('sale_items')
-    op.drop_table('stock_movements')
-    op.drop_table('sales')
     op.drop_table('item_sizes')
     op.drop_table('users')
     op.drop_table('transfer_items')
+    op.drop_table('sale_items')
     op.drop_table('items')
     op.drop_table('deposit_payments')
     op.drop_table('transfers')
+    op.drop_table('stock_movements')
     op.drop_table('shops')
+    op.drop_table('sales')
     op.drop_table('receipts')
     op.drop_table('notifications')
     op.drop_table('expenses')
