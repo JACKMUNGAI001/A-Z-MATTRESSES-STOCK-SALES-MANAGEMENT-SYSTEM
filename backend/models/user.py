@@ -1,0 +1,20 @@
+from datetime import datetime
+from passlib.hash import bcrypt
+from extensions import db
+
+class User(db.Model):
+    __tablename__ = "users"
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(255))
+    email = db.Column(db.String(255), unique=True, nullable=False)
+    password_hash = db.Column(db.String(255), nullable=False)
+    role = db.Column(db.String(50), default="attendant")  # admin | attendant
+    is_verified = db.Column(db.Boolean, default=False)
+    shop_id = db.Column(db.Integer, db.ForeignKey("shops.id"), nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def set_password(self, password):
+        self.password_hash = bcrypt.hash(password)
+
+    def check_password(self, password):
+        return bcrypt.verify(password, self.password_hash)
