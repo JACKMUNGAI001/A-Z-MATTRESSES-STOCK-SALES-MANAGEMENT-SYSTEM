@@ -1,8 +1,6 @@
-from flask import Blueprint, jsonify
-from models import Receipt
+from flask import Blueprint
+from controllers.receipt_controller import get_receipt_controller
+
 bp = Blueprint("receipts", __name__)
 
-@bp.route("/<string:uuid>", methods=["GET"])
-def get_receipt(uuid):
-    r = Receipt.query.filter_by(uuid=uuid).first_or_404()
-    return jsonify({"uuid":r.uuid,"payload":r.payload,"created_at":r.created_at.isoformat()}), 200
+bp.add_url_rule("/<string:uuid>", "get_receipt", get_receipt_controller, methods=["GET"])
