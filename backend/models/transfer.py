@@ -8,6 +8,7 @@ class Transfer(db.Model):
     to_shop_id = db.Column(db.Integer)
     created_by = db.Column(db.Integer)
     status = db.Column(db.String(20), default="completed")  # requested, approved, completed
+    notes = db.Column(db.Text, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 class TransferItem(db.Model):
@@ -15,5 +16,4 @@ class TransferItem(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     transfer_id = db.Column(db.Integer, db.ForeignKey("transfers.id"))
     item_id = db.Column(db.Integer)
-    item_size_id = db.Column(db.Integer)
     qty = db.Column(db.Integer)

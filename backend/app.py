@@ -1,4 +1,4 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 from config import Config
 from extensions import db, migrate, jwt, cors
 
@@ -25,6 +25,12 @@ def create_app():
     @app.route("/")
     def home():
         return jsonify({"message": "Welcome to A-Z Mattresses API"}), 200
+
+    @app.after_request
+    def handle_options_request(response):
+        if request.method == 'OPTIONS':
+            return app.make_response(('', 200))
+        return response
 
     return app
 

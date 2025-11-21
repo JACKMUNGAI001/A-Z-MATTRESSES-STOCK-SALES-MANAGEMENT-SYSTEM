@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import api from '../api/api'
 import { useNavigate } from 'react-router-dom'
 
@@ -6,13 +6,27 @@ export default function Register(){
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [shopId, setShopId] = useState('')
+  const [shops, setShops] = useState([])
   const [msg, setMsg] = useState('')
   const navigate = useNavigate()
+
+  useEffect(() => {
+    const fetchShops = async () => {
+      try {
+        const response = await api.get('/shops')
+        setShops(response.data)
+      } catch (err) {
+        setMsg(err.response?.data?.msg || 'Error fetching shops')
+      }
+    }
+    fetchShops()
+  }, [])
 
   const submit = async (e) => {
     e.preventDefault()
     try{
-      await api.post('/auth/register', { name, email, password })
+      await api.post('/auth/register', { name, email, password, shop_id: shopId })
       alert('Registered. Await admin verification.')
       navigate('/login')
     }catch(err){
@@ -31,6 +45,13 @@ export default function Register(){
           <input className="w-full p-2 border rounded mb-3" value={email} onChange={e=>setEmail(e.target.value)} />
           <label className="block mb-1">Password</label>
           <input type="password" className="w-full p-2 border rounded mb-3" value={password} onChange={e=>setPassword(e.target.value)} />
+          <label className="block mb-1">Shop</label>
+          <select className="w-full p-2 border rounded mb-3" value={shopId} onChange={e=>setShopId(e.target.value)}>
+            <option value="">Select your shop</option>
+            {shops.map(shop => (
+              <option key={shop.id} value={shop.id}>{shop.name}</option>
+            ))}
+          </select>
           <button className="w-full bg-pastel-500 text-white p-2 rounded">Register</button>
         </form>
       </div>

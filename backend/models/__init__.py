@@ -1,7 +1,7 @@
 # Import models to register with SQLAlchemy
 from .user import User
 from .shop import Shop
-from .product import Category, Item, ItemSize
+from .product import Category, Item
 from .stock import ShopStock, StockMovement
 from .sale import Sale, SaleItem
 from .deposit import DepositSale, DepositPayment

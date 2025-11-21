@@ -13,6 +13,10 @@ import Deposits from './pages/Deposits'
 import Transfers from './pages/Transfers'
 import Expenses from './pages/Expenses'
 import Profile from './pages/Profile'
+import PNLReport from './pages/PNLReport'
+import AdminShops from './pages/AdminShops' // New import
+import AdminItems from './pages/AdminItems' // New import
+import ShopDetails from './pages/ShopDetails' // New import
 import ProtectedRoute from './components/ProtectedRoute'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
@@ -34,6 +38,10 @@ ReactDOM.createRoot(document.getElementById('root')).render(
           <Route path="/transfers" element={<ProtectedRoute role="admin"><Transfers/></ProtectedRoute>} />
           <Route path="/admin/expenses" element={<ProtectedRoute role="admin"><Expenses/></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><Profile/></ProtectedRoute>} />
+          <Route path="/admin/pnl-report" element={<ProtectedRoute role="admin"><PNLReport/></ProtectedRoute>} />
+          <Route path="/admin/shops" element={<ProtectedRoute role="admin"><AdminShops/></ProtectedRoute>} /> {/* New route */}
+          <Route path="/admin/items" element={<ProtectedRoute role="admin"><AdminItems/></ProtectedRoute>} /> {/* New route */}
+          <Route path="/admin/shops/:shopId" element={<ProtectedRoute role="admin"><ShopDetails/></ProtectedRoute>} /> {/* New route */}
 
         </Routes>
       </BrowserRouter>

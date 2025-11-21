@@ -8,7 +8,6 @@ class DepositSale(db.Model):
     uuid = db.Column(db.String(64), default=lambda: str(uuid.uuid4()), unique=True)
     shop_id = db.Column(db.Integer)
     item_id = db.Column(db.Integer)
-    item_size_id = db.Column(db.Integer)
     buyer_name = db.Column(db.String(255))
     buyer_phone = db.Column(db.String(50))
     selling_price = db.Column(db.Numeric(12,2))
@@ -25,4 +24,5 @@ class DepositPayment(db.Model):
     amount = db.Column(db.Numeric(12,2))
     payment_method = db.Column(db.String(50))
     recorded_by = db.Column(db.Integer)
+    receipt_uuid = db.Column(db.String(64), db.ForeignKey("receipts.uuid"), nullable=True, index=True)
     paid_on = db.Column(db.DateTime, default=datetime.utcnow)

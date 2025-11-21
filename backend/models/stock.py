@@ -6,7 +6,6 @@ class ShopStock(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     shop_id = db.Column(db.Integer, db.ForeignKey("shops.id"), nullable=False)
     item_id = db.Column(db.Integer, db.ForeignKey("items.id"), nullable=False)
-    item_size_id = db.Column(db.Integer, db.ForeignKey("item_sizes.id"), nullable=True)
     quantity = db.Column(db.Integer, default=0)
     buy_price = db.Column(db.Numeric(10,2))
     sell_price = db.Column(db.Numeric(10,2))
@@ -17,7 +16,6 @@ class StockMovement(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     shop_id = db.Column(db.Integer)
     item_id = db.Column(db.Integer)
-    item_size_id = db.Column(db.Integer)
     movement_type = db.Column(db.String(50))  # purchase_in, sale, transfer_in, transfer_out, adjustment, reserve
     qty = db.Column(db.Integer)
     unit_buy_price = db.Column(db.Numeric(10,2))

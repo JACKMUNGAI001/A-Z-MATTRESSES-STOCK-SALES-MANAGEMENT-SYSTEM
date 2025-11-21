@@ -1,20 +1,57 @@
 from flask import request, jsonify
 from services.product_service import create_item, list_items
+from models.product import Category, Item
+from extensions import db
 
 def list_items_controller():
     items = list_items()
     out = []
     for it in items:
-        sizes = [{"id":s.id,"label":s.label,"sell_price":float(s.sell_price or 0)} for s in it.sizes]
-        out.append({"id":it.id,"name":it.name,"brand":it.brand,"category_id":it.category_id,"sizes":sizes})
+        out.append({
+            "id":it.id,
+            "sku": it.sku,
+            "name":it.name,
+            "brand":it.brand,
+            "category_id":it.category_id,
+            "buy_price": float(it.buy_price or 0),
+            "sell_price": float(it.sell_price or 0),
+            "description": it.description,
+        })
     return jsonify(out), 200
 
 def create_item_controller():
     data = request.get_json() or {}
     name = data.get("name")
     category_id = data.get("category_id")
-    sizes = data.get("sizes") or []
     if not all([name, category_id]):
         return jsonify({"msg":"name and category_id required"}), 400
-    it = create_item(name, category_id, brand=data.get("brand"), default_buy_price=data.get("default_buy_price"), default_sell_price=data.get("default_sell_price"), sizes=sizes)
+    it = create_item(name, category_id, sku=data.get("sku"), brand=data.get("brand"), buy_price=data.get("buy_price"), sell_price=data.get("sell_price"), description=data.get("description"))
     return jsonify({"id":it.id,"name":it.name}), 201
+
+def list_categories_controller():
+    categories = Category.query.all()
+    out = [{"id":c.id,"name":c.name} for c in categories]
+    return jsonify(out), 200
+
+def update_item_controller(item_id):
+    item = Item.query.get(item_id)
+    if not item:
+        return jsonify({"msg": "Item not found"}), 404
+    data = request.get_json() or {}
+    item.sku = data.get("sku", item.sku)
+    item.name = data.get("name", item.name)
+    item.category_id = data.get("category_id", item.category_id)
+    item.brand = data.get("brand", item.brand)
+    item.buy_price = data.get("buy_price", item.buy_price)
+    item.sell_price = data.get("sell_price", item.sell_price)
+    item.description = data.get("description", item.description)
+    db.session.commit()
+    return jsonify({"msg": "Item updated", "id": item.id}), 200
+
+def delete_item_controller(item_id):
+    item = Item.query.get(item_id)
+    if not item:
+        return jsonify({"msg": "Item not found"}), 404
+    db.session.delete(item)
+    db.session.commit()
+    return jsonify({"msg": "Item deleted"}), 200
