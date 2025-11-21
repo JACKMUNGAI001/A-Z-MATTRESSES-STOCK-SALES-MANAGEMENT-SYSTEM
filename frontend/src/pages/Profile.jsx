@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import api from "../utils/api";
+import api from "../api/api";
 
 export default function Profile() {
   const [data, setData] = useState({

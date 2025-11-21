@@ -1,5 +1,5 @@
 import { useState } from "react";
-import api from "../utils/api";
+import api from "../api/api";
 
 export default function Expenses() {
   const [shop, setShop] = useState("");
