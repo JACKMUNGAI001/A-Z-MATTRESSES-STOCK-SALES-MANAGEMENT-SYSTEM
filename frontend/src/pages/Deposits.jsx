@@ -8,7 +8,6 @@ export default function Deposits() {
     buyer_name: "",
     buyer_phone: "",
     item_id: "",
-    item_size_id: "",
     selling_price: "",
   });
   const [paymentAmount, setPaymentAmount] = useState("");
@@ -51,7 +50,6 @@ export default function Deposits() {
         buyer_name: "",
         buyer_phone: "",
         item_id: "",
-        item_size_id: "",
         selling_price: "",
       });
     } catch (err) {
@@ -89,12 +87,6 @@ export default function Deposits() {
               <option key={item.id} value={item.id}>{item.name}</option>
             ))}
           </select>
-          <select name="item_size_id" value={formData.item_size_id} onChange={handleInputChange} className="w-full p-2 border rounded">
-            <option value="">Select Size</option>
-            {formData.item_id && items.find(i => i.id === parseInt(formData.item_id))?.sizes.map(size => (
-              <option key={size.id} value={size.id}>{size.label}</option>
-            ))}
-          </select>
           <input name="selling_price" placeholder="Selling Price" value={formData.selling_price} onChange={handleInputChange} className="w-full p-2 border rounded" />
         </div>
         <button onClick={createDepositSale} className="mt-4 bg-blue-600 text-white p-3 rounded-lg hover:bg-blue-700">
@@ -119,8 +111,8 @@ export default function Deposits() {
               <tr key={deposit.id}>
                 <td>{deposit.buyer_name}</td>
                 <td>{items.find(i => i.id === deposit.item_id)?.name}</td>
-                <td>{deposit.payments.reduce((acc, p) => acc + p.amount, 0)}</td>
-                <td>{deposit.selling_price - deposit.payments.reduce((acc, p) => acc + p.amount, 0)}</td>
+                <td>{deposit.payments?.reduce((acc, p) => acc + p.amount, 0) || 0}</td>
+                <td>{deposit.selling_price - (deposit.payments?.reduce((acc, p) => acc + p.amount, 0) || 0)}</td>
                 <td>
                   <input type="number" value={paymentAmount} onChange={(e) => setPaymentAmount(e.target.value)} className="p-1 border rounded" />
                   <button onClick={() => handlePayment(deposit.id)} className="bg-green-600 text-white p-1 rounded ml-2">Pay</button>

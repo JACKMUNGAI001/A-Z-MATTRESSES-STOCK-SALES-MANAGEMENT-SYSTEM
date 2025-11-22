@@ -1,5 +1,5 @@
 from flask import request, jsonify
-from services.stock_service import adjust_stock, check_low_stock
+from services.stock_service import adjust_stock, check_low_stock, get_low_stock_count, get_low_stock_items, delete_stock
 from models.stock import ShopStock
 from flask_jwt_extended import get_jwt_identity
 
@@ -35,3 +35,21 @@ def low_stock_alerts_controller(threshold=2):
     low = check_low_stock(threshold)
     out = [{"shop_id":s.shop_id,"item_id":s.item_id,"qty":s.quantity} for s in low]
     return jsonify(out), 200
+
+def low_stock_count_controller(threshold=2):
+    count = get_low_stock_count(threshold)
+    return jsonify(count), 200
+
+def low_stock_items_controller(threshold=2):
+    items = get_low_stock_items(threshold)
+    return jsonify(items), 200
+
+def delete_stock_controller(shop_id, item_id):
+    user_identity = get_jwt_identity()
+    user_id = user_identity.get("id")
+    try:
+        delete_stock(shop_id, item_id, user_id)
+        return jsonify({"msg": "Stock record deleted successfully"}), 200
+    except ValueError as e:
+        return jsonify({"msg": str(e)}), 400
+

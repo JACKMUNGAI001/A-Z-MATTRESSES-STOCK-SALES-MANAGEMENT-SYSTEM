@@ -83,3 +83,12 @@ def get_pnl_report(year, month, shop_id=None):
         "total_expenses": float(total_expenses),
         "net_profit": float(net_profit)
     }
+
+def get_daily_sales():
+    today = datetime.utcnow().date()
+    total_sales_today = db.session.query(func.sum(Sale.total_amount)).filter(
+        func.extract('year', Sale.created_at) == today.year,
+        func.extract('month', Sale.created_at) == today.month,
+        func.extract('day', Sale.created_at) == today.day
+    ).scalar() or 0
+    return {"total_sales": float(total_sales_today)}

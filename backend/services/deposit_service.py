@@ -165,3 +165,29 @@ def _generate_sale_receipt_html(sale, shop, attendant, sale_items):
     </html>
     """
     return html
+
+def get_deposit_customers_count():
+    return {"count": DepositSale.query.filter(DepositSale.status == 'active').count()}
+
+def get_deposit_customers():
+    deposits = DepositSale.query.filter(DepositSale.status == 'active').all()
+    out = []
+    for dep in deposits:
+        total_paid = sum([float(p.amount) for p in dep.payments])
+        balance = float(dep.selling_price) - total_paid
+        item = Item.query.get(dep.item_id)
+        out.append({
+            "id": dep.id,
+            "uuid": dep.uuid,
+            "shop_id": dep.shop_id,
+            "item_name": item.name,
+            "buyer_name": dep.buyer_name,
+            "buyer_phone": dep.buyer_phone,
+            "selling_price": float(dep.selling_price),
+            "total_paid": total_paid,
+            "balance": balance,
+            "status": dep.status,
+            "created_at": dep.created_at.isoformat(),
+        })
+    return out
+

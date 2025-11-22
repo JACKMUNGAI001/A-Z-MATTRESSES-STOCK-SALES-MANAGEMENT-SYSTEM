@@ -1,4 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import Sidebar from '../components/Sidebar'
 import Header from '../components/Header'
 import Card from '../components/Card'
@@ -9,12 +10,37 @@ export default function AttendantDashboard(){
   const { user } = useContext(AuthContext)
   const [shopStock, setShopStock] = useState([]);
   const [availableItems, setAvailableItems] = useState([]);
+  const [todaysSales, setTodaysSales] = useState(0);
+  const [lowStockCount, setLowStockCount] = useState(0);
+  const [depositCustomersCount, setDepositCustomersCount] = useState(0);
 
   useEffect(() => {
     if (user?.shop_id) {
       fetchShopStock(user.shop_id);
     }
     fetchAvailableItems();
+
+    const fetchDashboardData = async () => {
+        try {
+            // Fetch Today's Sales
+            const salesResponse = await api.get('/reports/daily_sales');
+            setTodaysSales(salesResponse.data.total_sales);
+
+            // Fetch Low Stock Count
+            const lowStockResponse = await api.get('/stocks/low_stock_count');
+            setLowStockCount(lowStockResponse.data.count);
+
+            // Fetch Deposit Customers Count
+            const depositCustomersResponse = await api.get('/deposits/customers_count');
+            setDepositCustomersCount(depositCustomersResponse.data.count);
+
+        } catch (err) {
+            console.error('Error fetching dashboard data:', err);
+            alert('Error fetching dashboard data');
+        }
+    };
+
+    fetchDashboardData();
   }, [user?.shop_id]);
 
   const fetchShopStock = async (shopId) => {
@@ -46,9 +72,15 @@ export default function AttendantDashboard(){
           </div>
         )}
         <div className="grid grid-cols-3 gap-4">
-          <Card title="Today's Sales">KES 0</Card>
-          <Card title="Low Stock Items">0</Card>
-          <Card title="Deposit Customers">0</Card>
+          <Link to="/attendant/sales" className="no-underline">
+              <Card title="Today's Sales">KES {todaysSales.toFixed(2)}</Card>
+          </Link>
+          <Link to="/attendant/low-stock" className="no-underline">
+              <Card title="Low Stock Items">{lowStockCount}</Card>
+          </Link>
+          <Link to="/attendant/deposits" className="no-underline">
+              <Card title="Deposit Customers">{depositCustomersCount}</Card>
+          </Link>
         </div>
 
         <div className="mt-6">

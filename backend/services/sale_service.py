@@ -6,6 +6,7 @@ from models.user import User
 from models.product import Item
 from services.receipt_service import create_receipt
 from datetime import datetime
+from models.notification import Notification
 
 def _generate_sale_receipt_html(sale, shop, attendant, sale_items):
     items_html = ""
@@ -109,3 +110,34 @@ def create_sale(shop_id, user_id, items, payment_type="cash"):
     except Exception as e:
         db.session.rollback()
         raise e
+
+from sqlalchemy import func
+
+def get_todays_sales():
+    today = datetime.utcnow().date()
+    sales = Sale.query.filter(
+        func.extract('year', Sale.created_at) == today.year,
+        func.extract('month', Sale.created_at) == today.month,
+        func.extract('day', Sale.created_at) == today.day
+    ).all()
+    out = []
+    for sale in sales:
+        items_summary = []
+        for item in sale.items:
+            items_summary.append({
+                "item_id": item.item_id,
+                "qty": item.qty,
+                "unit_price": float(item.unit_price),
+                "unit_cost": float(item.unit_cost)
+            })
+        out.append({
+            "id": sale.id,
+            "shop_id": sale.shop_id,
+            "user_id": sale.user_id,
+            "total_amount": float(sale.total_amount),
+            "payment_type": sale.payment_type,
+            "created_at": sale.created_at.isoformat(),
+            "items": items_summary
+        })
+    return out
+

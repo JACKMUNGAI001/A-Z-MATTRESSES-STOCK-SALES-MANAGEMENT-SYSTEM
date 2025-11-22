@@ -1,5 +1,5 @@
 from flask import request, jsonify
-from services.sale_service import create_sale
+from services.sale_service import create_sale, get_todays_sales
 from models.sale import Sale, SaleItem
 from extensions import db
 from flask_jwt_extended import get_jwt_identity
@@ -38,3 +38,7 @@ def get_shop_sales_controller(shop_id):
             "items": items_summary
         })
     return jsonify(out), 200
+
+def todays_sales_controller():
+    sales = get_todays_sales()
+    return jsonify(sales), 200

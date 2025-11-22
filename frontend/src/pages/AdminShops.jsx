@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import api from "../api/api";
+import { useNavigate } from "react-router-dom"; // Import useNavigate
 
 export default function AdminShops() {
   const [shops, setShops] = useState([]);
@@ -8,6 +9,7 @@ export default function AdminShops() {
     address: "",
   });
   const [editingId, setEditingId] = useState(null);
+  const navigate = useNavigate(); // Initialize useNavigate
 
   useEffect(() => {
     fetchShops();
@@ -59,6 +61,10 @@ export default function AdminShops() {
     } catch (err) {
       alert(`Error deleting shop: ${err.response?.data?.msg || err.message}`);
     }
+  };
+
+  const handleViewStock = (shopId) => {
+    navigate(`/admin/shops/${shopId}/stock`);
   };
 
   const resetForm = () => {
@@ -130,8 +136,11 @@ export default function AdminShops() {
                   <button onClick={() => handleEdit(shop)} className="text-blue-600 mr-2">
                     Edit
                   </button>
-                  <button onClick={() => handleDelete(shop.id)} className="text-red-600">
+                  <button onClick={() => handleDelete(shop.id)} className="text-red-600 mr-2">
                     Delete
+                  </button>
+                  <button onClick={() => handleViewStock(shop.id)} className="bg-green-500 text-white py-1 px-2 rounded-lg">
+                    View Stock
                   </button>
                 </td>
               </tr>

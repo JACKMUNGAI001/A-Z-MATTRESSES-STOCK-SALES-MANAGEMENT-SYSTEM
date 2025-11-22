@@ -1,5 +1,5 @@
 from flask import request, jsonify
-from services.deposit_service import create_deposit, add_deposit_payment
+from services.deposit_service import create_deposit, add_deposit_payment, get_deposit_customers_count, get_deposit_customers
 from models.deposit import DepositSale
 from flask_jwt_extended import get_jwt_identity
 
@@ -60,3 +60,12 @@ def get_shop_deposits_controller(shop_id):
             "payments": payments_summary
         })
     return jsonify(out), 200
+
+def deposit_customers_count_controller():
+    count = get_deposit_customers_count()
+    return jsonify(count), 200
+
+def deposit_customers_controller():
+    customers = get_deposit_customers()
+    return jsonify(customers), 200
+

@@ -1,5 +1,5 @@
 from flask import Blueprint, request
-from controllers.stock_controller import get_shop_stock, adjust_stock_controller, low_stock_alerts_controller
+from controllers.stock_controller import get_shop_stock, adjust_stock_controller, low_stock_alerts_controller, low_stock_count_controller, low_stock_items_controller, delete_stock_controller
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
 bp = Blueprint("stocks", __name__)
@@ -20,3 +20,21 @@ def adjust():
 def low():
     threshold = int(request.args.get("threshold", 2))
     return low_stock_alerts_controller(threshold)
+
+@bp.route("/low_stock_count", methods=["GET"])
+@jwt_required()
+def low_stock_count():
+    threshold = int(request.args.get("threshold", 2))
+    return low_stock_count_controller(threshold)
+
+@bp.route("/low_stock_items", methods=["GET"])
+@jwt_required()
+def low_stock_items():
+    threshold = int(request.args.get("threshold", 2))
+    return low_stock_items_controller(threshold)
+
+@bp.route("/<int:shop_id>/<int:item_id>", methods=["DELETE"])
+@jwt_required()
+def delete_shop_stock(shop_id, item_id):
+    return delete_stock_controller(shop_id, item_id)
+
