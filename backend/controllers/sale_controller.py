@@ -1,5 +1,5 @@
 from flask import request, jsonify
-from services.sale_service import create_sale, get_todays_sales
+from services.sale_service import create_sale, get_todays_sales, get_current_weeks_sales, get_current_months_sales, get_current_years_sales, get_all_sales, get_sales_by_shop
 from models.sale import Sale, SaleItem
 from extensions import db
 from flask_jwt_extended import get_jwt_identity
@@ -16,29 +16,26 @@ def create_sale_controller():
     except ValueError as e:
         return jsonify({"msg":str(e)}), 400
 
+def get_all_sales_controller():
+    sales = get_all_sales()
+    return jsonify(sales), 200
+
 def get_shop_sales_controller(shop_id):
-    sales = Sale.query.filter_by(shop_id=shop_id).all()
-    out = []
-    for sale in sales:
-        items_summary = []
-        for item in sale.items:
-            items_summary.append({
-                "item_id": item.item_id,
-                "qty": item.qty,
-                "unit_price": float(item.unit_price),
-                "unit_cost": float(item.unit_cost)
-            })
-        out.append({
-            "id": sale.id,
-            "shop_id": sale.shop_id,
-            "user_id": sale.user_id,
-            "total_amount": float(sale.total_amount),
-            "payment_type": sale.payment_type,
-            "created_at": sale.created_at.isoformat(),
-            "items": items_summary
-        })
-    return jsonify(out), 200
+    sales = get_sales_by_shop(shop_id)
+    return jsonify(sales), 200
 
 def todays_sales_controller():
     sales = get_todays_sales()
+    return jsonify(sales), 200
+
+def current_weeks_sales_controller():
+    sales = get_current_weeks_sales()
+    return jsonify(sales), 200
+
+def current_months_sales_controller():
+    sales = get_current_months_sales()
+    return jsonify(sales), 200
+
+def current_years_sales_controller():
+    sales = get_current_years_sales()
     return jsonify(sales), 200

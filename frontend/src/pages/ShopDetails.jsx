@@ -114,9 +114,9 @@ export default function ShopDetails() {
       <p className="text-gray-600 mb-6">Address: {shop.address}</p>
 
       <div className="grid grid-cols-3 gap-4 mb-6">
-        <Card title="Total Sales">KES {shopSales.reduce((acc, sale) => acc + sale.total_amount, 0).toFixed(2)}</Card>
-        <Card title="Total Deposits">KES {shopDeposits.reduce((acc, dep) => acc + dep.payments.reduce((pAcc, p) => pAcc + p.amount, 0), 0).toFixed(2)}</Card>
-        <Card title="Current Stock Value">KES {shopStock.reduce((acc, stock) => acc + (stock.buy_price * stock.qty), 0).toFixed(2)}</Card>
+        <Card title="Total Sales">KES {shopSales.reduce((acc, sale) => acc + (sale.total_amount || 0), 0).toFixed(2)}</Card>
+        <Card title="Total Deposits">KES {shopDeposits.reduce((acc, dep) => acc + (dep.total_paid || 0), 0).toFixed(2)}</Card>
+        <Card title="Current Stock Value">KES {shopStock.reduce((acc, stock) => acc + ((stock.buy_price || 0) * (stock.qty || 0)), 0).toFixed(2)}</Card>
       </div>
 
       <div className="bg-white p-6 rounded-xl shadow mb-6">
@@ -238,7 +238,7 @@ export default function ShopDetails() {
                   <tr key={deposit.id}>
                     <td className="px-6 py-4 whitespace-nowrap">{deposit.id}</td>
                     <td className="px-6 py-4 whitespace-nowrap">{deposit.buyer_name}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">KES {deposit.selling_price.toFixed(2)}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">KES {(deposit.selling_price || 0).toFixed(2)}</td>
                     <td className="px-6 py-4 whitespace-nowrap">{deposit.status}</td>
                   </tr>
                 ))}

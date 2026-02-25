@@ -1,9 +1,13 @@
 from flask import Blueprint
-from controllers.sale_controller import create_sale_controller, get_shop_sales_controller, todays_sales_controller
+from controllers.sale_controller import create_sale_controller, get_shop_sales_controller, todays_sales_controller, current_weeks_sales_controller, current_months_sales_controller, current_years_sales_controller, get_all_sales_controller
 from flask_jwt_extended import jwt_required
 
 bp = Blueprint("sales", __name__)
 
 bp.add_url_rule("/", "create_sale", jwt_required()(create_sale_controller), methods=["POST"])
+bp.add_url_rule("/all", "get_all_sales", jwt_required()(get_all_sales_controller), methods=["GET"])
 bp.add_url_rule("/today", "todays_sales", jwt_required()(todays_sales_controller), methods=["GET"])
+bp.add_url_rule("/week", "current_weeks_sales", jwt_required()(current_weeks_sales_controller), methods=["GET"])
+bp.add_url_rule("/month", "current_months_sales", jwt_required()(current_months_sales_controller), methods=["GET"])
+bp.add_url_rule("/year", "current_years_sales", jwt_required()(current_years_sales_controller), methods=["GET"])
 bp.add_url_rule("/<int:shop_id>", "get_shop_sales", jwt_required()(get_shop_sales_controller), methods=["GET"])

@@ -11,12 +11,18 @@ export default function AdminDashboard(){
   const [shops, setShops] = useState([])
   const [pendingAttendants, setPendingAttendants] = useState([])
   const [allAttendants, setAllAttendants] = useState([])
+  const [salesSummary, setSalesSummary] = useState(null)
+  const [depositsSummary, setDepositsSummary] = useState(null)
+  const [financialOverview, setFinancialOverview] = useState(null)
   const navigate = useNavigate()
 
   useEffect(()=> {
     api.get('/shops').then(res=>setShops(res.data)).catch(()=>{})
     fetchPendingAttendants()
     fetchAllAttendants()
+    api.get('/reports/sales-summary').then(res=>setSalesSummary(res.data)).catch(()=>{})
+    api.get('/reports/deposits-summary').then(res=>setDepositsSummary(res.data)).catch(()=>{})
+    api.get('/reports/financial-overview').then(res=>setFinancialOverview(res.data)).catch(()=>{})
   },[])
 
   const fetchPendingAttendants = async () => {
@@ -30,8 +36,7 @@ export default function AdminDashboard(){
 
   const fetchAllAttendants = async () => {
     try {
-      const response = await api.get('/admin/attendants/all')
-      setAllAttendants(response.data)
+      await api.get('/admin/attendants/all').then(res => setAllAttendants(res.data))
     } catch (err) {
       alert('Error fetching all attendants')
     }
@@ -68,10 +73,47 @@ export default function AdminDashboard(){
       <main className="flex-1 p-6">
         <Header />
         <div className="grid grid-cols-3 gap-4">
-          <Card title="Total Sales">KES 0</Card>
-          <Card title="Total Deposits">KES 0</Card>
-          <Card title="Total Outstanding">KES 0</Card>
+          <div onClick={() => navigate('/admin/all-sales')} className="cursor-pointer">
+            <Card title="Total Sales">
+              KES {financialOverview ? financialOverview.total_sales.toLocaleString() : '...'}
+            </Card>
+          </div>
+          <div onClick={() => navigate('/admin/all-deposits')} className="cursor-pointer">
+            <Card title="Total Deposits">
+              KES {financialOverview ? financialOverview.total_deposit_collections.toLocaleString() : '...'}
+            </Card>
+          </div>
+          <div onClick={() => navigate('/admin/outstanding-deposits')} className="cursor-pointer">
+            <Card title="Total Outstanding">
+              {financialOverview ? financialOverview.customers_with_balances : '...'}
+            </Card>
+          </div>
         </div>
+
+        {salesSummary && (
+          <div className="mt-6">
+            <h3 className="text-lg font-semibold mb-2">Sales Summary</h3>
+            <div className="grid grid-cols-4 gap-4">
+              <Card title="Today's Sales">KES {salesSummary.today}</Card>
+              <Card title="This Week's Sales">KES {salesSummary.week}</Card>
+              <Card title="This Month's Sales">KES {salesSummary.month}</Card>
+              <Card title="This Year's Sales">KES {salesSummary.year}</Card>
+            </div>
+          </div>
+        )}
+
+        {depositsSummary && (
+          <div className="mt-6">
+            <h3 className="text-lg font-semibold mb-2">Deposits Summary</h3>
+            <div className="grid grid-cols-4 gap-4">
+              <Card title="Today's Deposits">KES {depositsSummary.today}</Card>
+              <Card title="This Week's Deposits">KES {depositsSummary.week}</Card>
+              <Card title="This Month's Deposits">KES {depositsSummary.month}</Card>
+              <Card title="This Year's Deposits">KES {depositsSummary.year}</Card>
+            </div>
+          </div>
+        )}
+
         <div className="mt-6">
           <h3 className="text-lg font-semibold mb-2">Shops</h3>
           <div className="grid grid-cols-3 gap-4">

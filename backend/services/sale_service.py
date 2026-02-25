@@ -7,6 +7,8 @@ from models.product import Item
 from services.receipt_service import create_receipt
 from datetime import datetime
 from models.notification import Notification
+from sqlalchemy import func
+from datetime import datetime, timedelta
 
 def _generate_sale_receipt_html(sale, shop, attendant, sale_items):
     items_html = ""
@@ -111,7 +113,38 @@ def create_sale(shop_id, user_id, items, payment_type="cash"):
         db.session.rollback()
         raise e
 
-from sqlalchemy import func
+def _serialize_sale(sale):
+    shop = Shop.query.get(sale.shop_id)
+    attendant = User.query.get(sale.user_id)
+    items_summary = []
+    for item in sale.items:
+        product = Item.query.get(item.item_id)
+        items_summary.append({
+            "item_id": item.item_id,
+            "item_name": product.name,
+            "qty": item.qty,
+            "unit_price": float(item.unit_price),
+            "unit_cost": float(item.unit_cost)
+        })
+    return {
+        "id": sale.id,
+        "shop_id": sale.shop_id,
+        "shop_name": shop.name if shop else "N/A",
+        "user_id": sale.user_id,
+        "attendant_name": attendant.name if attendant else "N/A",
+        "total_amount": float(sale.total_amount),
+        "payment_type": sale.payment_type,
+        "created_at": sale.created_at.isoformat(),
+        "items": items_summary
+    }
+
+def get_all_sales():
+    sales = Sale.query.order_by(Sale.created_at.desc()).all()
+    return [_serialize_sale(sale) for sale in sales]
+
+def get_sales_by_shop(shop_id):
+    sales = Sale.query.filter_by(shop_id=shop_id).order_by(Sale.created_at.desc()).all()
+    return [_serialize_sale(sale) for sale in sales]
 
 def get_todays_sales():
     today = datetime.utcnow().date()
@@ -120,24 +153,40 @@ def get_todays_sales():
         func.extract('month', Sale.created_at) == today.month,
         func.extract('day', Sale.created_at) == today.day
     ).all()
-    out = []
-    for sale in sales:
-        items_summary = []
-        for item in sale.items:
-            items_summary.append({
-                "item_id": item.item_id,
-                "qty": item.qty,
-                "unit_price": float(item.unit_price),
-                "unit_cost": float(item.unit_cost)
-            })
-        out.append({
-            "id": sale.id,
-            "shop_id": sale.shop_id,
-            "user_id": sale.user_id,
-            "total_amount": float(sale.total_amount),
-            "payment_type": sale.payment_type,
-            "created_at": sale.created_at.isoformat(),
-            "items": items_summary
-        })
-    return out
+    return [_serialize_sale(sale) for sale in sales]
+
+def get_current_weeks_sales():
+    today = datetime.utcnow().date()
+    # Find the start of the current week (Monday)
+    start_of_week = today - timedelta(days=today.weekday())
+    end_of_week = start_of_week + timedelta(days=6) # End of Sunday
+
+    sales = Sale.query.filter(
+        Sale.created_at.between(start_of_week, end_of_week + timedelta(days=1, microseconds=-1)) # Include all of Sunday
+    ).all()
+    return [_serialize_sale(sale) for sale in sales]
+
+def get_current_months_sales():
+    today = datetime.utcnow().date()
+    start_of_month = datetime(today.year, today.month, 1).date()
+    # Calculate end of month (first day of next month minus one day)
+    if today.month == 12:
+        end_of_month = datetime(today.year + 1, 1, 1).date() - timedelta(days=1)
+    else:
+        end_of_month = datetime(today.year, today.month + 1, 1).date() - timedelta(days=1)
+
+    sales = Sale.query.filter(
+        Sale.created_at.between(start_of_month, end_of_month + timedelta(days=1, microseconds=-1))
+    ).all()
+    return [_serialize_sale(sale) for sale in sales]
+
+def get_current_years_sales():
+    today = datetime.utcnow().date()
+    start_of_year = datetime(today.year, 1, 1).date()
+    end_of_year = datetime(today.year, 12, 31).date()
+
+    sales = Sale.query.filter(
+        Sale.created_at.between(start_of_year, end_of_year + timedelta(days=1, microseconds=-1))
+    ).all()
+    return [_serialize_sale(sale) for sale in sales]
 

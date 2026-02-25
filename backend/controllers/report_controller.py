@@ -1,5 +1,5 @@
 from flask import request, jsonify
-from services.report_service import get_global_financial_overview, get_pnl_report, get_daily_sales
+from services.report_service import get_global_financial_overview, get_pnl_report, get_daily_sales, get_sales_summary, get_deposits_summary
 from datetime import datetime
 
 def global_financial_overview_controller():
@@ -17,3 +17,11 @@ def pnl_report_controller():
 def daily_sales_report_controller():
     daily_sales = get_daily_sales()
     return jsonify(daily_sales), 200
+
+def sales_summary_controller():
+    summary = get_sales_summary()
+    return jsonify(summary), 200
+
+def deposits_summary_controller():
+    summary = get_deposits_summary()
+    return jsonify(summary), 200

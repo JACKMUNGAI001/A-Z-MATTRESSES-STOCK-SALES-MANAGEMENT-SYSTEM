@@ -1,7 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import api from "../api/api";
+import { AuthContext } from "../context/AuthContext";
 
 export default function Deposits() {
+  const { user } = useContext(AuthContext);
   const [deposits, setDeposits] = useState([]);
   const [items, setItems] = useState([]);
   const [formData, setFormData] = useState({
@@ -9,8 +11,9 @@ export default function Deposits() {
     buyer_phone: "",
     item_id: "",
     selling_price: "",
+    amount: "",
   });
-  const [paymentAmount, setPaymentAmount] = useState("");
+  const [paymentAmounts, setPaymentAmounts] = useState({});
   const [receiptUuid, setReceiptUuid] = useState(null);
 
   useEffect(() => {
@@ -43,14 +46,16 @@ export default function Deposits() {
 
   const createDepositSale = async () => {
     try {
-      await api.post("/deposits", formData);
-      alert("Deposit sale created!");
+      const data = { ...formData, shop_id: user.shop_id };
+      await api.post("/deposits", data);
+      alert("DEPOSIT SALE CREATED!");
       fetchDeposits();
       setFormData({
         buyer_name: "",
         buyer_phone: "",
         item_id: "",
         selling_price: "",
+        amount: "",
       });
     } catch (err) {
       alert(`Error creating deposit sale: ${err.response?.data?.msg || err.message}`);
@@ -58,15 +63,24 @@ export default function Deposits() {
   };
 
   const handlePayment = async (depositId) => {
+    const amount = paymentAmounts[depositId];
+    if (!amount || parseFloat(amount) <= 0) {
+      alert("Please enter a valid amount");
+      return;
+    }
     try {
-      const response = await api.post(`/deposits/${depositId}/pay`, {
-        amount: paymentAmount,
+      const response = await api.post(`/deposits/${depositId}/payments`, {
+        amount: amount,
         payment_method: "cash",
       });
       setReceiptUuid(response.data.receipt_uuid);
-      alert("Payment successful!");
+      alert("PAYMENT SUCCESSFUL");
       fetchDeposits();
-      setPaymentAmount("");
+      setPaymentAmounts(prevAmounts => {
+        const newAmounts = { ...prevAmounts };
+        delete newAmounts[depositId];
+        return newAmounts;
+      });
     } catch (err) {
       alert(`Error making payment: ${err.response?.data?.msg || err.message}`);
     }
@@ -88,6 +102,7 @@ export default function Deposits() {
             ))}
           </select>
           <input name="selling_price" placeholder="Selling Price" value={formData.selling_price} onChange={handleInputChange} className="w-full p-2 border rounded" />
+          <input name="amount" placeholder="Initial Payment" value={formData.amount} onChange={handleInputChange} className="w-full p-2 border rounded" />
         </div>
         <button onClick={createDepositSale} className="mt-4 bg-blue-600 text-white p-3 rounded-lg hover:bg-blue-700">
           Create Deposit Sale
@@ -100,6 +115,7 @@ export default function Deposits() {
           <thead>
             <tr>
               <th className="text-left">Buyer</th>
+              <th className="text-left">Buyer Phone</th>
               <th className="text-left">Item</th>
               <th className="text-left">Total Paid</th>
               <th className="text-left">Balance</th>
@@ -110,11 +126,17 @@ export default function Deposits() {
             {deposits.filter(d => d.status === 'active').map((deposit) => (
               <tr key={deposit.id}>
                 <td>{deposit.buyer_name}</td>
+                <td>{deposit.buyer_phone}</td>
                 <td>{items.find(i => i.id === deposit.item_id)?.name}</td>
-                <td>{deposit.payments?.reduce((acc, p) => acc + p.amount, 0) || 0}</td>
-                <td>{deposit.selling_price - (deposit.payments?.reduce((acc, p) => acc + p.amount, 0) || 0)}</td>
+                <td>{deposit.total_paid || 0}</td>
+                <td>{deposit.balance || 0}</td>
                 <td>
-                  <input type="number" value={paymentAmount} onChange={(e) => setPaymentAmount(e.target.value)} className="p-1 border rounded" />
+                  <input
+                    type="number"
+                    value={paymentAmounts[deposit.id] || ""}
+                    onChange={(e) => setPaymentAmounts(prev => ({ ...prev, [deposit.id]: e.target.value }))}
+                    className="p-1 border rounded"
+                  />
                   <button onClick={() => handlePayment(deposit.id)} className="bg-green-600 text-white p-1 rounded ml-2">Pay</button>
                 </td>
               </tr>
