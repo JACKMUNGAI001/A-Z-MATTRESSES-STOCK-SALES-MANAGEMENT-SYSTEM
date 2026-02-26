@@ -52,7 +52,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
           <Route path="/transfers" element={<ProtectedRoute role="admin"><Transfers/></ProtectedRoute>} />
           <Route path="/admin/expenses" element={<ProtectedRoute role="admin"><Expenses/></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><Profile/></ProtectedRoute>} />
-          <Route path="/admin/pnl-report" element={<ProtectedRoute role="admin"><PNLReport/></ProtectedRoute>} />
+          <Route path="/admin/pnl" element={<ProtectedRoute role="admin"><PNLReport/></ProtectedRoute>} />
           <Route path="/admin/shops" element={<ProtectedRoute role="admin"><AdminShops/></ProtectedRoute>} /> {/* New route */}
           <Route path="/admin/items" element={<ProtectedRoute role="admin"><AdminItems/></ProtectedRoute>} /> {/* New route */}
           <Route path="/admin/shops/:shopId" element={<ProtectedRoute role="admin"><ShopDetails/></ProtectedRoute>} /> {/* New route */}

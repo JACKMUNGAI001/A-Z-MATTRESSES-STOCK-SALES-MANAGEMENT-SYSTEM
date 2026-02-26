@@ -9,10 +9,12 @@ def global_financial_overview_controller():
 
 def pnl_report_controller():
     year = request.args.get('year', type=int, default=datetime.utcnow().year)
-    month = request.args.get('month', type=int, default=datetime.utcnow().month)
+    month = request.args.get('month', type=int) # Now optional for yearly report
+    shop_id = request.args.get('shop_id', type=int) # Optional for global report
     
     user = get_jwt_identity()
-    shop_id = user.get("shop_id") if user.get("role") == "attendant" else request.args.get('shop_id', type=int)
+    if user.get("role") == "attendant":
+        shop_id = user.get("shop_id")
     
     report = get_pnl_report(year, month, shop_id)
     return jsonify(report), 200

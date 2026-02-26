@@ -58,12 +58,17 @@ def get_global_financial_overview():
         current_app.logger.error(f"Error in get_global_financial_overview: {e}", exc_info=True)
         raise e
 
-def get_pnl_report(year, month, shop_id=None):
-    start_date = datetime(year, month, 1)
-    if month == 12:
-        end_date = datetime(year + 1, 1, 1)
+def get_pnl_report(year, month=None, shop_id=None):
+    if month:
+        start_date = datetime(year, month, 1)
+        if month == 12:
+            end_date = datetime(year + 1, 1, 1)
+        else:
+            end_date = datetime(year, month + 1, 1)
     else:
-        end_date = datetime(year, month + 1, 1)
+        # Yearly report
+        start_date = datetime(year, 1, 1)
+        end_date = datetime(year + 1, 1, 1)
 
     sales_query = db.session.query(func.sum(Sale.total_amount)).filter(
         Sale.created_at >= start_date,
@@ -85,9 +90,9 @@ def get_pnl_report(year, month, shop_id=None):
         cogs_query = cogs_query.filter(Sale.shop_id == shop_id)
         expenses_query = expenses_query.filter(Expense.shop_id == shop_id)
 
-    total_sales = sales_query.scalar() or 0
-    total_cogs = cogs_query.scalar() or 0
-    total_expenses = expenses_query.scalar() or 0
+    total_sales = float(sales_query.scalar() or 0)
+    total_cogs = float(cogs_query.scalar() or 0)
+    total_expenses = float(expenses_query.scalar() or 0)
 
     gross_profit = total_sales - total_cogs
     net_profit = gross_profit - total_expenses
@@ -96,11 +101,11 @@ def get_pnl_report(year, month, shop_id=None):
         "year": year,
         "month": month,
         "shop_id": shop_id,
-        "total_sales": float(total_sales),
-        "total_cogs": float(total_cogs),
-        "gross_profit": float(gross_profit),
-        "total_expenses": float(total_expenses),
-        "net_profit": float(net_profit)
+        "total_sales": total_sales,
+        "total_cogs": total_cogs,
+        "gross_profit": gross_profit,
+        "total_expenses": total_expenses,
+        "net_profit": net_profit
     }
 
 def get_daily_sales(shop_id=None):

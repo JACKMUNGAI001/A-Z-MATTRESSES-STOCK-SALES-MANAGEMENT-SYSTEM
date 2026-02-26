@@ -12,6 +12,7 @@ export default function Sidebar({ role }){
           <Link to="/admin" className="block py-2">Dashboard</Link>
           <Link to="/admin/shops" className="block py-2">Shops</Link>
           <Link to="/admin/items" className="block py-2">Products</Link>
+          <Link to="/admin/pnl" className="block py-2">Profit & Loss</Link>
           <Link to="/admin/expenses" className="block py-2">Expenses</Link>
           <Link to="/transfers" className="block py-2">Transfers</Link>
         </>}
