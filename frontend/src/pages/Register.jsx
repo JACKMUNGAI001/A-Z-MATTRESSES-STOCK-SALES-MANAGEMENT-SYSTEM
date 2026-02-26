@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import api from '../api/api'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
+import { UserPlus, Mail, Lock, Store, User, ArrowLeft, Zap } from 'lucide-react'
 
 export default function Register(){
   const [name, setName] = useState('')
@@ -27,39 +28,114 @@ export default function Register(){
     e.preventDefault()
     try{
       await api.post('/auth/register', { name, email, password, shop_id: shopId })
-      alert('Registered. Await admin verification.')
+      alert('Registration successful. Your account is pending admin verification.')
       navigate('/login')
     }catch(err){
       setMsg(err.response?.data?.msg || 'Registration failed')
     }
   }
+
   return (
-    <div className="flex items-center justify-center h-screen relative">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-[#f1f5f9] p-6">
+      {/* BACK BUTTON */}
       <button
-        onClick={() => navigate(-1)}
-        className="absolute top-6 left-10 bg-gray-200 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-300 flex items-center gap-1"
+        onClick={() => navigate('/')}
+        className="absolute top-8 left-8 bg-white border border-gray-200 text-gray-600 py-2.5 px-5 rounded-xl shadow-sm hover:bg-gray-50 transition-all flex items-center gap-2 font-bold text-sm"
       >
-        <span>←</span> Back
+        <ArrowLeft size={18} /> BACK TO HOME
       </button>
-      <div className="w-full max-w-md bg-white p-8 rounded shadow">
-        <h1 className="text-2xl font-bold mb-4">Register</h1>
-        {msg && <div className="text-red-600 mb-3">{msg}</div>}
-        <form onSubmit={submit}>
-          <label className="block mb-1">Name</label>
-          <input className="w-full p-2 border rounded mb-3" value={name} onChange={e=>setName(e.target.value)} />
-          <label className="block mb-1">Email</label>
-          <input className="w-full p-2 border rounded mb-3" value={email} onChange={e=>setEmail(e.target.value)} />
-          <label className="block mb-1">Password</label>
-          <input type="password" className="w-full p-2 border rounded mb-3" value={password} onChange={e=>setPassword(e.target.value)} />
-          <label className="block mb-1">Shop</label>
-          <select className="w-full p-2 border rounded mb-3" value={shopId} onChange={e=>setShopId(e.target.value)}>
-            <option value="">Select your shop</option>
-            {shops.map(shop => (
-              <option key={shop.id} value={shop.id}>{shop.name}</option>
-            ))}
-          </select>
-          <button className="w-full bg-pastel-500 text-white p-2 rounded">Register</button>
-        </form>
+
+      <div className="w-full max-w-lg">
+        <div className="text-center mb-10">
+          <div className="inline-flex bg-blue-600 p-3 rounded-2xl text-white shadow-xl shadow-blue-200 mb-4">
+            <UserPlus size={32} />
+          </div>
+          <h1 className="text-3xl font-black text-gray-900 tracking-tight">Create Account</h1>
+          <p className="text-gray-500 font-medium mt-2">Join our network of retail mattress shops</p>
+        </div>
+
+        <div className="bg-white p-10 rounded-[2.5rem] shadow-xl border border-gray-100">
+          {msg && (
+            <div className="bg-red-50 text-red-600 p-4 rounded-xl text-sm font-bold mb-6 border border-red-100 flex items-center gap-2">
+              <span className="text-lg">⚠️</span> {msg}
+            </div>
+          )}
+
+          <form onSubmit={submit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="md:col-span-2">
+              <label className="block text-xs font-black text-gray-400 uppercase tracking-[0.2em] mb-2 px-1">Full Name</label>
+              <div className="relative">
+                <User className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                <input 
+                  className="w-full pl-12 pr-4 py-4 border border-gray-200 rounded-2xl bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none font-bold text-gray-900 transition-all" 
+                  value={name} 
+                  onChange={e=>setName(e.target.value)} 
+                  placeholder="Enter your name"
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="md:col-span-2">
+              <label className="block text-xs font-black text-gray-400 uppercase tracking-[0.2em] mb-2 px-1">Email Address</label>
+              <div className="relative">
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                <input 
+                  type="email"
+                  className="w-full pl-12 pr-4 py-4 border border-gray-200 rounded-2xl bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none font-bold text-gray-900 transition-all" 
+                  value={email} 
+                  onChange={e=>setEmail(e.target.value)} 
+                  placeholder="name@company.com"
+                  required
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-black text-gray-400 uppercase tracking-[0.2em] mb-2 px-1">Password</label>
+              <div className="relative">
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                <input 
+                  type="password" 
+                  className="w-full pl-12 pr-4 py-4 border border-gray-200 rounded-2xl bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none font-bold text-gray-900 transition-all" 
+                  value={password} 
+                  onChange={e=>setPassword(e.target.value)} 
+                  placeholder="••••••••"
+                  required
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-black text-gray-400 uppercase tracking-[0.2em] mb-2 px-1">Assigned Shop</label>
+              <div className="relative">
+                <Store className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                <select 
+                  className="w-full pl-12 pr-4 py-4 border border-gray-200 rounded-2xl bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none font-bold text-gray-900 appearance-none transition-all" 
+                  value={shopId} 
+                  onChange={e=>setShopId(e.target.value)}
+                  required
+                >
+                  <option value="">Select Shop</option>
+                  {shops.map(shop => (
+                    <option key={shop.id} value={shop.id}>{shop.name}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <button className="md:col-span-2 bg-blue-600 text-white py-5 rounded-2xl font-black text-lg shadow-xl shadow-blue-100 hover:bg-blue-700 hover:-translate-y-0.5 transition-all flex items-center justify-center gap-3 mt-4">
+              <Zap size={24} fill="currentColor" /> CREATE ACCOUNT
+            </button>
+          </form>
+
+          <div className="mt-10 pt-8 border-t border-gray-50 text-center">
+            <p className="text-gray-500 font-medium">
+              Already have an account? <br/>
+              <Link to="/login" className="text-blue-600 font-black hover:underline mt-1 inline-block uppercase tracking-wider text-sm">Sign in here</Link>
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   )

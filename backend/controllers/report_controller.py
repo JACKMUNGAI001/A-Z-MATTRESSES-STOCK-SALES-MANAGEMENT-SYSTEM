@@ -32,5 +32,7 @@ def sales_summary_controller():
     return jsonify(summary), 200
 
 def deposits_summary_controller():
-    summary = get_deposits_summary()
+    user = get_jwt_identity()
+    shop_id = user.get("shop_id") if user.get("role") == "attendant" else None
+    summary = get_deposits_summary(shop_id)
     return jsonify(summary), 200

@@ -5,14 +5,14 @@ import Header from '../components/Header'
 import Card from '../components/Card'
 import { AuthContext } from '../context/AuthContext'
 import api from '../api/api'
+import { Store, Package, TrendingUp, Users, Wallet } from 'lucide-react'
 
 export default function AttendantDashboard(){
   const { user } = useContext(AuthContext)
   const [shopStock, setShopStock] = useState([]);
   const [availableItems, setAvailableItems] = useState([]);
-  const [todaysSales, setTodaysSales] = useState(0);
-  const [monthsSales, setMonthsSales] = useState(0);
-  const [yearsSales, setYearsSales] = useState(0);
+  const [salesSummary, setSalesSummary] = useState(null);
+  const [depositsSummary, setDepositsSummary] = useState(null);
   const [lowStockCount, setLowStockCount] = useState(0);
   const [depositCustomersCount, setDepositCustomersCount] = useState(0);
 
@@ -25,10 +25,12 @@ export default function AttendantDashboard(){
     const fetchDashboardData = async () => {
         try {
             // Fetch Sales Summary
-            const salesResponse = await api.get('/reports/sales-summary');
-            setTodaysSales(salesResponse.data.today);
-            setMonthsSales(salesResponse.data.month);
-            setYearsSales(salesResponse.data.year);
+            const salesRes = await api.get('/reports/sales-summary');
+            setSalesSummary(salesRes.data);
+
+            // Fetch Deposits Summary
+            const depositsRes = await api.get('/reports/deposits-summary');
+            setDepositsSummary(depositsRes.data);
 
             // Fetch Low Stock Count
             const lowStockResponse = await api.get('/stocks/low_stock_count');
@@ -40,7 +42,6 @@ export default function AttendantDashboard(){
 
         } catch (err) {
             console.error('Error fetching dashboard data:', err);
-            alert('Error fetching dashboard data');
         }
     };
 
@@ -52,7 +53,7 @@ export default function AttendantDashboard(){
       const response = await api.get(`/stocks/${shopId}`);
       setShopStock(response.data);
     } catch (err) {
-      alert('Error fetching shop stock');
+      console.error('Error fetching shop stock');
     }
   };
 
@@ -61,64 +62,128 @@ export default function AttendantDashboard(){
       const response = await api.get("/items");
       setAvailableItems(response.data);
     } catch (err) {
-      alert("Error fetching available items");
+      console.error("Error fetching available items");
     }
   };
 
+  const formatCurrency = (val) => {
+    return new Intl.NumberFormat('en-KE', { style: 'currency', currency: 'KES', minimumFractionDigits: 0 }).format(val || 0);
+  };
+
   return (
-    <div className="flex">
+    <div className="flex bg-[#f1f5f9] min-h-screen">
       <Sidebar role="attendant" />
-      <main className="flex-1 p-6">
+      <main className="flex-1 p-8 max-w-7xl mx-auto w-full">
         <Header />
+        
         {user?.shop_name && (
-          <div className="mb-4 text-lg font-semibold">
-            Your Shop: {user.shop_name}
+          <div className="mb-6 flex items-center gap-2 text-blue-700 bg-blue-50 px-4 py-2 rounded-lg border border-blue-100 w-fit">
+            <Store size={20} />
+            <span className="font-bold">Your Location: {user.shop_name}</span>
           </div>
         )}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Link to="/attendant/sales" className="no-underline">
-              <Card title="Today's Sales">KES {todaysSales.toFixed(2)}</Card>
+
+        {/* SALES SUMMARY */}
+        <div className="mb-10">
+          <h3 className="text-xl font-bold text-gray-800 mb-4 tracking-tight border-l-4 border-l-blue-600 pl-3 text-sm uppercase tracking-widest text-gray-400">Sales Summary</h3>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <Link to="/attendant/sales" className="no-underline group">
+                <Card title="Today's Sales" interactive={true}>
+                  {salesSummary ? formatCurrency(salesSummary.today) : '...'}
+                </Card>
+            </Link>
+            <Link to="/attendant/sales/week" className="no-underline group">
+                <Card title="This Week's" interactive={true}>
+                  {salesSummary ? formatCurrency(salesSummary.week) : '...'}
+                </Card>
+            </Link>
+            <Link to="/attendant/sales/month" className="no-underline group">
+                <Card title="This Month's" interactive={true}>
+                  {salesSummary ? formatCurrency(salesSummary.month) : '...'}
+                </Card>
+            </Link>
+            <Link to="/attendant/sales/year" className="no-underline group">
+                <Card title="This Year's" interactive={true}>
+                  {salesSummary ? formatCurrency(salesSummary.year) : '...'}
+                </Card>
+            </Link>
+          </div>
+        </div>
+
+        {/* DEPOSITS SUMMARY */}
+        <div className="mb-10">
+          <h3 className="text-xl font-bold text-gray-800 mb-4 tracking-tight border-l-4 border-l-indigo-600 pl-3 text-sm uppercase tracking-widest text-gray-400">Deposit Collections</h3>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <Link to="/attendant/deposits/today" className="no-underline group">
+                <Card title="Today's" interactive={true}>
+                  {depositsSummary ? formatCurrency(depositsSummary.today) : '...'}
+                </Card>
+            </Link>
+            <Link to="/attendant/deposits/week" className="no-underline group">
+                <Card title="This Week's" interactive={true}>
+                  {depositsSummary ? formatCurrency(depositsSummary.week) : '...'}
+                </Card>
+            </Link>
+            <Link to="/attendant/deposits/month" className="no-underline group">
+                <Card title="This Month's" interactive={true}>
+                  {depositsSummary ? formatCurrency(depositsSummary.month) : '...'}
+                </Card>
+            </Link>
+            <Link to="/attendant/deposits/year" className="no-underline group">
+                <Card title="This Year's" interactive={true}>
+                  {depositsSummary ? formatCurrency(depositsSummary.year) : '...'}
+                </Card>
+            </Link>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+          <Link to="/attendant/low-stock" className="no-underline group">
+              <Card title="Low Stock Items" interactive={true} className="border-l-4 border-l-orange-500 flex justify-between items-center">
+                <span>{lowStockCount}</span>
+                <Package className="text-orange-200 group-hover:text-orange-400 transition-colors" size={40} />
+              </Card>
           </Link>
-          <Link to="/attendant/sales/month" className="no-underline">
-              <Card title="This Month's Sales">KES {monthsSales.toFixed(2)}</Card>
-          </Link>
-          <Link to="/attendant/sales/year" className="no-underline">
-              <Card title="This Year's Sales">KES {yearsSales.toFixed(2)}</Card>
-          </Link>
-          <Link to="/attendant/low-stock" className="no-underline">
-              <Card title="Low Stock Items">{lowStockCount}</Card>
-          </Link>
-          <Link to="/attendant/deposits" className="no-underline">
-              <Card title="Deposit Customers">{depositCustomersCount}</Card>
+          <Link to="/deposits" className="no-underline group">
+              <Card title="Manage Deposits" interactive={true} className="border-l-4 border-l-indigo-500 flex justify-between items-center">
+                <span>{depositCustomersCount} Accounts</span>
+                <Users className="text-indigo-200 group-hover:text-indigo-400 transition-colors" size={40} />
+              </Card>
           </Link>
         </div>
 
-        <div className="mt-6">
-          <h2 className="text-xl font-semibold mb-4">Current Stock</h2>
+        <div className="mt-10">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-bold text-gray-800 tracking-tight flex items-center gap-2">
+              <TrendingUp size={24} className="text-blue-600" />
+              Current Inventory
+            </h2>
+          </div>
+          
           {shopStock.length === 0 ? (
-            <p>No stock recorded for your shop.</p>
+            <div className="bg-white p-10 rounded-2xl shadow-sm border border-dashed border-gray-300 text-center text-gray-400">
+              No stock items recorded for your shop yet.
+            </div>
           ) : (
-            <div className="bg-white p-4 rounded-xl shadow">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Item Name</th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
-                    {user?.role !== "attendant" && (
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Buy Price</th>
-                    )}
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sell Price</th>
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+              <table className="min-w-full divide-y divide-gray-100">
+                <thead>
+                  <tr className="bg-gray-50/50">
+                    <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-widest">Item Name</th>
+                    <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-widest">Quantity</th>
+                    <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-widest">Sell Price</th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+                <tbody className="divide-y divide-gray-50 bg-white">
                   {shopStock.map((stock) => (
-                    <tr key={stock.id}>
-                      <td className="px-6 py-4 whitespace-nowrap">{stock.item_name}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">{stock.qty}</td>
-                      {user?.role !== "attendant" && (
-                        <td className="px-6 py-4 whitespace-nowrap">KES {stock.buy_price.toFixed(2)}</td>
-                      )}
-                      <td className="px-6 py-4 whitespace-nowrap">KES {stock.sell_price.toFixed(2)}</td>
+                    <tr key={stock.id} className="hover:bg-gray-50/50 transition-colors">
+                      <td className="px-6 py-4 whitespace-nowrap font-bold text-gray-900">{stock.item_name}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`px-3 py-1 rounded-full text-sm font-bold ${stock.qty <= 2 ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
+                          {stock.qty}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap font-mono text-gray-600">{formatCurrency(stock.sell_price)}</td>
                     </tr>
                   ))}
                 </tbody>

@@ -1,6 +1,9 @@
 import { useState, useEffect, useContext } from "react";
 import api, { API_BASE } from "../api/api";
 import { AuthContext } from "../context/AuthContext";
+import Sidebar from "../components/Sidebar";
+import Header from "../components/Header";
+import { UserPlus, History, Wallet, CheckCircle } from "lucide-react";
 
 export default function Deposits() {
   const { user } = useContext(AuthContext);
@@ -26,7 +29,7 @@ export default function Deposits() {
       const response = await api.get("/deposits");
       setDeposits(response.data);
     } catch (err) {
-      alert("Error fetching deposits");
+      console.error("Error fetching deposits");
     }
   };
 
@@ -35,7 +38,7 @@ export default function Deposits() {
       const response = await api.get("/items");
       setItems(response.data);
     } catch (err) {
-      alert("Error fetching items");
+      console.error("Error fetching items");
     }
   };
 
@@ -50,13 +53,7 @@ export default function Deposits() {
       await api.post("/deposits", data);
       alert("DEPOSIT SALE CREATED!");
       fetchDeposits();
-      setFormData({
-        buyer_name: "",
-        buyer_phone: "",
-        item_id: "",
-        selling_price: "",
-        amount: "",
-      });
+      setFormData({ buyer_name: "", buyer_phone: "", item_id: "", selling_price: "", amount: "" });
     } catch (err) {
       alert(`Error creating deposit sale: ${err.response?.data?.msg || err.message}`);
     }
@@ -83,10 +80,10 @@ export default function Deposits() {
       setReceiptUuid(response.data.receipt_uuid);
       alert("PAYMENT SUCCESSFUL");
       fetchDeposits();
-      setPaymentAmounts(prevAmounts => {
-        const newAmounts = { ...prevAmounts };
-        delete newAmounts[depositId];
-        return newAmounts;
+      setPaymentAmounts(prev => {
+        const next = { ...prev };
+        delete next[depositId];
+        return next;
       });
     } catch (err) {
       alert(`Error making payment: ${err.response?.data?.msg || err.message}`);
@@ -94,70 +91,108 @@ export default function Deposits() {
   };
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-semibold mb-4">Deposit Sales</h1>
+    <div className="flex bg-[#f1f5f9] min-h-screen">
+      <Sidebar role="attendant" />
+      <main className="flex-1 p-8 max-w-7xl mx-auto w-full">
+        <Header />
 
-      <div className="bg-white p-6 rounded-xl shadow mb-6">
-        <h2 className="text-xl font-semibold mb-4">Create Deposit Sale</h2>
-        <div className="grid grid-cols-2 gap-4">
-          <input name="buyer_name" placeholder="Buyer Name" value={formData.buyer_name} onChange={handleInputChange} className="w-full p-2 border rounded" />
-          <input name="buyer_phone" placeholder="Buyer Phone" value={formData.buyer_phone} onChange={handleInputChange} className="w-full p-2 border rounded" />
-          <select name="item_id" value={formData.item_id} onChange={handleInputChange} className="w-full p-2 border rounded">
-            <option value="">Select Item</option>
-            {items.map((item) => (
-              <option key={item.id} value={item.id}>{item.name}</option>
-            ))}
-          </select>
-          <input name="selling_price" placeholder="Selling Price" value={formData.selling_price} onChange={handleInputChange} className="w-full p-2 border rounded" />
-          <input name="amount" placeholder="Initial Payment" value={formData.amount} onChange={handleInputChange} className="w-full p-2 border rounded" />
-        </div>
-        <button onClick={createDepositSale} className="mt-4 bg-blue-600 text-white p-3 rounded-lg hover:bg-blue-700">
-          Create Deposit Sale
-        </button>
-      </div>
-
-      <div className="bg-white p-6 rounded-xl shadow">
-        <h2 className="text-xl font-semibold mb-4">Active Deposits</h2>
-        <table className="w-full">
-          <thead>
-            <tr>
-              <th className="text-left">Buyer</th>
-              <th className="text-left">Buyer Phone</th>
-              <th className="text-left">Item</th>
-              <th className="text-left">Total Paid</th>
-              <th className="text-left">Balance</th>
-              <th className="text-left">Make Payment</th>
-            </tr>
-          </thead>
-          <tbody>
-            {deposits.filter(d => d.status === 'active').map((deposit) => (
-              <tr key={deposit.id}>
-                <td>{deposit.buyer_name}</td>
-                <td>{deposit.buyer_phone}</td>
-                <td>{deposit.item_name}</td>
-                <td>{deposit.total_paid || 0}</td>
-                <td>{deposit.balance || 0}</td>
-                <td>
-                  <input
-                    type="number"
-                    value={paymentAmounts[deposit.id] || ""}
-                    onChange={(e) => setPaymentAmounts(prev => ({ ...prev, [deposit.id]: e.target.value }))}
-                    className="p-1 border rounded"
-                  />
-                  <button onClick={() => handlePayment(deposit.id)} className="bg-green-600 text-white p-1 rounded ml-2">Pay</button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        {receiptUuid && (
-          <div className="mt-4 text-center">
-            <a href={`${API_BASE}/receipts/${receiptUuid}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
-              View Receipt
-            </a>
+        {/* CREATE DEPOSIT */}
+        <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 mb-10">
+          <h2 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+            <UserPlus size={24} className="text-blue-600" />
+            New Deposit Sale
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div>
+              <label className="block text-sm font-bold text-gray-700 uppercase tracking-wider mb-2">Buyer Name</label>
+              <input name="buyer_name" placeholder="Full Name" value={formData.buyer_name} onChange={handleInputChange} className="w-full p-3 border border-gray-200 rounded-xl bg-gray-50 focus:ring-2 focus:ring-blue-500 outline-none" />
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-gray-700 uppercase tracking-wider mb-2">Phone Number</label>
+              <input name="buyer_phone" placeholder="07..." value={formData.buyer_phone} onChange={handleInputChange} className="w-full p-3 border border-gray-200 rounded-xl bg-gray-50 focus:ring-2 focus:ring-blue-500 outline-none" />
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-gray-700 uppercase tracking-wider mb-2">Select Item</label>
+              <select name="item_id" value={formData.item_id} onChange={handleInputChange} className="w-full p-3 border border-gray-200 rounded-xl bg-gray-50 focus:ring-2 focus:ring-blue-500 outline-none">
+                <option value="">-- Choose Product --</option>
+                {items.map((item) => (
+                  <option key={item.id} value={item.id}>{item.name}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-gray-700 uppercase tracking-wider mb-2">Selling Price</label>
+              <input name="selling_price" type="number" placeholder="KES" value={formData.selling_price} onChange={handleInputChange} className="w-full p-3 border border-gray-200 rounded-xl bg-gray-50 focus:ring-2 focus:ring-blue-500 outline-none font-bold" />
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-gray-700 uppercase tracking-wider mb-2">Initial Payment</label>
+              <input name="amount" type="number" placeholder="KES" value={formData.amount} onChange={handleInputChange} className="w-full p-3 border border-gray-200 rounded-xl bg-gray-50 focus:ring-2 focus:ring-blue-500 outline-none font-bold text-blue-600" />
+            </div>
           </div>
-        )}
-      </div>
+          <button onClick={createDepositSale} className="mt-8 bg-blue-600 text-white py-3 px-10 rounded-xl font-bold shadow-lg shadow-blue-100 hover:bg-blue-700 transition-all">
+            Create Deposit Sale
+          </button>
+        </div>
+
+        {/* ACTIVE DEPOSITS */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="bg-gray-50 px-8 py-4 border-b border-gray-100 flex justify-between items-center">
+            <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+              <History size={20} className="text-blue-600" />
+              Active Installment Sales
+            </h2>
+          </div>
+          
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50/50">
+                <tr>
+                  <th className="px-8 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-widest">Buyer</th>
+                  <th className="px-8 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-widest">Item</th>
+                  <th className="px-8 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-widest">Total Paid</th>
+                  <th className="px-8 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-widest">Balance</th>
+                  <th className="px-8 py-4 text-center text-xs font-bold text-gray-500 uppercase tracking-widest">Make Payment</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-50 bg-white">
+                {deposits.filter(d => d.status === 'active').map((deposit) => (
+                  <tr key={deposit.id} className="hover:bg-gray-50/50 transition-colors">
+                    <td className="px-8 py-4">
+                      <div className="font-bold text-gray-900">{deposit.buyer_name}</div>
+                      <div className="text-xs text-gray-500">{deposit.buyer_phone}</div>
+                    </td>
+                    <td className="px-8 py-4 font-medium text-gray-700">{deposit.item_name}</td>
+                    <td className="px-8 py-4 text-right font-bold text-gray-900">KES {(deposit.total_paid || 0).toLocaleString()}</td>
+                    <td className="px-8 py-4 text-right font-bold text-red-600">KES {(deposit.balance || 0).toLocaleString()}</td>
+                    <td className="px-8 py-4">
+                      <div className="flex items-center justify-center gap-2">
+                        <input
+                          type="number"
+                          placeholder="Amount"
+                          value={paymentAmounts[deposit.id] || ""}
+                          onChange={(e) => setPaymentAmounts(prev => ({ ...prev, [deposit.id]: e.target.value }))}
+                          className="w-24 p-2 border border-gray-200 rounded-lg text-sm bg-gray-50 focus:ring-2 focus:ring-blue-500 outline-none font-bold"
+                        />
+                        <button onClick={() => handlePayment(deposit.id)} className="bg-green-600 text-white p-2 rounded-lg hover:bg-green-700 transition-all">
+                          <CheckCircle size={18} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          
+          {receiptUuid && (
+            <div className="p-8 bg-blue-50 border-t border-blue-100 text-center">
+              <a href={`${API_BASE}/receipts/${receiptUuid}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-blue-700 font-bold hover:underline decoration-2">
+                <Wallet size={20} /> Click here to View last transaction receipt
+              </a>
+            </div>
+          )}
+        </div>
+      </main>
     </div>
   );
 }

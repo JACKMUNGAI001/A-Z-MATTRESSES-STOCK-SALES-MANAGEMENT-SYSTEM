@@ -2,7 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
-/* simple pastel background */
+/* Default background, handled by Tailwind dark mode if applied to body or html */
 body {
-  background: linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
+  @apply min-h-screen transition-colors duration-300;
+  background-color: #f1f5f9;
+}
+
+.dark body {
+  background: #111827; /* Tailwind gray-900 */
 }

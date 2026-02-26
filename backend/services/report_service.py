@@ -152,38 +152,34 @@ def get_sales_summary(shop_id=None):
         "year": float(year_query.scalar() or 0)
     }
 
-def get_deposits_summary():
+def get_deposits_summary(shop_id=None):
     now = datetime.utcnow()
     today_start = datetime.combine(now.date(), datetime.min.time())
     
-    # Today's deposits
-    deposits_today = db.session.query(func.sum(DepositPayment.amount)).filter(
-        DepositPayment.paid_on >= today_start
-    ).scalar() or 0
-
-    # This week's deposits
+    # Base queries
+    today_q = db.session.query(func.sum(DepositPayment.amount)).filter(DepositPayment.paid_on >= today_start)
+    
     start_of_week = today_start - timedelta(days=now.weekday())
-    deposits_week = db.session.query(func.sum(DepositPayment.amount)).filter(
-        DepositPayment.paid_on >= start_of_week
-    ).scalar() or 0
-
-    # This month's deposits
+    week_q = db.session.query(func.sum(DepositPayment.amount)).filter(DepositPayment.paid_on >= start_of_week)
+    
     start_of_month = datetime(now.year, now.month, 1)
-    deposits_month = db.session.query(func.sum(DepositPayment.amount)).filter(
-        DepositPayment.paid_on >= start_of_month
-    ).scalar() or 0
-
-    # This year's deposits
+    month_q = db.session.query(func.sum(DepositPayment.amount)).filter(DepositPayment.paid_on >= start_of_month)
+    
     start_of_year = datetime(now.year, 1, 1)
-    deposits_year = db.session.query(func.sum(DepositPayment.amount)).filter(
-        DepositPayment.paid_on >= start_of_year
-    ).scalar() or 0
+    year_q = db.session.query(func.sum(DepositPayment.amount)).filter(DepositPayment.paid_on >= start_of_year)
+
+    if shop_id:
+        # Join with DepositSale to filter by shop_id
+        today_q = today_q.join(DepositSale).filter(DepositSale.shop_id == shop_id)
+        week_q = week_q.join(DepositSale).filter(DepositSale.shop_id == shop_id)
+        month_q = month_q.join(DepositSale).filter(DepositSale.shop_id == shop_id)
+        year_q = year_q.join(DepositSale).filter(DepositSale.shop_id == shop_id)
 
     return {
-        "today": float(deposits_today),
-        "week": float(deposits_week),
-        "month": float(deposits_month),
-        "year": float(deposits_year)
+        "today": float(today_q.scalar() or 0),
+        "week": float(week_q.scalar() or 0),
+        "month": float(month_q.scalar() or 0),
+        "year": float(year_q.scalar() or 0)
     }
 
 

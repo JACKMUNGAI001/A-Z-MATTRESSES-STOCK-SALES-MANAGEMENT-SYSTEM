@@ -1,5 +1,10 @@
 from flask import request, jsonify
-from services.deposit_service import create_deposit, add_deposit_payment, get_deposit_customers_count, get_deposit_customers, get_all_deposits, get_deposits_by_shop_id
+from services.deposit_service import (
+    create_deposit, add_deposit_payment, get_deposit_customers_count, 
+    get_deposit_customers, get_all_deposits, get_deposits_by_shop_id,
+    get_todays_deposit_payments, get_weeks_deposit_payments,
+    get_months_deposit_payments, get_years_deposit_payments
+)
 from models.deposit import DepositSale
 from flask_jwt_extended import get_jwt_identity
 
@@ -44,3 +49,22 @@ def deposit_customers_controller():
     customers = get_deposit_customers()
     return jsonify(customers), 200
 
+def todays_deposits_controller():
+    user = get_jwt_identity()
+    shop_id = user.get("shop_id") if user.get("role") == "attendant" else None
+    return jsonify(get_todays_deposit_payments(shop_id)), 200
+
+def weeks_deposits_controller():
+    user = get_jwt_identity()
+    shop_id = user.get("shop_id") if user.get("role") == "attendant" else None
+    return jsonify(get_weeks_deposit_payments(shop_id)), 200
+
+def months_deposits_controller():
+    user = get_jwt_identity()
+    shop_id = user.get("shop_id") if user.get("role") == "attendant" else None
+    return jsonify(get_months_deposit_payments(shop_id)), 200
+
+def years_deposits_controller():
+    user = get_jwt_identity()
+    shop_id = user.get("shop_id") if user.get("role") == "attendant" else None
+    return jsonify(get_years_deposit_payments(shop_id)), 200
