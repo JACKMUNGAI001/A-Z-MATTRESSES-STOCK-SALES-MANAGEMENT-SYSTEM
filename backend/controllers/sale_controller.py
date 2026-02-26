@@ -17,7 +17,11 @@ def create_sale_controller():
         return jsonify({"msg":str(e)}), 400
 
 def get_all_sales_controller():
-    sales = get_all_sales()
+    user = get_jwt_identity()
+    if user.get("role") == "attendant":
+        sales = get_sales_by_shop(user.get("shop_id"))
+    else:
+        sales = get_all_sales()
     return jsonify(sales), 200
 
 def get_shop_sales_controller(shop_id):
@@ -25,17 +29,25 @@ def get_shop_sales_controller(shop_id):
     return jsonify(sales), 200
 
 def todays_sales_controller():
-    sales = get_todays_sales()
+    user = get_jwt_identity()
+    shop_id = user.get("shop_id") if user.get("role") == "attendant" else None
+    sales = get_todays_sales(shop_id)
     return jsonify(sales), 200
 
 def current_weeks_sales_controller():
-    sales = get_current_weeks_sales()
+    user = get_jwt_identity()
+    shop_id = user.get("shop_id") if user.get("role") == "attendant" else None
+    sales = get_current_weeks_sales(shop_id)
     return jsonify(sales), 200
 
 def current_months_sales_controller():
-    sales = get_current_months_sales()
+    user = get_jwt_identity()
+    shop_id = user.get("shop_id") if user.get("role") == "attendant" else None
+    sales = get_current_months_sales(shop_id)
     return jsonify(sales), 200
 
 def current_years_sales_controller():
-    sales = get_current_years_sales()
+    user = get_jwt_identity()
+    shop_id = user.get("shop_id") if user.get("role") == "attendant" else None
+    sales = get_current_years_sales(shop_id)
     return jsonify(sales), 200

@@ -103,49 +103,48 @@ def get_pnl_report(year, month, shop_id=None):
         "net_profit": float(net_profit)
     }
 
-def get_daily_sales():
+def get_daily_sales(shop_id=None):
     today = datetime.utcnow().date()
     start_of_day = datetime.combine(today, datetime.min.time())
     end_of_day = datetime.combine(today, datetime.max.time())
 
-    total_sales_today = db.session.query(func.sum(Sale.total_amount)).filter(
+    query = db.session.query(func.sum(Sale.total_amount)).filter(
         Sale.created_at >= start_of_day,
         Sale.created_at <= end_of_day
-    ).scalar() or 0
+    )
+    if shop_id:
+        query = query.filter(Sale.shop_id == shop_id)
+
+    total_sales_today = query.scalar() or 0
     return {"total_sales": float(total_sales_today)}
 
-def get_sales_summary():
+def get_sales_summary(shop_id=None):
     now = datetime.utcnow()
     today_start = datetime.combine(now.date(), datetime.min.time())
     
-    # Today's sales
-    sales_today = db.session.query(func.sum(Sale.total_amount)).filter(
-        Sale.created_at >= today_start
-    ).scalar() or 0
-
-    # This week's sales
+    # Base queries
+    today_query = db.session.query(func.sum(Sale.total_amount)).filter(Sale.created_at >= today_start)
+    
     start_of_week = today_start - timedelta(days=now.weekday())
-    sales_week = db.session.query(func.sum(Sale.total_amount)).filter(
-        Sale.created_at >= start_of_week
-    ).scalar() or 0
-
-    # This month's sales
+    week_query = db.session.query(func.sum(Sale.total_amount)).filter(Sale.created_at >= start_of_week)
+    
     start_of_month = datetime(now.year, now.month, 1)
-    sales_month = db.session.query(func.sum(Sale.total_amount)).filter(
-        Sale.created_at >= start_of_month
-    ).scalar() or 0
-
-    # This year's sales
+    month_query = db.session.query(func.sum(Sale.total_amount)).filter(Sale.created_at >= start_of_month)
+    
     start_of_year = datetime(now.year, 1, 1)
-    sales_year = db.session.query(func.sum(Sale.total_amount)).filter(
-        Sale.created_at >= start_of_year
-    ).scalar() or 0
+    year_query = db.session.query(func.sum(Sale.total_amount)).filter(Sale.created_at >= start_of_year)
+
+    if shop_id:
+        today_query = today_query.filter(Sale.shop_id == shop_id)
+        week_query = week_query.filter(Sale.shop_id == shop_id)
+        month_query = month_query.filter(Sale.shop_id == shop_id)
+        year_query = year_query.filter(Sale.shop_id == shop_id)
 
     return {
-        "today": float(sales_today),
-        "week": float(sales_week),
-        "month": float(sales_month),
-        "year": float(sales_year)
+        "today": float(today_query.scalar() or 0),
+        "week": float(week_query.scalar() or 0),
+        "month": float(month_query.scalar() or 0),
+        "year": float(year_query.scalar() or 0)
     }
 
 def get_deposits_summary():

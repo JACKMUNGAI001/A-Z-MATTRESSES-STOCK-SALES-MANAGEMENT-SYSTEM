@@ -109,14 +109,20 @@ def create_deposit(shop_id, item_id, buyer_name, buyer_phone, selling_price, cre
         # Create initial DepositPayment
         dp = DepositPayment(deposit_id=dep.id, amount=amount, payment_method="cash", recorded_by=created_by, paid_on=datetime.utcnow())
         db.session.add(dp)
+        db.session.flush()
+
+        shop = Shop.query.get(shop_id)
+        attendant = User.query.get(created_by)
         
-        if current_app.config.get("RESERVE_ON_DEPOSIT", True):
-            stock = ShopStock.query.filter_by(shop_id=shop_id, item_id=item_id).first()
-            if not stock or stock.quantity < 1:
-                raise ValueError("Insufficient stock to reserve")
-            stock.quantity -= 1
-            mv = StockMovement(shop_id=shop_id, item_id=item_id, movement_type="reserve", qty=-1, user_id=created_by, created_at=datetime.utcnow())
-            db.session.add(mv)
+        # Generate receipt for the initial payment
+        receipt_html = _generate_deposit_receipt_html(dp, dep, shop, attendant)
+        receipt = create_receipt(payload=receipt_html)
+        dp.receipt_uuid = receipt.uuid
+        
+        # Check stock availability but DO NOT decrease quantity yet
+        stock = ShopStock.query.filter_by(shop_id=shop_id, item_id=item_id).first()
+        if not stock or stock.quantity < 1:
+            raise ValueError("Insufficient stock to start a deposit")
             
         db.session.commit()
         return dep
@@ -140,6 +146,12 @@ def add_deposit_payment(deposit_id, amount, payment_method, recorded_by):
         current_app.logger.debug(f"[add_deposit_payment] Inside transaction block.")
         dep = DepositSale.query.get_or_404(deposit_id)
         current_app.logger.debug(f"[add_deposit_payment] Fetched deposit sale: {dep.id}")
+
+        # Check balance before adding payment
+        total_paid_before = db.session.query(func.sum(DepositPayment.amount)).filter(DepositPayment.deposit_id == deposit_id).scalar() or 0
+        balance = float(dep.selling_price) - float(total_paid_before)
+        if float(amount) > (balance + 0.01): # Adding small epsilon for float precision
+            raise ValueError(f"Payment amount (KES {amount}) exceeds the remaining balance (KES {balance})")
 
         dp = DepositPayment(deposit_id=deposit_id, amount=amount, payment_method=payment_method, recorded_by=recorded_by, paid_on=datetime.utcnow())
         db.session.add(dp)
@@ -180,11 +192,14 @@ def add_deposit_payment(deposit_id, amount, payment_method, recorded_by):
             db.session.add(si)
             current_app.logger.debug(f"[add_deposit_payment] Added sale item: {si.id}")
 
-            if not current_app.config.get("RESERVE_ON_DEPOSIT", True):
-                stock.quantity -= 1
-                mv = StockMovement(shop_id=dep.shop_id, item_id=dep.item_id, movement_type="sale", qty=-1, user_id=recorded_by, created_at=datetime.utcnow())
-                db.session.add(mv)
-                current_app.logger.debug(f"[add_deposit_payment] Updated stock and added stock movement.")
+            # Decrease stock quantity now that the deposit is complete
+            if stock.quantity < 1:
+                raise ValueError("Insufficient stock to complete the sale")
+            
+            stock.quantity -= 1
+            mv = StockMovement(shop_id=dep.shop_id, item_id=dep.item_id, movement_type="sale", qty=-1, user_id=recorded_by, created_at=datetime.utcnow())
+            db.session.add(mv)
+            current_app.logger.debug(f"[add_deposit_payment] Updated stock and added stock movement.")
 
             # Notify admin
             from models.notification import Notification
@@ -236,6 +251,7 @@ def _serialize_deposit(deposit):
         "id": deposit.id,
         "uuid": deposit.uuid,
         "shop_id": deposit.shop_id,
+        "item_id": deposit.item_id,
         "shop_name": shop.name if shop else "N/A",
         "item_name": item.name if item else "N/A",
         "buyer_name": deposit.buyer_name,

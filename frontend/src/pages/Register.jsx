@@ -34,7 +34,13 @@ export default function Register(){
     }
   }
   return (
-    <div className="flex items-center justify-center h-screen">
+    <div className="flex items-center justify-center h-screen relative">
+      <button
+        onClick={() => navigate(-1)}
+        className="absolute top-6 left-10 bg-gray-200 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-300 flex items-center gap-1"
+      >
+        <span>←</span> Back
+      </button>
       <div className="w-full max-w-md bg-white p-8 rounded shadow">
         <h1 className="text-2xl font-bold mb-4">Register</h1>
         {msg && <div className="text-red-600 mb-3">{msg}</div>}

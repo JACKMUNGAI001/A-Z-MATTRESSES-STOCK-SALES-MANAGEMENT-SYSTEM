@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import api from "../api/api";
+import api, { API_BASE } from "../api/api";
 import AttendantLayout from "../components/AttendantLayout";
 
 export default function AllDeposits() {
@@ -43,6 +43,7 @@ export default function AllDeposits() {
                   <th className="text-left">Total Paid</th>
                   <th className="text-left">Balance</th>
                   <th className="text-left">Status</th>
+                  <th className="text-left">Receipts</th>
                 </tr>
               </thead>
               <tbody>
@@ -58,6 +59,16 @@ export default function AllDeposits() {
                     <td>KES {deposit.total_paid.toLocaleString()}</td>
                     <td>KES {deposit.balance.toLocaleString()}</td>
                     <td>{deposit.status}</td>
+                    <td>
+                      <a
+                        href={`${API_BASE}/receipts/deposit/${deposit.id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:underline text-xs font-semibold"
+                      >
+                        VIEW RECEIPTS
+                      </a>
+                    </td>
                   </tr>
                 ))}
               </tbody>

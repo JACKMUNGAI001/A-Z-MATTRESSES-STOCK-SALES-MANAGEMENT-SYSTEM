@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import api from "../api/api";
+import api, { API_BASE } from "../api/api";
 import AttendantLayout from "../components/AttendantLayout";
 
 export default function AllSales() {
@@ -38,6 +38,7 @@ export default function AllSales() {
                   <th className="text-left">Attendant</th>
                   <th className="text-left">Total Amount</th>
                   <th className="text-left">Payment Type</th>
+                  <th className="text-left">Receipt</th>
                 </tr>
               </thead>
               <tbody>
@@ -48,6 +49,18 @@ export default function AllSales() {
                     <td>{sale.attendant_name}</td>
                     <td>KES {sale.total_amount.toLocaleString()}</td>
                     <td>{sale.payment_type}</td>
+                    <td>
+                      {sale.receipt_uuid && (
+                        <a
+                          href={`${API_BASE}/receipts/${sale.receipt_uuid}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:underline"
+                        >
+                          View Receipt
+                        </a>
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>

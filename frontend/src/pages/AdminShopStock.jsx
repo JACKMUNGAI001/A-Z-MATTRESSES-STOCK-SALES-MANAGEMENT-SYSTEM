@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import api from "../../api/api";
-import AttendantLayout from "../../components/AttendantLayout"; // Import AttendantLayout
+import api from "../api/api";
+import AttendantLayout from "../components/AttendantLayout"; // Import AttendantLayout
 
 export default function AdminShopStock() {
   const { shopId } = useParams();

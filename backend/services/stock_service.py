@@ -1,5 +1,7 @@
 from extensions import db
 from models.stock import ShopStock, StockMovement
+from models.product import Item
+from models.shop import Shop
 from datetime import datetime
 
 def adjust_stock(shop_id, item_id, qty, movement_type="adjustment", user_id=None, buy_price=None, sell_price=None):
@@ -16,20 +18,33 @@ def adjust_stock(shop_id, item_id, qty, movement_type="adjustment", user_id=None
     db.session.commit()
     return stock
 
-def check_low_stock(threshold=2):
-    return ShopStock.query.filter(ShopStock.quantity <= threshold, ShopStock.quantity > 0).all()
+def check_low_stock(threshold=2, shop_id=None):
+    query = ShopStock.query.filter(ShopStock.quantity <= threshold)
+    if shop_id:
+        query = query.filter(ShopStock.shop_id == shop_id)
+    return query.all()
 
-def get_low_stock_count(threshold=2):
-    return {"count": ShopStock.query.filter(ShopStock.quantity <= threshold, ShopStock.quantity > 0).count()}
+def get_low_stock_count(threshold=2, shop_id=None):
+    query = ShopStock.query.filter(ShopStock.quantity <= threshold)
+    if shop_id:
+        query = query.filter(ShopStock.shop_id == shop_id)
+    return {"count": query.count()}
 
-def get_low_stock_items(threshold=2):
-    low_stock = ShopStock.query.filter(ShopStock.quantity <= threshold, ShopStock.quantity > 0).all()
+def get_low_stock_items(threshold=2, shop_id=None):
+    query = ShopStock.query.filter(ShopStock.quantity <= threshold)
+    if shop_id:
+        query = query.filter(ShopStock.shop_id == shop_id)
+    low_stock = query.all()
     out = []
     for s in low_stock:
+        item = Item.query.get(s.item_id)
+        shop = Shop.query.get(s.shop_id)
         out.append({
             "id":s.id,
             "item_id":s.item_id,
+            "item_name": item.name if item else "N/A",
             "shop_id":s.shop_id,
+            "shop_name": shop.name if shop else "N/A",
             "qty":s.quantity,
             "sell_price":float(s.sell_price or 0),
             "buy_price":float(s.buy_price or 0)
@@ -48,4 +63,3 @@ def delete_stock(shop_id, item_id, user_id):
     db.session.add(mv)
     db.session.commit()
     return True
-

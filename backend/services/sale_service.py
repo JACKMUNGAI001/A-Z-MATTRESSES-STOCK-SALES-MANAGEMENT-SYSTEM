@@ -121,10 +121,10 @@ def _serialize_sale(sale):
         product = Item.query.get(item.item_id)
         items_summary.append({
             "item_id": item.item_id,
-            "item_name": product.name,
+            "item_name": product.name if product else "N/A",
             "qty": item.qty,
-            "unit_price": float(item.unit_price),
-            "unit_cost": float(item.unit_cost)
+            "unit_price": float(item.unit_price) if item.unit_price is not None else 0.0,
+            "unit_cost": float(item.unit_cost) if item.unit_cost is not None else 0.0
         })
     return {
         "id": sale.id,
@@ -132,9 +132,10 @@ def _serialize_sale(sale):
         "shop_name": shop.name if shop else "N/A",
         "user_id": sale.user_id,
         "attendant_name": attendant.name if attendant else "N/A",
-        "total_amount": float(sale.total_amount),
+        "total_amount": float(sale.total_amount) if sale.total_amount is not None else 0.0,
         "payment_type": sale.payment_type,
         "created_at": sale.created_at.isoformat(),
+        "receipt_uuid": sale.receipt_uuid,
         "items": items_summary
     }
 
@@ -146,47 +147,56 @@ def get_sales_by_shop(shop_id):
     sales = Sale.query.filter_by(shop_id=shop_id).order_by(Sale.created_at.desc()).all()
     return [_serialize_sale(sale) for sale in sales]
 
-def get_todays_sales():
+def get_todays_sales(shop_id=None):
     today = datetime.utcnow().date()
-    sales = Sale.query.filter(
-        func.extract('year', Sale.created_at) == today.year,
-        func.extract('month', Sale.created_at) == today.month,
-        func.extract('day', Sale.created_at) == today.day
-    ).all()
+    start_of_day = datetime(today.year, today.month, today.day)
+    end_of_day = start_of_day + timedelta(days=1, microseconds=-1)
+    
+    query = Sale.query.filter(Sale.created_at.between(start_of_day, end_of_day))
+    if shop_id:
+        query = query.filter(Sale.shop_id == shop_id)
+        
+    sales = query.all()
     return [_serialize_sale(sale) for sale in sales]
 
-def get_current_weeks_sales():
-    today = datetime.utcnow().date()
+def get_current_weeks_sales(shop_id=None):
+    now = datetime.utcnow()
     # Find the start of the current week (Monday)
-    start_of_week = today - timedelta(days=today.weekday())
-    end_of_week = start_of_week + timedelta(days=6) # End of Sunday
+    start_of_week = datetime.combine(now.date() - timedelta(days=now.weekday()), datetime.min.time())
+    end_of_week = start_of_week + timedelta(days=7, microseconds=-1)
 
-    sales = Sale.query.filter(
-        Sale.created_at.between(start_of_week, end_of_week + timedelta(days=1, microseconds=-1)) # Include all of Sunday
-    ).all()
+    query = Sale.query.filter(Sale.created_at.between(start_of_week, end_of_week))
+    if shop_id:
+        query = query.filter(Sale.shop_id == shop_id)
+        
+    sales = query.all()
     return [_serialize_sale(sale) for sale in sales]
 
-def get_current_months_sales():
-    today = datetime.utcnow().date()
-    start_of_month = datetime(today.year, today.month, 1).date()
-    # Calculate end of month (first day of next month minus one day)
-    if today.month == 12:
-        end_of_month = datetime(today.year + 1, 1, 1).date() - timedelta(days=1)
+def get_current_months_sales(shop_id=None):
+    now = datetime.utcnow()
+    start_of_month = datetime(now.year, now.month, 1)
+    # Calculate end of month
+    if now.month == 12:
+        end_of_month = datetime(now.year + 1, 1, 1) - timedelta(microseconds=1)
     else:
-        end_of_month = datetime(today.year, today.month + 1, 1).date() - timedelta(days=1)
+        end_of_month = datetime(now.year, now.month + 1, 1) - timedelta(microseconds=1)
 
-    sales = Sale.query.filter(
-        Sale.created_at.between(start_of_month, end_of_month + timedelta(days=1, microseconds=-1))
-    ).all()
+    query = Sale.query.filter(Sale.created_at.between(start_of_month, end_of_month))
+    if shop_id:
+        query = query.filter(Sale.shop_id == shop_id)
+        
+    sales = query.all()
     return [_serialize_sale(sale) for sale in sales]
 
-def get_current_years_sales():
-    today = datetime.utcnow().date()
-    start_of_year = datetime(today.year, 1, 1).date()
-    end_of_year = datetime(today.year, 12, 31).date()
+def get_current_years_sales(shop_id=None):
+    now = datetime.utcnow()
+    start_of_year = datetime(now.year, 1, 1)
+    end_of_year = datetime(now.year, 12, 31, 23, 59, 59, 999999)
 
-    sales = Sale.query.filter(
-        Sale.created_at.between(start_of_year, end_of_year + timedelta(days=1, microseconds=-1))
-    ).all()
+    query = Sale.query.filter(Sale.created_at.between(start_of_year, end_of_year))
+    if shop_id:
+        query = query.filter(Sale.shop_id == shop_id)
+        
+    sales = query.all()
     return [_serialize_sale(sale) for sale in sales]
 

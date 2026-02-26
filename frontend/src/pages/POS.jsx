@@ -1,5 +1,5 @@
 import { useState, useEffect, useContext } from "react";
-import api from "../api/api";
+import api, { API_BASE } from "../api/api";
 import { AuthContext } from "../context/AuthContext";
 
 export default function POS() {
@@ -175,7 +175,7 @@ export default function POS() {
         {receiptUuid && (
           <div className="mt-4 text-center">
             <a
-              href={`/receipts/${receiptUuid}`}
+              href={`${API_BASE}/receipts/${receiptUuid}`}
               target="_blank"
               rel="noopener noreferrer"
               className="text-blue-600 hover:underline"

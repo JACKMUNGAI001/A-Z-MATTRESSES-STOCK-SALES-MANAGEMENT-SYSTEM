@@ -1,5 +1,5 @@
 import { useState, useEffect, useContext } from "react";
-import api from "../api/api";
+import api, { API_BASE } from "../api/api";
 import { AuthContext } from "../context/AuthContext";
 
 export default function Deposits() {
@@ -68,6 +68,13 @@ export default function Deposits() {
       alert("Please enter a valid amount");
       return;
     }
+
+    const deposit = deposits.find(d => d.id === depositId);
+    if (deposit && parseFloat(amount) > parseFloat(deposit.balance)) {
+      alert(`Payment amount (KES ${amount}) exceeds the remaining balance (KES ${deposit.balance})`);
+      return;
+    }
+
     try {
       const response = await api.post(`/deposits/${depositId}/payments`, {
         amount: amount,
@@ -127,7 +134,7 @@ export default function Deposits() {
               <tr key={deposit.id}>
                 <td>{deposit.buyer_name}</td>
                 <td>{deposit.buyer_phone}</td>
-                <td>{items.find(i => i.id === deposit.item_id)?.name}</td>
+                <td>{deposit.item_name}</td>
                 <td>{deposit.total_paid || 0}</td>
                 <td>{deposit.balance || 0}</td>
                 <td>
@@ -145,7 +152,7 @@ export default function Deposits() {
         </table>
         {receiptUuid && (
           <div className="mt-4 text-center">
-            <a href={`/receipts/${receiptUuid}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+            <a href={`${API_BASE}/receipts/${receiptUuid}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
               View Receipt
             </a>
           </div>

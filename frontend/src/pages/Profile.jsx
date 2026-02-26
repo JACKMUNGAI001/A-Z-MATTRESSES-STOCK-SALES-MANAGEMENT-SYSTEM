@@ -11,6 +11,8 @@ export default function Profile() {
     new_password: "",
     confirm_password: "",
   });
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -105,30 +107,48 @@ export default function Profile() {
       <div className="bg-white p-6 rounded-xl shadow">
         <h2 className="text-xl font-semibold mb-4">Change Password</h2>
         <div className="grid grid-cols-2 gap-4">
-          <div>
+          <div className="relative">
             <label>New Password</label>
-            <input
-              name="new_password"
-              type="password"
-              className="w-full border p-2 rounded mt-1"
-              value={passwordData.new_password}
-              onChange={handlePasswordChange}
-            />
+            <div className="relative">
+              <input
+                name="new_password"
+                type={showNewPassword ? "text" : "password"}
+                className="w-full border p-2 rounded mt-1 pr-12"
+                value={passwordData.new_password}
+                onChange={handlePasswordChange}
+              />
+              <button
+                type="button"
+                className="absolute right-2 top-1/2 -translate-y-1/2 mt-0.5 text-gray-500 hover:text-gray-700 text-sm font-medium"
+                onClick={() => setShowNewPassword(!showNewPassword)}
+              >
+                {showNewPassword ? "Hide" : "Show"}
+              </button>
+            </div>
           </div>
-          <div>
+          <div className="relative">
             <label>Confirm New Password</label>
-            <input
-              name="confirm_password"
-              type="password"
-              className="w-full border p-2 rounded mt-1"
-              value={passwordData.confirm_password}
-              onChange={handlePasswordChange}
-            />
+            <div className="relative">
+              <input
+                name="confirm_password"
+                type={showConfirmPassword ? "text" : "password"}
+                className="w-full border p-2 rounded mt-1 pr-12"
+                value={passwordData.confirm_password}
+                onChange={handlePasswordChange}
+              />
+              <button
+                type="button"
+                className="absolute right-2 top-1/2 -translate-y-1/2 mt-0.5 text-gray-500 hover:text-gray-700 text-sm font-medium"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              >
+                {showConfirmPassword ? "Hide" : "Show"}
+              </button>
+            </div>
           </div>
         </div>
         <button
           onClick={changePassword}
-          className="bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 mt-4"
+          className="bg-blue-600 text-white p-3 rounded-lg hover:bg-blue-700 mt-4 w-full md:w-auto px-6"
         >
           Change Password
         </button>

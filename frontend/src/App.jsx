@@ -7,6 +7,8 @@ import Expenses from "./pages/Expenses";
 import Profile from "./pages/Profile";
 import Login from "./pages/Login";
 import TodaysSales from "./pages/TodaysSales";
+import MonthsSales from "./pages/MonthsSales";
+import YearsSales from "./pages/YearsSales";
 import LowStockItems from "./pages/LowStockItems";
 import DepositCustomers from "./pages/DepositCustomers";
 import AdminDashboard from "./pages/AdminDashboard";
@@ -35,6 +37,8 @@ function App() {
         <Route path="/expenses" element={<ProtectedRoute><Expenses /></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
         <Route path="/attendant/sales" element={<ProtectedRoute><AttendantLayout><TodaysSales /></AttendantLayout></ProtectedRoute>} />
+        <Route path="/attendant/sales/month" element={<ProtectedRoute><AttendantLayout><MonthsSales /></AttendantLayout></ProtectedRoute>} />
+        <Route path="/attendant/sales/year" element={<ProtectedRoute><AttendantLayout><YearsSales /></AttendantLayout></ProtectedRoute>} />
         <Route path="/attendant/low-stock" element={<ProtectedRoute><AttendantLayout><LowStockItems /></AttendantLayout></ProtectedRoute>} />
         <Route path="/attendant/deposits" element={<ProtectedRoute><AttendantLayout><DepositCustomers /></AttendantLayout></ProtectedRoute>} />
         

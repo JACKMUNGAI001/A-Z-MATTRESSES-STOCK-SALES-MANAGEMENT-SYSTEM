@@ -11,6 +11,8 @@ export default function AttendantDashboard(){
   const [shopStock, setShopStock] = useState([]);
   const [availableItems, setAvailableItems] = useState([]);
   const [todaysSales, setTodaysSales] = useState(0);
+  const [monthsSales, setMonthsSales] = useState(0);
+  const [yearsSales, setYearsSales] = useState(0);
   const [lowStockCount, setLowStockCount] = useState(0);
   const [depositCustomersCount, setDepositCustomersCount] = useState(0);
 
@@ -22,9 +24,11 @@ export default function AttendantDashboard(){
 
     const fetchDashboardData = async () => {
         try {
-            // Fetch Today's Sales
-            const salesResponse = await api.get('/reports/daily_sales');
-            setTodaysSales(salesResponse.data.total_sales);
+            // Fetch Sales Summary
+            const salesResponse = await api.get('/reports/sales-summary');
+            setTodaysSales(salesResponse.data.today);
+            setMonthsSales(salesResponse.data.month);
+            setYearsSales(salesResponse.data.year);
 
             // Fetch Low Stock Count
             const lowStockResponse = await api.get('/stocks/low_stock_count');
@@ -71,9 +75,15 @@ export default function AttendantDashboard(){
             Your Shop: {user.shop_name}
           </div>
         )}
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Link to="/attendant/sales" className="no-underline">
               <Card title="Today's Sales">KES {todaysSales.toFixed(2)}</Card>
+          </Link>
+          <Link to="/attendant/sales/month" className="no-underline">
+              <Card title="This Month's Sales">KES {monthsSales.toFixed(2)}</Card>
+          </Link>
+          <Link to="/attendant/sales/year" className="no-underline">
+              <Card title="This Year's Sales">KES {yearsSales.toFixed(2)}</Card>
           </Link>
           <Link to="/attendant/low-stock" className="no-underline">
               <Card title="Low Stock Items">{lowStockCount}</Card>
@@ -103,7 +113,7 @@ export default function AttendantDashboard(){
                 <tbody className="bg-white divide-y divide-gray-200">
                   {shopStock.map((stock) => (
                     <tr key={stock.id}>
-                      <td className="px-6 py-4 whitespace-nowrap">{availableItems.find(item => item.id === stock.item_id)?.name}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">{stock.item_name}</td>
                       <td className="px-6 py-4 whitespace-nowrap">{stock.qty}</td>
                       {user?.role !== "attendant" && (
                         <td className="px-6 py-4 whitespace-nowrap">KES {stock.buy_price.toFixed(2)}</td>
