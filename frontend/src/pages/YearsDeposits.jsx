@@ -1,9 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import api, { API_BASE } from '../api/api';
-import Sidebar from "../components/Sidebar";
-import Header from "../components/Header";
-import { FileText, Wallet, Trophy, History } from "lucide-react";
-import { formatDate } from "../utils/helpers";
+import { FileText, Wallet, Clock, History, TrendingUp } from "lucide-react";
 
 export default function YearsDeposits() {
   const [payments, setPayments] = useState([]);
@@ -16,7 +13,7 @@ export default function YearsDeposits() {
         setPayments(response.data);
         setLoading(false);
       } catch (error) {
-        console.error("Error fetching annual deposits:", error);
+        console.error("Error fetching this year's deposits:", error);
         setLoading(false);
       }
     };
@@ -28,72 +25,68 @@ export default function YearsDeposits() {
   };
 
   return (
-    <div className="flex bg-[#f1f5f9] min-h-screen">
-      <Sidebar />
-      <main className="flex-1 p-8 max-w-7xl mx-auto w-full">
-        <Header />
-
+    <>
         <div className="mb-8 flex items-center gap-3">
-          <div className="bg-indigo-600 p-3 rounded-2xl text-white shadow-lg shadow-indigo-200">
-            <Trophy size={32} />
+          <div className="bg-indigo-600 p-3 rounded-2xl text-white shadow-lg shadow-indigo-200 transition-colors">
+            <TrendingUp size={32} />
           </div>
           <div>
-            <h1 className="text-3xl font-black text-gray-900 tracking-tight">Annual Deposit Collections</h1>
-            <p className="text-gray-500 font-medium">Complete record of installment payments for {new Date().getFullYear()}</p>
+            <h1 className="text-3xl font-black text-gray-900 dark:text-white tracking-tight transition-colors">Annual Collection Summary</h1>
+            <p className="text-gray-500 dark:text-gray-400 font-medium transition-colors">Overview of installment collections for {new Date().getFullYear()}</p>
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-          <div className="bg-indigo-50 px-8 py-4 border-b border-indigo-100 flex justify-between items-center">
-            <h2 className="text-lg font-bold text-indigo-800 flex items-center gap-2">
-              <History size={20} className="text-indigo-600" />
-              Annual Collection Log
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden transition-colors">
+          <div className="bg-indigo-50 dark:bg-indigo-900/50 px-8 py-4 border-b border-indigo-100 dark:border-indigo-900/50 flex justify-between items-center transition-colors">
+            <h2 className="text-lg font-bold text-indigo-800 dark:text-indigo-400 flex items-center gap-2 transition-colors">
+              <History size={20} className="text-indigo-600 dark:text-indigo-400" />
+              Yearly Collection Log
             </h2>
             <div className="flex items-center gap-4">
-              <div className="text-right">
-                <div className="text-[10px] text-gray-400 font-black uppercase tracking-widest px-1">Total Collected</div>
-                <div className="text-lg font-black text-gray-900">{formatCurrency(payments.reduce((acc, p) => acc + p.amount, 0))}</div>
-              </div>
-              <span className="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest">
-                {payments.length} Records
-              </span>
+               <div className="text-right">
+                  <div className="text-[10px] text-indigo-400 dark:text-indigo-500 font-black uppercase tracking-widest transition-colors">Year Total</div>
+                  <div className="text-lg font-black text-indigo-800 dark:text-indigo-400 transition-colors">{formatCurrency(payments.reduce((acc, p) => acc + p.amount, 0))}</div>
+               </div>
+               <span className="bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-400 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest transition-colors">
+                 {payments.length} Payments
+               </span>
             </div>
           </div>
           
           <div className="overflow-x-auto">
             {loading ? (
-              <div className="p-20 text-center text-gray-400 font-bold uppercase tracking-widest animate-pulse">Scanning annual history...</div>
+              <div className="p-20 text-center text-gray-400 dark:text-gray-500 font-bold uppercase tracking-widest animate-pulse transition-colors">Loading data...</div>
             ) : payments.length === 0 ? (
-              <div className="p-20 text-center text-gray-400 italic">No deposit payments recorded for this year yet.</div>
+              <div className="p-20 text-center text-gray-400 dark:text-gray-500 italic transition-colors">No deposit payments recorded for this year.</div>
             ) : (
               <table className="w-full">
-                <thead className="bg-gray-50/50">
+                <thead className="bg-gray-50/50 dark:bg-gray-900/50 transition-colors">
                   <tr>
-                    <th className="px-8 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-widest">Customer / Item</th>
-                    <th className="px-8 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-widest">Amount Paid</th>
-                    <th className="px-8 py-4 text-center text-xs font-bold text-gray-500 uppercase tracking-widest">Date Info</th>
-                    <th className="px-8 py-4 text-center text-xs font-bold text-gray-500 uppercase tracking-widest">Receipt</th>
+                    <th className="px-8 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Customer / Item</th>
+                    <th className="px-8 py-4 text-right text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Amount Paid</th>
+                    <th className="px-8 py-4 text-center text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Date Info</th>
+                    <th className="px-8 py-4 text-center text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Receipt</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-50 bg-white">
+                <tbody className="divide-y divide-gray-50 dark:divide-gray-700 bg-white dark:bg-gray-800 transition-colors">
                   {payments.map((p) => (
-                    <tr key={p.id} className="hover:bg-indigo-50/50 transition-colors">
+                    <tr key={p.id} className="hover:bg-indigo-50/50 dark:hover:bg-indigo-900/20 transition-colors">
                       <td className="px-8 py-4">
-                        <div className="font-bold text-gray-900">{p.buyer_name}</div>
-                        <div className="text-xs text-gray-400 uppercase font-black">{p.item_name}</div>
+                        <div className="font-bold text-gray-900 dark:text-white transition-colors">{p.buyer_name}</div>
+                        <div className="text-xs text-gray-400 dark:text-gray-500 uppercase font-black transition-colors">{p.item_name}</div>
                       </td>
-                      <td className="px-8 py-4 text-right font-black text-indigo-600 text-lg">{formatCurrency(p.amount)}</td>
-                      <td className="px-8 py-4 text-center text-gray-500 font-medium">
-                        <div className="font-bold text-gray-700">{formatDate(p.paid_on)}</div>
-                        <div className="text-[10px] uppercase font-black text-gray-400">{new Date(p.paid_on).toLocaleTimeString()}</div>
+                      <td className="px-8 py-4 text-right font-black text-indigo-600 dark:text-indigo-400 text-lg transition-colors">{formatCurrency(p.amount)}</td>
+                      <td className="px-8 py-4 text-center text-gray-500 dark:text-gray-400 font-medium transition-colors">
+                        <div className="text-sm font-bold transition-colors">{new Date(p.paid_on).toLocaleDateString()}</div>
+                        <div className="text-[10px] uppercase font-black text-gray-400 dark:text-gray-500 transition-colors">{new Date(p.paid_on).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
                       </td>
-                      <td className="px-8 py-4 text-center">
+                      <td className="px-8 py-4 text-center transition-colors">
                         {p.receipt_uuid && (
                           <a
                             href={`${API_BASE}/receipts/${p.receipt_uuid}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="bg-indigo-50 text-indigo-600 p-2 rounded-lg hover:bg-indigo-600 hover:text-white transition-all inline-flex items-center gap-1 font-bold text-xs"
+                            className="bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 p-2 rounded-lg hover:bg-indigo-600 hover:text-white transition-all inline-flex items-center gap-1 font-bold text-xs"
                           >
                             <FileText size={16} /> VIEW
                           </a>
@@ -106,7 +99,6 @@ export default function YearsDeposits() {
             )}
           </div>
         </div>
-      </main>
-    </div>
+    </>
   );
 }

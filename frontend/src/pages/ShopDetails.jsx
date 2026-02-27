@@ -2,8 +2,6 @@ import React, { useState, useEffect, useContext } from 'react';
 import { useParams } from 'react-router-dom';
 import api from '../api/api';
 import Card from '../components/Card';
-import Sidebar from "../components/Sidebar";
-import Header from "../components/Header";
 import { AuthContext } from '../context/AuthContext';
 import { Store, Plus, ChevronDown, ChevronUp, AlertTriangle, TrendingUp, History, Package } from 'lucide-react';
 import { formatDate } from '../utils/helpers';
@@ -104,27 +102,23 @@ export default function ShopDetails() {
   };
 
   if (!shop) {
-    return <div className="flex bg-[#f1f5f9] min-h-screen items-center justify-center text-gray-500 font-bold uppercase tracking-widest">Loading shop data...</div>;
+    return <div className="flex bg-[#f1f5f9] dark:bg-[#0f172a] min-h-screen items-center justify-center text-gray-500 dark:text-gray-400 font-bold uppercase tracking-widest transition-colors">Loading shop data...</div>;
   }
 
   return (
-    <div className="flex bg-[#f1f5f9] min-h-screen">
-      <Sidebar role="admin" />
-      <main className="flex-1 p-8 max-w-7xl mx-auto w-full">
-        <Header />
-
-        <div className="mb-8 flex items-center gap-3">
-          <div className="bg-blue-600 p-3 rounded-2xl text-white shadow-lg shadow-blue-200">
+    <>
+        <div className="mb-8 flex items-center gap-3 transition-colors">
+          <div className="bg-blue-600 p-3 rounded-2xl text-white shadow-lg shadow-blue-200 dark:shadow-none transition-colors">
             <Store size={32} />
           </div>
           <div>
-            <h1 className="text-3xl font-black text-gray-900 tracking-tight">{shop.name}</h1>
-            <p className="text-gray-500 font-medium">{shop.address}</p>
+            <h1 className="text-3xl font-black text-gray-900 dark:text-white tracking-tight transition-colors">{shop.name}</h1>
+            <p className="text-gray-500 dark:text-gray-400 font-medium transition-colors">{shop.address}</p>
           </div>
         </div>
 
         {/* SHOP METRICS */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10 transition-colors">
           <Card title="Revenue (Total Sales)" className="border-l-4 border-l-green-500">
             {formatCurrency(shopSales.reduce((acc, sale) => acc + (sale.total_amount || 0), 0))}
           </Card>
@@ -137,17 +131,17 @@ export default function ShopDetails() {
         </div>
 
         {/* ADD STOCK FORM */}
-        <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 mb-10">
-          <h2 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
-            <Plus size={24} className="text-blue-600" />
+        <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 mb-10 transition-colors">
+          <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-6 flex items-center gap-2 transition-colors">
+            <Plus size={24} className="text-blue-600 dark:text-blue-400" />
             Replenish Inventory
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div>
-              <label className="block text-sm font-bold text-gray-700 uppercase mb-1">Product</label>
+              <label className="block text-sm font-bold text-gray-700 dark:text-gray-400 uppercase mb-1 px-1 transition-colors">Product</label>
               <select
                 name="itemId"
-                className="w-full p-3 border border-gray-200 rounded-xl bg-gray-50 focus:ring-2 focus:ring-blue-500 outline-none"
+                className="w-full p-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                 value={stockFormData.itemId}
                 onChange={(e) => {
                   const id = e.target.value;
@@ -167,25 +161,25 @@ export default function ShopDetails() {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-bold text-gray-700 uppercase mb-1">Quantity</label>
-              <input name="quantity" type="number" className="w-full p-3 border border-gray-200 rounded-xl bg-gray-50 focus:ring-2 focus:ring-blue-500 outline-none font-bold text-blue-600" value={stockFormData.quantity} onChange={handleStockInputChange} />
+              <label className="block text-sm font-bold text-gray-700 dark:text-gray-400 uppercase mb-1 px-1 transition-colors">Quantity</label>
+              <input name="quantity" type="number" className="w-full p-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-blue-600 dark:text-blue-400 focus:ring-2 focus:ring-blue-500 outline-none font-bold transition-all" value={stockFormData.quantity} onChange={handleStockInputChange} />
             </div>
             <div>
-              <label className="block text-sm font-bold text-gray-700 uppercase mb-1">Buy Price</label>
-              <input name="buyPrice" type="number" className="w-full p-3 border border-gray-200 rounded-xl bg-gray-50 focus:ring-2 focus:ring-blue-500 outline-none" value={stockFormData.buyPrice} onChange={handleStockInputChange} />
+              <label className="block text-sm font-bold text-gray-700 dark:text-gray-400 uppercase mb-1 px-1 transition-colors">Buy Price</label>
+              <input name="buyPrice" type="number" className="w-full p-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all" value={stockFormData.buyPrice} onChange={handleStockInputChange} />
             </div>
             <div>
-              <label className="block text-sm font-bold text-gray-700 uppercase mb-1">Sell Price</label>
-              <input name="sellPrice" type="number" className="w-full p-3 border border-gray-200 rounded-xl bg-gray-50 focus:ring-2 focus:ring-blue-500 outline-none" value={stockFormData.sellPrice} onChange={handleStockInputChange} />
+              <label className="block text-sm font-bold text-gray-700 dark:text-gray-400 uppercase mb-1 px-1 transition-colors">Sell Price</label>
+              <input name="sellPrice" type="number" className="w-full p-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all" value={stockFormData.sellPrice} onChange={handleStockInputChange} />
             </div>
           </div>
-          <button onClick={handleAddStock} className="mt-6 bg-blue-600 text-white py-3 px-10 rounded-xl font-bold shadow-lg shadow-blue-100 hover:bg-blue-700 transition-all">
+          <button onClick={handleAddStock} className="mt-6 bg-blue-600 text-white py-3 px-10 rounded-xl font-bold shadow-lg shadow-blue-100 dark:shadow-none hover:bg-blue-700 transition-all">
             Confirm Restock
           </button>
         </div>
 
         {/* COLLAPSIBLE SECTIONS */}
-        <div className="space-y-4">
+        <div className="space-y-4 transition-colors">
           <Section 
             title="Sales History" 
             count={shopSales.length} 
@@ -195,12 +189,12 @@ export default function ShopDetails() {
             onToggle={() => setExpandedSection(expandedSection === 'sales' ? null : 'sales')}
           >
             <table className="w-full">
-              <thead className="bg-gray-50/50 text-xs font-bold text-gray-500 uppercase">
+              <thead className="bg-gray-50/50 dark:bg-gray-900/50 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase transition-colors">
                 <tr><th className="px-6 py-4 text-left">ID</th><th className="px-6 py-4 text-right">Amount</th><th className="px-6 py-4 text-left">Type</th><th className="px-6 py-4 text-left">Date</th></tr>
               </thead>
-                              <tbody className="divide-y divide-gray-50">
+                              <tbody className="divide-y divide-gray-50 dark:divide-gray-700 transition-colors">
                                 {shopSales.map(s => (
-                                  <tr key={s.id} className="hover:bg-gray-50/50"><td className="px-6 py-4 font-bold">{s.id}</td><td className="px-6 py-4 text-right font-black text-gray-900">{formatCurrency(s.total_amount)}</td><td className="px-6 py-4 text-gray-500 uppercase text-xs font-bold tracking-widest">{s.payment_type}</td><td className="px-6 py-4 text-gray-500">{formatDate(s.created_at)}</td></tr>
+                                  <tr key={s.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-900/50 transition-colors"><td className="px-6 py-4 font-bold text-gray-900 dark:text-white">{s.id}</td><td className="px-6 py-4 text-right font-black text-gray-900 dark:text-white">{formatCurrency(s.total_amount)}</td><td className="px-6 py-4 text-gray-500 dark:text-gray-400 uppercase text-xs font-bold tracking-widest">{s.payment_type}</td><td className="px-6 py-4 text-gray-500 dark:text-gray-400">{formatDate(s.created_at)}</td></tr>
                                 ))}
                               </tbody>            </table>
           </Section>
@@ -214,12 +208,12 @@ export default function ShopDetails() {
             onToggle={() => setExpandedSection(expandedSection === 'deposits' ? null : 'deposits')}
           >
             <table className="w-full">
-              <thead className="bg-gray-50/50 text-xs font-bold text-gray-500 uppercase">
+              <thead className="bg-gray-50/50 dark:bg-gray-900/50 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase transition-colors">
                 <tr><th className="px-6 py-4 text-left">Buyer</th><th className="px-6 py-4 text-right">Price</th><th className="px-6 py-4 text-left">Status</th></tr>
               </thead>
-              <tbody className="divide-y divide-gray-50">
+              <tbody className="divide-y divide-gray-50 dark:divide-gray-700 transition-colors">
                 {shopDeposits.map(d => (
-                  <tr key={d.id} className="hover:bg-gray-50/50"><td className="px-6 py-4 font-bold text-gray-900">{d.buyer_name}</td><td className="px-6 py-4 text-right font-black">{formatCurrency(d.selling_price)}</td><td className="px-6 py-4 italic text-sm text-gray-500 uppercase tracking-widest font-bold">{d.status}</td></tr>
+                  <tr key={d.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-900/50 transition-colors"><td className="px-6 py-4 font-bold text-gray-900 dark:text-white">{d.buyer_name}</td><td className="px-6 py-4 text-right font-black text-gray-900 dark:text-white">{formatCurrency(d.selling_price)}</td><td className="px-6 py-4 italic text-sm text-gray-500 dark:text-gray-400 uppercase tracking-widest font-bold">{d.status}</td></tr>
                 ))}
               </tbody>
             </table>
@@ -234,12 +228,12 @@ export default function ShopDetails() {
             onToggle={() => setExpandedSection(expandedSection === 'stock' ? null : 'stock')}
           >
             <table className="w-full">
-              <thead className="bg-gray-50/50 text-xs font-bold text-gray-500 uppercase">
+              <thead className="bg-gray-50/50 dark:bg-gray-900/50 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase transition-colors">
                 <tr><th className="px-6 py-4 text-left">Item Name</th><th className="px-6 py-4 text-center">Qty</th><th className="px-6 py-4 text-right">Buy</th><th className="px-6 py-4 text-right">Sell</th></tr>
               </thead>
-              <tbody className="divide-y divide-gray-50">
+              <tbody className="divide-y divide-gray-50 dark:divide-gray-700 transition-colors">
                 {shopStock.map(s => (
-                  <tr key={s.id} className="hover:bg-gray-50/50"><td className="px-6 py-4 font-bold text-gray-900">{availableItems.find(i => i.id === s.item_id)?.name}</td><td className="px-6 py-4 text-center"><span className={`px-2 py-1 rounded-full text-xs font-black ${s.qty <= 2 ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>{s.qty}</span></td><td className="px-6 py-4 text-right font-mono text-xs text-gray-400">{formatCurrency(s.buy_price)}</td><td className="px-6 py-4 text-right font-black text-blue-600">{formatCurrency(s.sell_price)}</td></tr>
+                  <tr key={s.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-900/50 transition-colors"><td className="px-6 py-4 font-bold text-gray-900 dark:text-white">{availableItems.find(i => i.id === s.item_id)?.name}</td><td className="px-6 py-4 text-center"><span className={`px-2 py-1 rounded-full text-xs font-black transition-colors ${s.qty <= 2 ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400' : 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'}`}>{s.qty}</span></td><td className="px-6 py-4 text-right font-mono text-xs text-gray-400 dark:text-gray-500 transition-colors">{formatCurrency(s.buy_price)}</td><td className="px-6 py-4 text-right font-black text-blue-600 dark:text-blue-400 transition-colors">{formatCurrency(s.sell_price)}</td></tr>
                 ))}
               </tbody>
             </table>
@@ -254,35 +248,34 @@ export default function ShopDetails() {
             onToggle={() => setExpandedSection(expandedSection === 'low_stock' ? null : 'low_stock')}
           >
             <table className="w-full">
-              <thead className="bg-orange-50/50 text-xs font-bold text-orange-800 uppercase">
+              <thead className="bg-orange-50/50 dark:bg-orange-900/30 text-xs font-bold text-orange-800 dark:text-orange-400 uppercase transition-colors">
                 <tr><th className="px-6 py-4 text-left">Item Name</th><th className="px-6 py-4 text-center">Qty</th></tr>
               </thead>
-              <tbody className="divide-y divide-gray-50">
+              <tbody className="divide-y divide-gray-50 dark:divide-gray-700 transition-colors">
                 {lowStockItems.map(s => (
-                  <tr key={s.id} className="hover:bg-orange-50/20"><td className="px-6 py-4 font-bold text-gray-900">{availableItems.find(i => i.id === s.item_id)?.name}</td><td className="px-6 py-4 text-center font-black text-red-600">{s.qty}</td></tr>
+                  <tr key={s.id} className="hover:bg-orange-50/20 dark:hover:bg-orange-900/10 transition-colors"><td className="px-6 py-4 font-bold text-gray-900 dark:text-white">{availableItems.find(i => i.id === s.item_id)?.name}</td><td className="px-6 py-4 text-center font-black text-red-600 dark:text-red-400">{s.qty}</td></tr>
                 ))}
               </tbody>
             </table>
           </Section>
         </div>
-      </main>
-    </div>
+    </>
   );
 }
 
 function Section({ title, count, icon: Icon, color, isExpanded, onToggle, children }) {
   const colors = {
-    blue: 'bg-blue-50 text-blue-700 hover:bg-blue-100 border-blue-100',
-    indigo: 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border-indigo-100',
-    purple: 'bg-purple-50 text-purple-700 hover:bg-purple-100 border-purple-100',
-    orange: 'bg-orange-50 text-orange-700 hover:bg-orange-100 border-orange-100',
+    blue: 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/50 border-blue-100 dark:border-blue-800',
+    indigo: 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 border-indigo-100 dark:border-indigo-800',
+    purple: 'bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 hover:bg-purple-100 dark:hover:bg-purple-900/50 border-purple-100 dark:border-purple-800',
+    orange: 'bg-orange-50 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 hover:bg-orange-100 dark:hover:bg-orange-900/50 border-orange-100 dark:border-orange-800',
   }
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden transition-colors">
       <button 
         onClick={onToggle}
-        className={`w-full flex justify-between items-center p-6 transition-all border-b border-transparent ${isExpanded ? 'border-gray-100 shadow-sm' : ''} ${colors[color]}`}
+        className={`w-full flex justify-between items-center p-6 transition-all border-b border-transparent ${isExpanded ? 'border-gray-100 dark:border-gray-700 shadow-sm' : ''} ${colors[color]}`}
       >
         <div className="flex items-center gap-3">
           <Icon size={24} className={isExpanded ? 'animate-pulse' : ''} />
@@ -291,9 +284,9 @@ function Section({ title, count, icon: Icon, color, isExpanded, onToggle, childr
         {isExpanded ? <ChevronUp size={24} /> : <ChevronDown size={24} />}
       </button>
       {isExpanded && (
-        <div className="p-0 overflow-x-auto max-h-96 overflow-y-auto custom-scrollbar">
+        <div className="p-0 overflow-x-auto max-h-96 overflow-y-auto custom-scrollbar transition-colors">
           {count === 0 ? (
-            <div className="p-10 text-center text-gray-400 italic font-medium tracking-widest uppercase text-xs">No records available in this category</div>
+            <div className="p-10 text-center text-gray-400 dark:text-gray-500 italic font-medium tracking-widest uppercase text-xs">No records available in this category</div>
           ) : children}
         </div>
       )}

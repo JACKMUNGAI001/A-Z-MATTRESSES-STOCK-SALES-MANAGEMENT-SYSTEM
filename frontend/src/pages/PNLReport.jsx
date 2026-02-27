@@ -1,7 +1,5 @@
 import { useState, useEffect } from "react";
 import api from "../api/api";
-import Header from "../components/Header";
-import Sidebar from "../components/Sidebar";
 
 export default function PNLReport() {
   const [year, setYear] = useState(new Date().getFullYear());
@@ -65,22 +63,18 @@ export default function PNLReport() {
   };
 
   return (
-    <div className="flex">
-      <Sidebar role="admin" />
-      <main className="flex-1 p-6 bg-gray-50 min-h-screen">
-        <Header />
-        
-        <div className="mt-6 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-gray-800">Profit & Loss Analysis</h1>
+    <>
+        <div className="flex justify-between items-center transition-colors">
+          <h1 className="text-2xl font-bold text-gray-800 dark:text-white transition-colors">Profit & Loss Analysis</h1>
         </div>
 
         {/* FILTERS */}
-        <div className="bg-white p-6 rounded-xl shadow-sm mt-6 border border-gray-100">
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm mt-6 border border-gray-100 dark:border-gray-700 transition-colors">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700">Reporting Year</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-400 px-1 transition-colors">Reporting Year</label>
               <select
-                className="w-full border p-3 rounded-lg mt-1 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full border dark:border-gray-700 p-3 rounded-lg mt-1 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-900 dark:text-white transition-all"
                 value={year}
                 onChange={(e) => setYear(parseInt(e.target.value))}
               >
@@ -91,9 +85,9 @@ export default function PNLReport() {
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700">Period</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-400 px-1 transition-colors">Period</label>
               <select
-                className="w-full border p-3 rounded-lg mt-1 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full border dark:border-gray-700 p-3 rounded-lg mt-1 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-900 dark:text-white transition-all"
                 value={month}
                 onChange={(e) => setMonth(parseInt(e.target.value))}
               >
@@ -104,9 +98,9 @@ export default function PNLReport() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700">Shop Scope</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-400 px-1 transition-colors">Shop Scope</label>
               <select
-                className="w-full border p-3 rounded-lg mt-1 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full border dark:border-gray-700 p-3 rounded-lg mt-1 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-900 dark:text-white transition-all"
                 value={shopId}
                 onChange={(e) => setShopId(e.target.value)}
               >
@@ -123,11 +117,11 @@ export default function PNLReport() {
 
         {/* REPORT DISPLAY */}
         {loading ? (
-          <div className="mt-10 text-center text-gray-500">Calculating financial data...</div>
+          <div className="mt-10 text-center text-gray-500 dark:text-gray-400 font-bold uppercase tracking-widest animate-pulse">Calculating financial data...</div>
         ) : report && (
-          <div className="mt-8 space-y-6">
-            <div className="bg-white rounded-xl shadow-md overflow-hidden border border-gray-200">
-              <div className="bg-blue-600 px-6 py-4">
+          <div className="mt-8 space-y-6 transition-colors">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden border border-gray-200 dark:border-gray-700 transition-colors">
+              <div className="bg-blue-600 px-6 py-4 transition-colors">
                 <h2 className="text-white text-lg font-semibold uppercase tracking-wider">
                   {month === 0 ? "Yearly" : "Monthly"} Statement: {month !== 0 ? months.find(m => m.value === month).label : ""} {year}
                 </h2>
@@ -136,44 +130,44 @@ export default function PNLReport() {
                 </p>
               </div>
 
-              <div className="p-8">
+              <div className="p-8 transition-colors">
                 <div className="space-y-4 max-w-2xl mx-auto">
                   
                   {/* REVENUE */}
-                  <div className="flex justify-between items-center pb-2 border-b">
-                    <span className="text-gray-600 font-medium">Total Revenue (Sales)</span>
-                    <span className="text-gray-900 font-bold">{formatCurrency(report.total_sales)}</span>
+                  <div className="flex justify-between items-center pb-2 border-b dark:border-gray-700 transition-colors">
+                    <span className="text-gray-600 dark:text-gray-400 font-medium">Total Revenue (Sales)</span>
+                    <span className="text-gray-900 dark:text-white font-bold">{formatCurrency(report.total_sales)}</span>
                   </div>
 
                   {/* COGS */}
-                  <div className="flex justify-between items-center pb-2 border-b">
-                    <span className="text-gray-600 font-medium">Cost of Goods Sold (COGS)</span>
-                    <span className="text-red-500 font-semibold">({formatCurrency(report.total_cogs)})</span>
+                  <div className="flex justify-between items-center pb-2 border-b dark:border-gray-700 transition-colors">
+                    <span className="text-gray-600 dark:text-gray-400 font-medium">Cost of Goods Sold (COGS)</span>
+                    <span className="text-red-500 dark:text-red-400 font-semibold">({formatCurrency(report.total_cogs)})</span>
                   </div>
 
                   {/* GROSS PROFIT */}
-                  <div className="flex justify-between items-center py-4 bg-gray-50 px-4 rounded-lg">
-                    <span className="text-gray-800 font-bold uppercase text-sm">Gross Profit</span>
-                    <span className={`font-black text-lg ${report.gross_profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  <div className="flex justify-between items-center py-4 bg-gray-50 dark:bg-gray-900/50 px-4 rounded-lg transition-colors">
+                    <span className="text-gray-800 dark:text-gray-200 font-bold uppercase text-sm">Gross Profit</span>
+                    <span className={`font-black text-lg ${report.gross_profit >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
                       {formatCurrency(report.gross_profit)}
                     </span>
                   </div>
 
                   {/* EXPENSES */}
-                  <div className="flex justify-between items-center pb-2 border-b mt-6">
-                    <span className="text-gray-600 font-medium">Operating Expenses</span>
-                    <span className="text-red-500 font-semibold">({formatCurrency(report.total_expenses)})</span>
+                  <div className="flex justify-between items-center pb-2 border-b dark:border-gray-700 mt-6 transition-colors">
+                    <span className="text-gray-600 dark:text-gray-400 font-medium">Operating Expenses</span>
+                    <span className="text-red-500 dark:text-red-400 font-semibold">({formatCurrency(report.total_expenses)})</span>
                   </div>
 
                   {/* NET PROFIT */}
-                  <div className={`flex justify-between items-center py-6 px-6 rounded-xl mt-8 ${report.net_profit >= 0 ? 'bg-green-50 border-2 border-green-200' : 'bg-red-50 border-2 border-red-200'}`}>
+                  <div className={`flex justify-between items-center py-6 px-6 rounded-xl mt-8 transition-all ${report.net_profit >= 0 ? 'bg-green-50 dark:bg-green-900/20 border-2 border-green-200 dark:border-green-900' : 'bg-red-50 dark:bg-red-900/20 border-2 border-red-200 dark:border-red-900'}`}>
                     <div>
-                      <span className="block text-gray-700 font-bold uppercase tracking-widest text-xs">Final Net Position</span>
-                      <span className="text-2xl font-black text-gray-900">
+                      <span className="block text-gray-700 dark:text-gray-300 font-bold uppercase tracking-widest text-xs transition-colors">Final Net Position</span>
+                      <span className="text-2xl font-black text-gray-900 dark:text-white transition-colors">
                         {report.net_profit >= 0 ? "PROFIT" : "LOSS"}
                       </span>
                     </div>
-                    <span className={`text-3xl font-black ${report.net_profit >= 0 ? 'text-green-700' : 'text-red-700'}`}>
+                    <span className={`text-3xl font-black transition-colors ${report.net_profit >= 0 ? 'text-green-700 dark:text-green-400' : 'text-red-700 dark:text-red-400'}`}>
                       {formatCurrency(report.net_profit)}
                     </span>
                   </div>
@@ -181,13 +175,12 @@ export default function PNLReport() {
                 </div>
               </div>
               
-              <div className="bg-gray-50 px-8 py-4 text-xs text-gray-400 italic text-center">
+              <div className="bg-gray-50 dark:bg-gray-900/50 px-8 py-4 text-xs text-gray-400 dark:text-gray-500 italic text-center transition-colors">
                 This report considers all confirmed sales and recorded expenses within the selected period.
               </div>
             </div>
           </div>
         )}
-      </main>
-    </div>
+    </>
   );
 }

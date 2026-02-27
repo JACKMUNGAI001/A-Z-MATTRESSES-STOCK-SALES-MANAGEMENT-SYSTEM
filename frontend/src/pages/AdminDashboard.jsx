@@ -1,6 +1,4 @@
 import React, { useContext, useEffect, useState } from 'react'
-import Sidebar from '../components/Sidebar'
-import Header from '../components/Header'
 import Card from '../components/Card'
 import api from '../api/api'
 import { AuthContext } from '../context/AuthContext'
@@ -76,11 +74,7 @@ export default function AdminDashboard(){
   };
 
   return (
-    <div className="flex bg-[#f1f5f9] min-h-screen">
-      <Sidebar role="admin" />
-      <main className="flex-1 p-8 max-w-7xl mx-auto w-full">
-        <Header />
-        
+    <>
         {/* OVERVIEW SECTION */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
           <Card title="Total Sales" interactive={true} onClick={() => navigate('/admin/all-sales')}>
@@ -96,7 +90,7 @@ export default function AdminDashboard(){
 
         {/* SALES SUMMARY */}
         <div className="mb-10">
-          <h3 className="text-xl font-bold text-gray-800 mb-4 tracking-tight border-l-4 border-l-blue-600 pl-3">Sales Summary</h3>
+          <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4 tracking-tight border-l-4 border-l-blue-600 pl-3 transition-colors">Sales Summary</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <Link to="/attendant/sales" className="no-underline"><Card title="Today's Sales" interactive={true}>{salesSummary ? formatCurrency(salesSummary.today) : '...'}</Card></Link>
             <Link to="/attendant/sales/week" className="no-underline"><Card title="This Week's" interactive={true}>{salesSummary ? formatCurrency(salesSummary.week) : '...'}</Card></Link>
@@ -107,7 +101,7 @@ export default function AdminDashboard(){
 
         {/* DEPOSITS SUMMARY */}
         <div className="mb-10">
-          <h3 className="text-xl font-bold text-gray-800 mb-4 tracking-tight border-l-4 border-l-indigo-600 pl-3">Deposits Summary</h3>
+          <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4 tracking-tight border-l-4 border-l-indigo-600 pl-3 transition-colors">Deposits Summary</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <Link to="/attendant/deposits/today" className="no-underline"><Card title="Today's" interactive={true}>{depositsSummary ? formatCurrency(depositsSummary.today) : '...'}</Card></Link>
             <Link to="/attendant/deposits/week" className="no-underline"><Card title="This Week's" interactive={true}>{depositsSummary ? formatCurrency(depositsSummary.week) : '...'}</Card></Link>
@@ -118,13 +112,13 @@ export default function AdminDashboard(){
 
         {/* SHOPS SECTION */}
         <div className="mb-10">
-          <h3 className="text-xl font-bold text-gray-800 mb-4 tracking-tight">Shops Management</h3>
+          <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4 tracking-tight transition-colors">Shops Management</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {shops.map(s => (
-              <div key={s.id} onClick={() => handleShopClick(s.id)} className="bg-white p-6 rounded-2xl shadow-sm border border-blue-100 bg-gradient-to-br from-white to-blue-50/30 hover:border-blue-400 hover:shadow-xl hover:-translate-y-1.5 transition-all cursor-pointer group relative">
-                <div className="absolute top-4 right-4 bg-blue-100 p-1 rounded-lg text-blue-600"><Store size={14} strokeWidth={3} /></div>
-                <h4 className="text-lg font-bold text-gray-900 mb-1 group-hover:text-blue-600 transition-colors">{s.name}</h4>
-                <div className="flex items-start gap-2 text-gray-500 text-sm"><MapPin size={16} className="mt-0.5 shrink-0" /><span>{s.address}</span></div>
+              <div key={s.id} onClick={() => handleShopClick(s.id)} className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-blue-100 dark:border-gray-700 bg-gradient-to-br from-white to-blue-50/30 dark:from-gray-800 dark:to-blue-900/10 hover:border-blue-400 dark:hover:border-blue-500 hover:shadow-xl hover:-translate-y-1.5 transition-all cursor-pointer group relative">
+                <div className="absolute top-4 right-4 bg-blue-100 dark:bg-blue-900/50 p-1 rounded-lg text-blue-600 dark:text-blue-400"><Store size={14} strokeWidth={3} /></div>
+                <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-1 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{s.name}</h4>
+                <div className="flex items-start gap-2 text-gray-500 dark:text-gray-400 text-sm transition-colors"><MapPin size={16} className="mt-0.5 shrink-0" /><span>{s.address}</span></div>
               </div>
             ))}
           </div>
@@ -133,18 +127,18 @@ export default function AdminDashboard(){
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 pb-20">
           {/* PENDING ATTENDANTS */}
           <div>
-            <h3 className="text-xl font-bold text-gray-800 mb-4 tracking-tight">Pending Attendants</h3>
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-              {pendingAttendants.length === 0 ? (<div className="p-8 text-center text-gray-400 italic">No pending attendants.</div>) : (
-                <div className="divide-y divide-gray-50">
+            <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4 tracking-tight transition-colors">Pending Attendants</h3>
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden transition-colors">
+              {pendingAttendants.length === 0 ? (<div className="p-8 text-center text-gray-400 dark:text-gray-500 italic">No pending attendants.</div>) : (
+                <div className="divide-y divide-gray-50 dark:divide-gray-700">
                   {pendingAttendants.map(attendant => (
                     <div key={attendant.id} className="p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                       <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center text-gray-400"><UserCircle size={32} /></div>
-                        <div><p className="font-bold text-gray-900">{attendant.name}</p><div className="flex items-center gap-2 text-gray-500 text-sm"><Mail size={14} /><span>{attendant.email}</span></div></div>
+                        <div className="w-12 h-12 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center text-gray-400 dark:text-gray-500"><UserCircle size={32} /></div>
+                        <div><p className="font-bold text-gray-900 dark:text-white">{attendant.name}</p><div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 text-sm"><Mail size={14} /><span>{attendant.email}</span></div></div>
                       </div>
                       <div className="flex items-center gap-2 w-full sm:w-auto">
-                        <select className="flex-1 sm:flex-none p-2 border border-gray-200 rounded-lg text-sm bg-gray-50 focus:ring-2 focus:ring-blue-500 outline-none transition-all" onChange={(e) => handleVerifyAttendant(attendant.id, e.target.value)}>
+                        <select className="flex-1 sm:flex-none p-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all" onChange={(e) => handleVerifyAttendant(attendant.id, e.target.value)}>
                           <option value="">Assign Shop</option>
                           {shops.map(shop => (<option key={shop.id} value={shop.id}>{shop.name}</option>))}
                         </select>
@@ -158,17 +152,17 @@ export default function AdminDashboard(){
 
           {/* ALL ATTENDANTS */}
           <div>
-            <h3 className="text-xl font-bold text-gray-800 mb-4 tracking-tight">All Attendants</h3>
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-              {allAttendants.length === 0 ? (<div className="p-8 text-center text-gray-400 italic">No attendants registered.</div>) : (
-                <div className="divide-y divide-gray-50">
+            <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4 tracking-tight transition-colors">All Attendants</h3>
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden transition-colors">
+              {allAttendants.length === 0 ? (<div className="p-8 text-center text-gray-400 dark:text-gray-500 italic">No attendants registered.</div>) : (
+                <div className="divide-y divide-gray-50 dark:divide-gray-700">
                   {allAttendants.map(attendant => (
                     <div key={attendant.id} className="p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                       <div className="flex items-center gap-4">
-                        <div className="relative"><div className="w-12 h-12 bg-blue-50 rounded-full flex items-center justify-center text-blue-600"><UserCircle size={32} /></div>{attendant.is_verified && (<div className="absolute -top-1 -right-1 bg-white rounded-full p-0.5"><ShieldCheck size={16} className="text-green-500" fill="currentColor" /></div>)}</div>
-                        <div><div className="flex items-center gap-2"><p className="font-bold text-gray-900">{attendant.name}</p>{attendant.is_verified && <span className="text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">Verified</span>}</div><div className="flex items-center gap-3 text-gray-500 text-xs"><span className="flex items-center gap-1"><Mail size={12} /> {attendant.email}</span><span className="flex items-center gap-1"><Store size={12} /> {attendant.shop_name || "Unassigned"}</span></div></div>
+                        <div className="relative"><div className="w-12 h-12 bg-blue-50 dark:bg-blue-900/30 rounded-full flex items-center justify-center text-blue-600 dark:text-blue-400"><UserCircle size={32} /></div>{attendant.is_verified && (<div className="absolute -top-1 -right-1 bg-white dark:bg-gray-800 rounded-full p-0.5 transition-colors"><ShieldCheck size={16} className="text-green-500" fill="currentColor" /></div>)}</div>
+                        <div><div className="flex items-center gap-2"><p className="font-bold text-gray-900 dark:text-white">{attendant.name}</p>{attendant.is_verified && <span className="text-[10px] bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">Verified</span>}</div><div className="flex items-center gap-3 text-gray-500 dark:text-gray-400 text-xs transition-colors"><span className="flex items-center gap-1"><Mail size={12} /> {attendant.email}</span><span className="flex items-center gap-1"><Store size={12} /> {attendant.shop_name || "Unassigned"}</span></div></div>
                       </div>
-                      <button onClick={() => handleRemoveAttendant(attendant.id)} className="w-full sm:w-auto bg-red-50 text-red-600 px-4 py-2 rounded-xl text-sm font-bold hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-2"><UserX size={16} /> Remove</button>
+                      <button onClick={() => handleRemoveAttendant(attendant.id)} className="w-full sm:w-auto bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 px-4 py-2 rounded-xl text-sm font-bold hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-2"><UserX size={16} /> Remove</button>
                     </div>
                   ))}
                 </div>
@@ -176,7 +170,6 @@ export default function AdminDashboard(){
             </div>
           </div>
         </div>
-      </main>
-    </div>
+    </>
   )
 }

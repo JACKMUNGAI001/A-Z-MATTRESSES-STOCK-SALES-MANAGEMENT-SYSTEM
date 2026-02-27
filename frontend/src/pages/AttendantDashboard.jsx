@@ -1,7 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import Sidebar from '../components/Sidebar'
-import Header from '../components/Header'
 import Card from '../components/Card'
 import { AuthContext } from '../context/AuthContext'
 import api from '../api/api'
@@ -71,13 +69,9 @@ export default function AttendantDashboard(){
   };
 
   return (
-    <div className="flex bg-[#f1f5f9] min-h-screen">
-      <Sidebar role="attendant" />
-      <main className="flex-1 p-8 max-w-7xl mx-auto w-full">
-        <Header />
-        
+    <>
         {user?.shop_name && (
-          <div className="mb-6 flex items-center gap-2 text-blue-700 bg-blue-50 px-4 py-2 rounded-lg border border-blue-100 w-fit">
+          <div className="mb-6 flex items-center gap-2 text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-4 py-2 rounded-lg border border-blue-100 dark:border-blue-800 w-fit transition-colors">
             <Store size={20} />
             <span className="font-bold">Your Location: {user.shop_name}</span>
           </div>
@@ -85,7 +79,7 @@ export default function AttendantDashboard(){
 
         {/* SALES SUMMARY */}
         <div className="mb-10">
-          <h3 className="text-xl font-bold text-gray-800 mb-4 tracking-tight border-l-4 border-l-blue-600 pl-3 text-sm uppercase tracking-widest text-gray-400">Sales Summary</h3>
+          <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4 tracking-tight border-l-4 border-l-blue-600 pl-3 text-sm uppercase tracking-widest text-gray-400 dark:text-gray-500 transition-colors">Sales Summary</h3>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             <Link to="/attendant/sales" className="no-underline group">
                 <Card title="Today's Sales" interactive={true}>
@@ -112,7 +106,7 @@ export default function AttendantDashboard(){
 
         {/* DEPOSITS SUMMARY */}
         <div className="mb-10">
-          <h3 className="text-xl font-bold text-gray-800 mb-4 tracking-tight border-l-4 border-l-indigo-600 pl-3 text-sm uppercase tracking-widest text-gray-400">Deposit Collections</h3>
+          <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4 tracking-tight border-l-4 border-l-indigo-600 pl-3 text-sm uppercase tracking-widest text-gray-400 dark:text-gray-500 transition-colors">Deposit Collections</h3>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             <Link to="/attendant/deposits/today" className="no-underline group">
                 <Card title="Today's" interactive={true}>
@@ -141,49 +135,49 @@ export default function AttendantDashboard(){
           <Link to="/attendant/low-stock" className="no-underline group">
               <Card title="Low Stock Items" interactive={true} className="border-l-4 border-l-orange-500 flex justify-between items-center">
                 <span>{lowStockCount}</span>
-                <Package className="text-orange-200 group-hover:text-orange-400 transition-colors" size={40} />
+                <Package className="text-orange-200 dark:text-orange-900/30 group-hover:text-orange-400 dark:group-hover:text-orange-500 transition-colors" size={40} />
               </Card>
           </Link>
           <Link to="/deposits" className="no-underline group">
               <Card title="Manage Deposits" interactive={true} className="border-l-4 border-l-indigo-500 flex justify-between items-center">
                 <span>{depositCustomersCount} Accounts</span>
-                <Users className="text-indigo-200 group-hover:text-indigo-400 transition-colors" size={40} />
+                <Users className="text-indigo-200 dark:text-indigo-900/30 group-hover:text-indigo-400 dark:group-hover:text-indigo-500 transition-colors" size={40} />
               </Card>
           </Link>
         </div>
 
         <div className="mt-10">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-bold text-gray-800 tracking-tight flex items-center gap-2">
-              <TrendingUp size={24} className="text-blue-600" />
+            <h2 className="text-xl font-bold text-gray-800 dark:text-white tracking-tight flex items-center gap-2 transition-colors">
+              <TrendingUp size={24} className="text-blue-600 dark:text-blue-400" />
               Current Inventory
             </h2>
           </div>
           
           {shopStock.length === 0 ? (
-            <div className="bg-white p-10 rounded-2xl shadow-sm border border-dashed border-gray-300 text-center text-gray-400">
+            <div className="bg-white dark:bg-gray-800 p-10 rounded-2xl shadow-sm border border-dashed border-gray-300 dark:border-gray-700 text-center text-gray-400 dark:text-gray-500 transition-colors">
               No stock items recorded for your shop yet.
             </div>
           ) : (
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-              <table className="min-w-full divide-y divide-gray-100">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden transition-colors">
+              <table className="min-w-full divide-y divide-gray-100 dark:divide-gray-700">
                 <thead>
-                  <tr className="bg-gray-50/50">
-                    <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-widest">Item Name</th>
-                    <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-widest">Quantity</th>
-                    <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-widest">Sell Price</th>
+                  <tr className="bg-gray-50/50 dark:bg-gray-900/50 transition-colors">
+                    <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Item Name</th>
+                    <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Quantity</th>
+                    <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Sell Price</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-50 bg-white">
+                <tbody className="divide-y divide-gray-50 dark:divide-gray-700 bg-white dark:bg-gray-800 transition-colors">
                   {shopStock.map((stock) => (
-                    <tr key={stock.id} className="hover:bg-gray-50/50 transition-colors">
-                      <td className="px-6 py-4 whitespace-nowrap font-bold text-gray-900">{stock.item_name}</td>
+                    <tr key={stock.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-900/50 transition-colors">
+                      <td className="px-6 py-4 whitespace-nowrap font-bold text-gray-900 dark:text-white">{stock.item_name}</td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-3 py-1 rounded-full text-sm font-bold ${stock.qty <= 2 ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
+                        <span className={`px-3 py-1 rounded-full text-sm font-bold ${stock.qty <= 2 ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400' : 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'}`}>
                           {stock.qty}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap font-mono text-gray-600">{formatCurrency(stock.sell_price)}</td>
+                      <td className="px-6 py-4 whitespace-nowrap font-mono text-gray-600 dark:text-gray-300 transition-colors">{formatCurrency(stock.sell_price)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -191,7 +185,6 @@ export default function AttendantDashboard(){
             </div>
           )}
         </div>
-      </main>
-    </div>
+      </>
   )
 }

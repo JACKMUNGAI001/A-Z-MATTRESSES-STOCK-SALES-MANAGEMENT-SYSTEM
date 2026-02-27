@@ -1,23 +1,10 @@
-import { useState, useEffect } from "react";
+import { useContext } from "react";
 import { Link } from "react-router-dom";
 import { CheckCircle, Sun, Moon, ArrowRight, ShieldCheck, Zap, BarChart3 } from "lucide-react";
+import { ThemeContext } from "../context/ThemeContext";
 
 export default function Landing() {
-  const [isDarkMode, setIsDarkMode] = useState(
-    localStorage.getItem("theme") === "dark"
-  );
-
-  useEffect(() => {
-    if (isDarkMode) {
-      document.documentElement.classList.add("dark");
-      localStorage.setItem("theme", "dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-      localStorage.setItem("theme", "light");
-    }
-  }, [isDarkMode]);
-
-  const toggleDarkMode = () => setIsDarkMode(!isDarkMode);
+  const { isDarkMode, toggleDarkMode } = useContext(ThemeContext);
 
   return (
     <div className="min-h-screen bg-[#f1f5f9] dark:bg-[#0f172a] transition-colors duration-300 font-sans">
