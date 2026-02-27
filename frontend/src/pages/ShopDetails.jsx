@@ -190,11 +190,22 @@ export default function ShopDetails() {
           >
             <table className="w-full">
               <thead className="bg-gray-50/50 dark:bg-gray-900/50 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase transition-colors">
-                <tr><th className="px-6 py-4 text-left">ID</th><th className="px-6 py-4 text-right">Amount</th><th className="px-6 py-4 text-left">Type</th><th className="px-6 py-4 text-left">Date</th></tr>
+                <tr><th className="px-6 py-4 text-left">ID</th><th className="px-6 py-4 text-left">Items Sold</th><th className="px-6 py-4 text-right">Amount</th><th className="px-6 py-4 text-left">Type</th><th className="px-6 py-4 text-left">Date</th></tr>
               </thead>
                               <tbody className="divide-y divide-gray-50 dark:divide-gray-700 transition-colors">
                                 {shopSales.map(s => (
-                                  <tr key={s.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-900/50 transition-colors"><td className="px-6 py-4 font-bold text-gray-900 dark:text-white">{s.id}</td><td className="px-6 py-4 text-right font-black text-gray-900 dark:text-white">{formatCurrency(s.total_amount)}</td><td className="px-6 py-4 text-gray-500 dark:text-gray-400 uppercase text-xs font-bold tracking-widest">{s.payment_type}</td><td className="px-6 py-4 text-gray-500 dark:text-gray-400">{formatDate(s.created_at)}</td></tr>
+                                  <tr key={s.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-900/50 transition-colors">
+                                    <td className="px-6 py-4 font-bold text-gray-900 dark:text-white">{s.id}</td>
+                                    <td className="px-6 py-4">
+                                      <div className="flex flex-wrap gap-1 max-w-xs">
+                                        {s.items?.map((item, idx) => (
+                                          <span key={idx} className="bg-gray-100 dark:bg-gray-700/50 text-gray-700 dark:text-gray-300 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-tight">
+                                            {item.item_name} (x{item.qty})
+                                          </span>
+                                        ))}
+                                      </div>
+                                    </td>
+                                    <td className="px-6 py-4 text-right font-black text-gray-900 dark:text-white">{formatCurrency(s.total_amount)}</td><td className="px-6 py-4 text-gray-500 dark:text-gray-400 uppercase text-xs font-bold tracking-widest">{s.payment_type}</td><td className="px-6 py-4 text-gray-500 dark:text-gray-400">{formatDate(s.created_at)}</td></tr>
                                 ))}
                               </tbody>            </table>
           </Section>
@@ -209,11 +220,11 @@ export default function ShopDetails() {
           >
             <table className="w-full">
               <thead className="bg-gray-50/50 dark:bg-gray-900/50 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase transition-colors">
-                <tr><th className="px-6 py-4 text-left">Buyer</th><th className="px-6 py-4 text-right">Price</th><th className="px-6 py-4 text-left">Status</th></tr>
+                <tr><th className="px-6 py-4 text-left">Buyer</th><th className="px-6 py-4 text-left">Item Info</th><th className="px-6 py-4 text-right">Price</th><th className="px-6 py-4 text-left">Status</th></tr>
               </thead>
               <tbody className="divide-y divide-gray-50 dark:divide-gray-700 transition-colors">
                 {shopDeposits.map(d => (
-                  <tr key={d.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-900/50 transition-colors"><td className="px-6 py-4 font-bold text-gray-900 dark:text-white">{d.buyer_name}</td><td className="px-6 py-4 text-right font-black text-gray-900 dark:text-white">{formatCurrency(d.selling_price)}</td><td className="px-6 py-4 italic text-sm text-gray-500 dark:text-gray-400 uppercase tracking-widest font-bold">{d.status}</td></tr>
+                  <tr key={d.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-900/50 transition-colors"><td className="px-6 py-4 font-bold text-gray-900 dark:text-white">{d.buyer_name}</td><td className="px-6 py-4 text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-tight">{d.item_name}</td><td className="px-6 py-4 text-right font-black text-gray-900 dark:text-white">{formatCurrency(d.selling_price)}</td><td className="px-6 py-4 italic text-sm text-gray-500 dark:text-gray-400 uppercase tracking-widest font-bold">{d.status}</td></tr>
                 ))}
               </tbody>
             </table>

@@ -64,6 +64,7 @@ export default function MonthsSales() {
                 <thead className="bg-gray-50/50 dark:bg-gray-900/50 transition-colors">
                   <tr>
                     <th className="px-8 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">ID</th>
+                    <th className="px-8 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Items Sold</th>
                     <th className="px-8 py-4 text-right text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Amount</th>
                     <th className="px-8 py-4 text-center text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Date</th>
                     <th className="px-8 py-4 text-center text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Receipt</th>
@@ -73,6 +74,15 @@ export default function MonthsSales() {
                   {sales.map((sale) => (
                     <tr key={sale.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-900/50 transition-colors">
                       <td className="px-8 py-4 font-bold text-gray-400 dark:text-gray-500 transition-colors">#{sale.id}</td>
+                      <td className="px-8 py-4">
+                        <div className="flex flex-wrap gap-1 max-w-xs">
+                          {sale.items?.map((item, idx) => (
+                            <span key={idx} className="bg-gray-100 dark:bg-gray-700/50 text-gray-700 dark:text-gray-300 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-tight">
+                              {item.item_name} (x{item.qty})
+                            </span>
+                          ))}
+                        </div>
+                      </td>
                       <td className="px-8 py-4 text-right font-black text-gray-900 dark:text-white text-lg transition-colors">{formatCurrency(sale.total_amount)}</td>
                       <td className="px-8 py-4 text-center text-gray-500 dark:text-gray-400 font-medium transition-colors">
                         <div className="text-sm font-bold text-gray-700 dark:text-gray-300 transition-colors">{formatDate(sale.created_at)}</div>

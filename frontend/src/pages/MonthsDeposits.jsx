@@ -62,7 +62,8 @@ export default function MonthsDeposits() {
               <table className="w-full">
                 <thead className="bg-gray-50/50 dark:bg-gray-900/50 transition-colors">
                   <tr>
-                    <th className="px-8 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Customer / Item</th>
+                    <th className="px-8 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Customer</th>
+                    <th className="px-8 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Item Info</th>
                     <th className="px-8 py-4 text-right text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Amount Paid</th>
                     <th className="px-8 py-4 text-center text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Date Info</th>
                     <th className="px-8 py-4 text-center text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Receipt</th>
@@ -73,7 +74,9 @@ export default function MonthsDeposits() {
                     <tr key={p.id} className="hover:bg-indigo-50/50 dark:hover:bg-indigo-900/20 transition-colors">
                       <td className="px-8 py-4">
                         <div className="font-bold text-gray-900 dark:text-white transition-colors">{p.buyer_name}</div>
-                        <div className="text-xs text-gray-400 dark:text-gray-500 uppercase font-black transition-colors">{p.item_name}</div>
+                      </td>
+                      <td className="px-8 py-4">
+                        <div className="text-xs text-gray-700 dark:text-gray-300 uppercase font-black transition-colors">{p.item_name}</div>
                       </td>
                       <td className="px-8 py-4 text-right font-black text-indigo-600 dark:text-indigo-400 text-lg transition-colors">{formatCurrency(p.amount)}</td>
                       <td className="px-8 py-4 text-center text-gray-500 dark:text-gray-400 font-medium transition-colors">

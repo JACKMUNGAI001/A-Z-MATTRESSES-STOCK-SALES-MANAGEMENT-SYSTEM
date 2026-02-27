@@ -72,6 +72,7 @@ export default function AllSales() {
                   <tr>
                     <th className="px-8 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Date & Time</th>
                     <th className="px-8 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Shop / Attendant</th>
+                    <th className="px-8 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Items Sold</th>
                     <th className="px-8 py-4 text-right text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Amount</th>
                     <th className="px-8 py-4 text-center text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Actions</th>
                   </tr>
@@ -89,6 +90,15 @@ export default function AllSales() {
                         </div>
                         <div className="flex items-center gap-1 text-gray-500 dark:text-gray-400 text-sm">
                           <User size={14} /> {sale.attendant_name}
+                        </div>
+                      </td>
+                      <td className="px-8 py-4">
+                        <div className="flex flex-wrap gap-1 max-w-md">
+                          {sale.items?.map((item, idx) => (
+                            <span key={idx} className="bg-gray-100 dark:bg-gray-700/50 text-gray-700 dark:text-gray-300 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-tight">
+                              {item.item_name} (x{item.qty})
+                            </span>
+                          ))}
                         </div>
                       </td>
                       <td className="px-8 py-4 text-right">

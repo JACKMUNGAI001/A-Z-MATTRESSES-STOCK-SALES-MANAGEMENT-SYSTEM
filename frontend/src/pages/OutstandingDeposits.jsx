@@ -59,7 +59,8 @@ export default function OutstandingDeposits() {
                 <thead className="bg-gray-50/50 dark:bg-gray-900/50 transition-colors">
                   <tr>
                     <th className="px-8 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Customer / Contact</th>
-                    <th className="px-8 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Item / Shop</th>
+                    <th className="px-8 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Item Info</th>
+                    <th className="px-8 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Shop</th>
                     <th className="px-8 py-4 text-right text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Amount Due</th>
                     <th className="px-8 py-4 text-center text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Receipts</th>
                   </tr>
@@ -73,6 +74,8 @@ export default function OutstandingDeposits() {
                       </td>
                       <td className="px-8 py-4">
                         <div className="font-bold text-gray-700 dark:text-gray-300 text-sm transition-colors">{deposit.item_name}</div>
+                      </td>
+                      <td className="px-8 py-4">
                         <div className="text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-tight flex items-center gap-1 transition-colors">
                           <Store size={12} /> {deposit.shop_name}
                         </div>

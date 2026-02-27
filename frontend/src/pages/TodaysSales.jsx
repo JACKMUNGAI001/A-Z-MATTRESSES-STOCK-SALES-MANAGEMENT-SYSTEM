@@ -57,6 +57,7 @@ export default function TodaysSales() {
                 <thead className="bg-gray-50/50 dark:bg-gray-900/50 transition-colors">
                   <tr>
                     <th className="px-8 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">ID</th>
+                    <th className="px-8 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Items Sold</th>
                     <th className="px-8 py-4 text-right text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Total Amount</th>
                     <th className="px-8 py-4 text-center text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Payment</th>
                     <th className="px-8 py-4 text-center text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Time</th>
@@ -67,6 +68,15 @@ export default function TodaysSales() {
                   {sales.map((sale) => (
                     <tr key={sale.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-900/50 transition-colors">
                       <td className="px-8 py-4 font-bold text-gray-400 dark:text-gray-500 transition-colors">#{sale.id}</td>
+                      <td className="px-8 py-4">
+                        <div className="flex flex-wrap gap-1 max-w-xs">
+                          {sale.items?.map((item, idx) => (
+                            <span key={idx} className="bg-gray-100 dark:bg-gray-700/50 text-gray-700 dark:text-gray-300 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-tight">
+                              {item.item_name} (x{item.qty})
+                            </span>
+                          ))}
+                        </div>
+                      </td>
                       <td className="px-8 py-4 text-right font-black text-gray-900 dark:text-white text-lg transition-colors">{formatCurrency(sale.total_amount)}</td>
                       <td className="px-8 py-4 text-center">
                         <span className="bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border border-gray-200 dark:border-gray-600 transition-colors">
