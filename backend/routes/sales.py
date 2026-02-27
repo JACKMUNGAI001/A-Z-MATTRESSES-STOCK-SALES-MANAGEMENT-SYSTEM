@@ -1,13 +1,50 @@
 from flask import Blueprint
-from controllers.sale_controller import create_sale_controller, get_shop_sales_controller, todays_sales_controller, current_weeks_sales_controller, current_months_sales_controller, current_years_sales_controller, get_all_sales_controller
+from controllers.sale_controller import (
+    create_sale_controller, get_shop_sales_controller, 
+    todays_sales_controller, current_weeks_sales_controller, 
+    current_months_sales_controller, current_years_sales_controller, 
+    get_all_sales_controller, delete_sale_controller
+)
 from flask_jwt_extended import jwt_required
 
 bp = Blueprint("sales", __name__)
 
-bp.add_url_rule("/", "create_sale", jwt_required()(create_sale_controller), methods=["POST"])
-bp.add_url_rule("/all", "get_all_sales", jwt_required()(get_all_sales_controller), methods=["GET"])
-bp.add_url_rule("/today", "todays_sales", jwt_required()(todays_sales_controller), methods=["GET"])
-bp.add_url_rule("/week", "current_weeks_sales", jwt_required()(current_weeks_sales_controller), methods=["GET"])
-bp.add_url_rule("/month", "current_months_sales", jwt_required()(current_months_sales_controller), methods=["GET"])
-bp.add_url_rule("/year", "current_years_sales", jwt_required()(current_years_sales_controller), methods=["GET"])
-bp.add_url_rule("/<int:shop_id>", "get_shop_sales", jwt_required()(get_shop_sales_controller), methods=["GET"])
+@bp.route("/", methods=["POST"])
+@jwt_required()
+def create_sale():
+    return create_sale_controller()
+
+@bp.route("/all", methods=["GET"])
+@jwt_required()
+def get_all_sales():
+    return get_all_sales_controller()
+
+@bp.route("/today", methods=["GET"])
+@jwt_required()
+def todays_sales():
+    return todays_sales_controller()
+
+@bp.route("/week", methods=["GET"])
+@jwt_required()
+def current_weeks_sales():
+    return current_weeks_sales_controller()
+
+@bp.route("/month", methods=["GET"])
+@jwt_required()
+def current_months_sales():
+    return current_months_sales_controller()
+
+@bp.route("/year", methods=["GET"])
+@jwt_required()
+def current_years_sales():
+    return current_years_sales_controller()
+
+@bp.route("/shop/<int:shop_id>", methods=["GET"])
+@jwt_required()
+def get_shop_sales(shop_id):
+    return get_shop_sales_controller(shop_id)
+
+@bp.route("/<int:sale_id>", methods=["DELETE"])
+@jwt_required()
+def delete_sale(sale_id):
+    return delete_sale_controller(sale_id)

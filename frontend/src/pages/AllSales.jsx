@@ -1,11 +1,13 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import api, { API_BASE } from "../api/api";
-import { History, ShoppingBag, Store, User, FileText } from "lucide-react";
+import { History, ShoppingBag, Store, User, FileText, Trash2 } from "lucide-react";
 import { formatDate } from "../utils/helpers";
+import { AuthContext } from "../context/AuthContext";
 
 export default function AllSales() {
   const [sales, setSales] = useState([]);
   const [loading, setLoading] = useState(false);
+  const { user } = useContext(AuthContext);
 
   useEffect(() => {
     fetchSales();
@@ -20,6 +22,17 @@ export default function AllSales() {
       console.error("Error fetching sales");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this sale record? Inventory levels for the items in this sale will be reverted.")) return;
+    try {
+      await api.delete(`/sales/${id}`);
+      alert("Sale record deleted and stock reverted successfully");
+      fetchSales();
+    } catch (err) {
+      alert(`Error deleting record: ${err.response?.data?.msg || err.message}`);
     }
   };
 
@@ -60,7 +73,7 @@ export default function AllSales() {
                     <th className="px-8 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Date & Time</th>
                     <th className="px-8 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Shop / Attendant</th>
                     <th className="px-8 py-4 text-right text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Amount</th>
-                    <th className="px-8 py-4 text-center text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Receipt</th>
+                    <th className="px-8 py-4 text-center text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50 dark:divide-gray-700 bg-white dark:bg-gray-800">
@@ -82,17 +95,28 @@ export default function AllSales() {
                         <div className="font-black text-gray-900 dark:text-white text-lg transition-colors">{formatCurrency(sale.total_amount)}</div>
                         <div className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">{sale.payment_type}</div>
                       </td>
-                      <td className="px-8 py-4 text-center">
-                        {sale.receipt_uuid && (
-                          <a
-                            href={`${API_BASE}/receipts/${sale.receipt_uuid}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 p-2 rounded-lg hover:bg-blue-600 hover:text-white transition-all inline-flex items-center gap-1 font-bold text-xs"
-                          >
-                            <FileText size={16} /> VIEW
-                          </a>
-                        )}
+                      <td className="px-8 py-4 text-center transition-colors">
+                        <div className="flex items-center justify-center gap-2">
+                          {sale.receipt_uuid && (
+                            <a
+                              href={`${API_BASE}/receipts/${sale.receipt_uuid}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 p-2 rounded-lg hover:bg-blue-600 hover:text-white transition-all inline-flex items-center gap-1 font-bold text-xs"
+                            >
+                              <FileText size={16} /> VIEW
+                            </a>
+                          )}
+                          {user?.role === 'admin' && (
+                            <button
+                              onClick={() => handleDelete(sale.id)}
+                              className="bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 p-2 rounded-lg hover:bg-red-600 hover:text-white transition-all"
+                              title="Delete Sale"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}

@@ -11,6 +11,8 @@ class ShopStock(db.Model):
     sell_price = db.Column(db.Numeric(10,2))
     updated_at = db.Column(db.DateTime, default=datetime.utcnow)
 
+    __table_args__ = (db.UniqueConstraint("shop_id", "item_id", name="uq_shop_item"),)
+
 class StockMovement(db.Model):
     __tablename__ = "stock_movements"
     id = db.Column(db.Integer, primary_key=True)

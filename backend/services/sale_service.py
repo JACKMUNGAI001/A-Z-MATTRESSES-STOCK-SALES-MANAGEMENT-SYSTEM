@@ -200,3 +200,40 @@ def get_current_years_sales(shop_id=None):
     sales = query.all()
     return [_serialize_sale(sale) for sale in sales]
 
+def delete_sale(sale_id, user_id):
+    try:
+        sale = Sale.query.get(sale_id)
+        if not sale:
+            raise ValueError("Sale not found")
+
+        with db.session.begin_nested():
+            # Revert stock levels
+            for item in sale.items:
+                stock = ShopStock.query.filter_by(shop_id=sale.shop_id, item_id=item.item_id).first()
+                if stock:
+                    stock.quantity += item.qty
+                    stock.updated_at = datetime.utcnow()
+                    
+                    # Record adjustment movement
+                    mv = StockMovement(
+                        shop_id=sale.shop_id, 
+                        item_id=item.item_id, 
+                        movement_type="adjustment", 
+                        qty=item.qty, 
+                        user_id=user_id, 
+                        reference=f"Sale {sale_id} deleted",
+                        created_at=datetime.utcnow()
+                    )
+                    db.session.add(mv)
+
+            # Delete sale items first
+            SaleItem.query.filter_by(sale_id=sale_id).delete()
+            # Delete the sale
+            db.session.delete(sale)
+
+        db.session.commit()
+        return True
+    except Exception as e:
+        db.session.rollback()
+        raise e
+

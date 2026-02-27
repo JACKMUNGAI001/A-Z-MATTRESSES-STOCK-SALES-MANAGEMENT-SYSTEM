@@ -25,7 +25,8 @@ def get_global_financial_overview():
                 total_profit += (up - uc) * qty
 
         combined_stock_value = 0
-        stocks = ShopStock.query.all()
+        from models.product import Item
+        stocks = ShopStock.query.join(Item).all()
         for stock in stocks:
             # Ensure buy_price and quantity are not None
             bp = float(stock.buy_price or 0)

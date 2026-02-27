@@ -40,7 +40,7 @@ export default function ShopDetails() {
 
   const fetchShopSales = async () => {
     try {
-      const response = await api.get(`/sales/${shopId}`);
+      const response = await api.get(`/sales/shop/${shopId}`);
       setShopSales(response.data);
     } catch (err) {
       console.error('Error fetching shop sales');
@@ -233,7 +233,7 @@ export default function ShopDetails() {
               </thead>
               <tbody className="divide-y divide-gray-50 dark:divide-gray-700 transition-colors">
                 {shopStock.map(s => (
-                  <tr key={s.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-900/50 transition-colors"><td className="px-6 py-4 font-bold text-gray-900 dark:text-white">{availableItems.find(i => i.id === s.item_id)?.name}</td><td className="px-6 py-4 text-center"><span className={`px-2 py-1 rounded-full text-xs font-black transition-colors ${s.qty <= 2 ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400' : 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'}`}>{s.qty}</span></td><td className="px-6 py-4 text-right font-mono text-xs text-gray-400 dark:text-gray-500 transition-colors">{formatCurrency(s.buy_price)}</td><td className="px-6 py-4 text-right font-black text-blue-600 dark:text-blue-400 transition-colors">{formatCurrency(s.sell_price)}</td></tr>
+                  <tr key={s.item_id} className="hover:bg-gray-50/50 dark:hover:bg-gray-900/50 transition-colors"><td className="px-6 py-4 font-bold text-gray-900 dark:text-white">{availableItems.find(i => i.id === s.item_id)?.name}</td><td className="px-6 py-4 text-center"><span className={`px-2 py-1 rounded-full text-xs font-black transition-colors ${s.qty <= 2 ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400' : 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'}`}>{s.qty}</span></td><td className="px-6 py-4 text-right font-mono text-xs text-gray-400 dark:text-gray-500 transition-colors">{formatCurrency(s.buy_price)}</td><td className="px-6 py-4 text-right font-black text-blue-600 dark:text-blue-400 transition-colors">{formatCurrency(s.sell_price)}</td></tr>
                 ))}
               </tbody>
             </table>
@@ -253,7 +253,7 @@ export default function ShopDetails() {
               </thead>
               <tbody className="divide-y divide-gray-50 dark:divide-gray-700 transition-colors">
                 {lowStockItems.map(s => (
-                  <tr key={s.id} className="hover:bg-orange-50/20 dark:hover:bg-orange-900/10 transition-colors"><td className="px-6 py-4 font-bold text-gray-900 dark:text-white">{availableItems.find(i => i.id === s.item_id)?.name}</td><td className="px-6 py-4 text-center font-black text-red-600 dark:text-red-400">{s.qty}</td></tr>
+                  <tr key={s.item_id} className="hover:bg-orange-50/20 dark:hover:bg-orange-900/10 transition-colors"><td className="px-6 py-4 font-bold text-gray-900 dark:text-white">{availableItems.find(i => i.id === s.item_id)?.name}</td><td className="px-6 py-4 text-center font-black text-red-600 dark:text-red-400">{s.qty}</td></tr>
                 ))}
               </tbody>
             </table>

@@ -1,11 +1,13 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import api, { API_BASE } from "../api/api";
-import { History, Store, FileText, Wallet } from "lucide-react";
+import { History, Store, FileText, Wallet, Trash2 } from "lucide-react";
 import { formatDate } from "../utils/helpers";
+import { AuthContext } from "../context/AuthContext";
 
 export default function AllDeposits() {
   const [deposits, setDeposits] = useState([]);
   const [loading, setLoading] = useState(false);
+  const { user } = useContext(AuthContext);
 
   useEffect(() => {
     fetchDeposits();
@@ -20,6 +22,17 @@ export default function AllDeposits() {
       console.error("Error fetching deposits");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this deposit record? This will also remove all associated payment history.")) return;
+    try {
+      await api.delete(`/deposits/${id}`);
+      alert("Deposit record deleted successfully");
+      fetchDeposits();
+    } catch (err) {
+      alert(`Error deleting record: ${err.response?.data?.msg || err.message}`);
     }
   };
 
@@ -61,7 +74,7 @@ export default function AllDeposits() {
                     <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Item Info</th>
                     <th className="px-6 py-4 text-right text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Financials</th>
                     <th className="px-6 py-4 text-center text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Status</th>
-                    <th className="px-6 py-4 text-center text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Receipts</th>
+                    <th className="px-6 py-4 text-center text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50 dark:divide-gray-700 bg-white dark:bg-gray-800 transition-colors">
@@ -87,14 +100,25 @@ export default function AllDeposits() {
                         </span>
                       </td>
                       <td className="px-6 py-4 text-center transition-colors">
-                        <a
-                          href={`${API_BASE}/receipts/deposit/${deposit.id}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 p-2 rounded-lg hover:bg-indigo-600 hover:text-white transition-all inline-flex items-center gap-1 font-bold text-xs"
-                        >
-                          <FileText size={16} /> VIEW ALL
-                        </a>
+                        <div className="flex items-center justify-center gap-2">
+                          <a
+                            href={`${API_BASE}/receipts/deposit/${deposit.id}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 p-2 rounded-lg hover:bg-indigo-600 hover:text-white transition-all inline-flex items-center gap-1 font-bold text-xs"
+                          >
+                            <FileText size={16} /> VIEW
+                          </a>
+                          {user?.role === 'admin' && (
+                            <button
+                              onClick={() => handleDelete(deposit.id)}
+                              className="bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 p-2 rounded-lg hover:bg-red-600 hover:text-white transition-all"
+                              title="Delete Transaction"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -106,3 +130,4 @@ export default function AllDeposits() {
     </>
   );
 }
+

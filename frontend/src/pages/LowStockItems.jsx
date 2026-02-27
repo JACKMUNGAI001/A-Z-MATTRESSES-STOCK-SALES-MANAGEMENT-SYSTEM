@@ -62,7 +62,7 @@ export default function LowStockItems() {
                 </thead>
                 <tbody className="divide-y divide-gray-50 dark:divide-gray-700 bg-white dark:bg-gray-800 transition-colors">
                   {items.map((item) => (
-                    <tr key={item.id} className="hover:bg-orange-50/10 dark:hover:bg-orange-900/10 transition-colors">
+                    <tr key={item.item_id} className="hover:bg-orange-50/10 dark:hover:bg-orange-900/10 transition-colors">
                       <td className="px-8 py-4 font-black text-gray-900 dark:text-white transition-colors">{item.item_name}</td>
                       <td className="px-8 py-4 text-center transition-colors">
                         <span className="text-2xl font-black text-red-600 dark:text-red-400">{item.qty}</span>

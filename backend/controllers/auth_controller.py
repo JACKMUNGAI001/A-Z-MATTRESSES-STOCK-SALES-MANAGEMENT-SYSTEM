@@ -37,7 +37,7 @@ def login():
         if shop:
             shop_name = shop.name
 
-    token = create_access_token(identity={"id":u.id,"role":u.role})
+    token = create_access_token(identity={"id":u.id,"role":u.role, "shop_id": u.shop_id})
     return jsonify({"access_token": token, "user": {"id":u.id,"name":u.name,"email":u.email,"role":u.role, "shop_id": u.shop_id, "shop_name": shop_name}}), 200
 
 def get_current_user_controller():

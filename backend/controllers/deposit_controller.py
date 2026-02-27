@@ -3,10 +3,12 @@ from services.deposit_service import (
     create_deposit, add_deposit_payment, get_deposit_customers_count, 
     get_deposit_customers, get_all_deposits, get_deposits_by_shop_id,
     get_todays_deposit_payments, get_weeks_deposit_payments,
-    get_months_deposit_payments, get_years_deposit_payments
+    get_months_deposit_payments, get_years_deposit_payments,
+    delete_deposit
 )
 from models.deposit import DepositSale
 from flask_jwt_extended import get_jwt_identity
+from utils.auth_utils import get_shop_id_for_attendant
 
 def create_deposit_controller():
     data = request.get_json() or {}
@@ -42,29 +44,37 @@ def get_shop_deposits_controller(shop_id):
     return jsonify(deposits), 200
 
 def deposit_customers_count_controller():
-    count = get_deposit_customers_count()
+    shop_id = get_shop_id_for_attendant()
+    count = get_deposit_customers_count(shop_id=shop_id)
     return jsonify(count), 200
 
 def deposit_customers_controller():
-    customers = get_deposit_customers()
+    shop_id = get_shop_id_for_attendant()
+    customers = get_deposit_customers(shop_id=shop_id)
     return jsonify(customers), 200
 
 def todays_deposits_controller():
-    user = get_jwt_identity()
-    shop_id = user.get("shop_id") if user.get("role") == "attendant" else None
+    shop_id = get_shop_id_for_attendant()
     return jsonify(get_todays_deposit_payments(shop_id)), 200
 
 def weeks_deposits_controller():
-    user = get_jwt_identity()
-    shop_id = user.get("shop_id") if user.get("role") == "attendant" else None
+    shop_id = get_shop_id_for_attendant()
     return jsonify(get_weeks_deposit_payments(shop_id)), 200
 
 def months_deposits_controller():
-    user = get_jwt_identity()
-    shop_id = user.get("shop_id") if user.get("role") == "attendant" else None
+    shop_id = get_shop_id_for_attendant()
     return jsonify(get_months_deposit_payments(shop_id)), 200
 
 def years_deposits_controller():
-    user = get_jwt_identity()
-    shop_id = user.get("shop_id") if user.get("role") == "attendant" else None
+    shop_id = get_shop_id_for_attendant()
     return jsonify(get_years_deposit_payments(shop_id)), 200
+
+def delete_deposit_controller(deposit_id):
+    user_identity = get_jwt_identity()
+    if user_identity.get("role") != "admin":
+        return jsonify({"msg": "Admin privilege required"}), 403
+    try:
+        delete_deposit(deposit_id)
+        return jsonify({"msg": "Deposit record deleted successfully"}), 200
+    except ValueError as e:
+        return jsonify({"msg": str(e)}), 404

@@ -219,9 +219,26 @@ def get_deposits_by_shop_id(shop_id):
     deposits = DepositSale.query.filter_by(shop_id=shop_id).order_by(DepositSale.created_at.desc()).all()
     return [_serialize_deposit(dep) for dep in deposits]
 
-def get_deposit_customers_count():
-    return {"count": DepositSale.query.filter(DepositSale.status == 'active').count()}
+def get_deposit_customers_count(shop_id=None):
+    query = DepositSale.query.filter(DepositSale.status == 'active')
+    if shop_id:
+        query = query.filter(DepositSale.shop_id == shop_id)
+    return {"count": query.count()}
 
-def get_deposit_customers():
-    deposits = DepositSale.query.filter(DepositSale.status == 'active').all()
+def get_deposit_customers(shop_id=None):
+    query = DepositSale.query.filter(DepositSale.status == 'active')
+    if shop_id:
+        query = query.filter(DepositSale.shop_id == shop_id)
+    deposits = query.all()
     return [_serialize_deposit(dep) for dep in deposits]
+
+def delete_deposit(deposit_id):
+    dep = DepositSale.query.get(deposit_id)
+    if not dep:
+        raise ValueError("Deposit record not found")
+    
+    # Delete associated payments first
+    DepositPayment.query.filter_by(deposit_id=deposit_id).delete()
+    db.session.delete(dep)
+    db.session.commit()
+    return True

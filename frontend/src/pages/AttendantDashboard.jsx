@@ -170,7 +170,7 @@ export default function AttendantDashboard(){
                 </thead>
                 <tbody className="divide-y divide-gray-50 dark:divide-gray-700 bg-white dark:bg-gray-800 transition-colors">
                   {shopStock.map((stock) => (
-                    <tr key={stock.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-900/50 transition-colors">
+                    <tr key={stock.item_id} className="hover:bg-gray-50/50 dark:hover:bg-gray-900/50 transition-colors">
                       <td className="px-6 py-4 whitespace-nowrap font-bold text-gray-900 dark:text-white">{stock.item_name}</td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`px-3 py-1 rounded-full text-sm font-bold ${stock.qty <= 2 ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400' : 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'}`}>

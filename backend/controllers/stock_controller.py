@@ -3,26 +3,34 @@ from services.stock_service import adjust_stock, check_low_stock, get_low_stock_
 from models.stock import ShopStock
 from extensions import db
 from flask_jwt_extended import get_jwt_identity
+from utils.auth_utils import get_shop_id_for_attendant
 
 def get_shop_stock(shop_id):
     # Show all stock records for the shop, including those with quantity 0
-    q = ShopStock.query.filter_by(shop_id=shop_id).all()
+    # Use join(Item) to ensure we only see stock for existing products
+    # Use group_by to aggregate potential duplicates
+    from models.product import Item
+    from sqlalchemy import func
+    
+    q = db.session.query(
+        ShopStock.item_id,
+        func.sum(ShopStock.quantity).label('total_qty'),
+        func.max(ShopStock.sell_price).label('sell_price'),
+        func.max(ShopStock.buy_price).label('buy_price')
+    ).join(Item).filter(ShopStock.shop_id == shop_id).group_by(ShopStock.item_id).all()
+    
     out = []
     user_identity = get_jwt_identity()
     user_role = user_identity.get("role")
 
     for s in q:
-        # Safety check: if the item itself was deleted from the system, skip this row
-        from models.product import Item
         item = Item.query.get(s.item_id)
-        if not item:
-            continue
+        # item will not be None because of the inner join above
 
         stock_data = {
-            "id":s.id,
             "item_id":s.item_id,
             "item_name": item.name,
-            "qty":s.quantity,
+            "qty":int(s.total_qty),
             "sell_price":float(s.sell_price or 0)
         }
         if user_role != "attendant":
@@ -41,18 +49,14 @@ def adjust_stock_controller(identity):
     return jsonify({"msg":"adjusted","qty":stock.quantity}), 200
 
 def low_stock_alerts_controller(threshold=2):
-    user_identity = get_jwt_identity()
-    user_role = user_identity.get("role")
-    shop_id = user_identity.get("shop_id") if user_role == "attendant" else None
+    shop_id = get_shop_id_for_attendant()
     
     low = check_low_stock(threshold, shop_id=shop_id)
-    out = [{"shop_id":s.shop_id,"item_id":s.item_id,"qty":s.quantity} for s in low]
+    out = [{"shop_id":s.shop_id,"item_id":s.item_id,"qty":int(s.total_qty)} for s in low]
     return jsonify(out), 200
 
 def low_stock_count_controller(threshold=2):
-    user_identity = get_jwt_identity()
-    user_role = user_identity.get("role")
-    shop_id = user_identity.get("shop_id") if user_role == "attendant" else None
+    shop_id = get_shop_id_for_attendant()
     
     count = get_low_stock_count(threshold, shop_id=shop_id)
     return jsonify(count), 200
@@ -60,9 +64,15 @@ def low_stock_count_controller(threshold=2):
 def low_stock_items_controller(threshold=2):
     user_identity = get_jwt_identity()
     user_role = user_identity.get("role")
-    shop_id = user_identity.get("shop_id") if user_role == "attendant" else None
+    shop_id = get_shop_id_for_attendant()
     
     items = get_low_stock_items(threshold, shop_id=shop_id)
+    
+    # Filter out buy_price for attendants
+    if user_role == "attendant":
+        for item in items:
+            item.pop("buy_price", None)
+            
     return jsonify(items), 200
 
 def delete_stock_controller(shop_id, item_id):

@@ -52,6 +52,21 @@ def delete_item_controller(item_id):
     item = Item.query.get(item_id)
     if not item:
         return jsonify({"msg": "Item not found"}), 404
+    
+    # Cleanup related records to prevent "N/A" orphans
+    from models.stock import ShopStock
+    from models.deposit import DepositSale, DepositPayment
+    
+    # Optionally: Only allow delete if no active deposits exist? 
+    # For now, let's just cleanup to be safe as requested.
+    ShopStock.query.filter_by(item_id=item_id).delete()
+    
+    # Handle deposits: Delete payments first then the sales
+    deposits = DepositSale.query.filter_by(item_id=item_id).all()
+    for d in deposits:
+        DepositPayment.query.filter_by(deposit_id=d.id).delete()
+        db.session.delete(d)
+
     db.session.delete(item)
     db.session.commit()
-    return jsonify({"msg": "Item deleted"}), 200
+    return jsonify({"msg": "Item and associated records deleted"}), 200
