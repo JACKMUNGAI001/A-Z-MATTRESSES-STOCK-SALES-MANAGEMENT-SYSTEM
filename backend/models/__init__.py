@@ -9,3 +9,4 @@ from .transfer import Transfer, TransferItem
 from .expense import Expense
 from .notification import Notification
 from .receipt import Receipt
+from .supplier import Supplier, SupplierInvoice, SupplierInvoiceItem

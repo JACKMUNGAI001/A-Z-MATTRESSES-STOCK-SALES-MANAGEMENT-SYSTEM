@@ -10,6 +10,7 @@ from .expenses import bp as expenses_bp
 from .receipts import bp as receipts_bp
 from .reports import bp as reports_bp
 from .user import bp as user_bp
+from .suppliers import suppliers_bp
 
 def register_blueprints(app):
     app.register_blueprint(auth_bp, url_prefix="/auth")
@@ -24,3 +25,4 @@ def register_blueprints(app):
     app.register_blueprint(receipts_bp, url_prefix="/receipts")
     app.register_blueprint(reports_bp, url_prefix="/reports")
     app.register_blueprint(user_bp, url_prefix="/user")
+    app.register_blueprint(suppliers_bp, url_prefix="/suppliers")

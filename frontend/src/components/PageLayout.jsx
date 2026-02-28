@@ -3,7 +3,7 @@ import Sidebar from './Sidebar';
 import Header from './Header';
 import { AuthContext } from '../context/AuthContext';
 
-export default function PageLayout({ children, role }) {
+export default function PageLayout({ children, role, title }) {
   const { user } = useContext(AuthContext);
   const currentRole = role || user?.role;
 
@@ -12,6 +12,7 @@ export default function PageLayout({ children, role }) {
       <Sidebar role={currentRole} />
       <main className="flex-1 p-8 max-w-7xl mx-auto w-full">
         <Header />
+        {title && <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-6">{title}</h1>}
         {children}
       </main>
     </div>

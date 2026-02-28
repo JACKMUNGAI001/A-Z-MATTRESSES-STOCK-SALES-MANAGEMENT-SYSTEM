@@ -9,7 +9,8 @@ import {
   Receipt, 
   ArrowLeftRight, 
   UserCircle,
-  FileText
+  FileText,
+  Truck
 } from 'lucide-react'
 
 export default function Sidebar({ role: propRole }){
@@ -45,6 +46,7 @@ export default function Sidebar({ role: propRole }){
             <NavLink to="/admin" icon={LayoutDashboard}>Dashboard</NavLink>
             <NavLink to="/admin/shops" icon={Store}>Shops</NavLink>
             <NavLink to="/admin/items" icon={Package}>Products</NavLink>
+            <NavLink to="/admin/suppliers" icon={Truck}>Suppliers</NavLink>
             <NavLink to="/admin/pnl" icon={TrendingUp}>Profit & Loss</NavLink>
             <NavLink to="/admin/expenses" icon={Receipt}>Expenses</NavLink>
             <NavLink to="/transfers" icon={ArrowLeftRight}>Transfers</NavLink>

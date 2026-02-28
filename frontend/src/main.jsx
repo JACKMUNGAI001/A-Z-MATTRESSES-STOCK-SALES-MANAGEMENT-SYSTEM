@@ -24,6 +24,8 @@ import PageLayout from './components/PageLayout'
 import AllSales from './pages/AllSales'
 import AllDeposits from './pages/AllDeposits'
 import OutstandingDeposits from './pages/OutstandingDeposits'
+import AdminSuppliers from './pages/AdminSuppliers'
+import AdminSupplierInvoices from './pages/AdminSupplierInvoices'
 import TodaysSales from './pages/TodaysSales'
 import WeeksSales from './pages/WeeksSales'
 import MonthsSales from './pages/MonthsSales'
@@ -54,6 +56,8 @@ ReactDOM.createRoot(document.getElementById('root')).render(
             <Route path="/admin" element={<ProtectedRoute role="admin"><PageLayout role="admin"><AdminDashboard/></PageLayout></ProtectedRoute>} />
             <Route path="/admin/shops" element={<ProtectedRoute role="admin"><PageLayout role="admin"><AdminShops/></PageLayout></ProtectedRoute>} />
             <Route path="/admin/items" element={<ProtectedRoute role="admin"><PageLayout role="admin"><AdminItems/></PageLayout></ProtectedRoute>} />
+            <Route path="/admin/suppliers" element={<ProtectedRoute role="admin"><PageLayout role="admin" title="Suppliers Management"><AdminSuppliers/></PageLayout></ProtectedRoute>} />
+            <Route path="/admin/supplier-invoices" element={<ProtectedRoute role="admin"><PageLayout role="admin" title="Supplier Invoices"><AdminSupplierInvoices/></PageLayout></ProtectedRoute>} />
             <Route path="/admin/shops/:shopId" element={<ProtectedRoute role="admin"><PageLayout role="admin"><ShopDetails/></PageLayout></ProtectedRoute>} />
             <Route path="/admin/shops/:shopId/stock" element={<ProtectedRoute role="admin"><PageLayout role="admin"><AdminShopStock/></PageLayout></ProtectedRoute>} />
             <Route path="/admin/all-sales" element={<ProtectedRoute role="admin"><PageLayout role="admin"><AllSales/></PageLayout></ProtectedRoute>} />

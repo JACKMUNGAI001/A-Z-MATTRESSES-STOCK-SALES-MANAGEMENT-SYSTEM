@@ -1,0 +1,133 @@
+from flask import request, jsonify
+from services.supplier_service import (
+    create_supplier, list_suppliers, update_supplier, delete_supplier,
+    create_supplier_invoice, list_supplier_invoices, get_supplier_invoice,
+    update_invoice_status
+)
+from extensions import db
+from models.supplier import Supplier, SupplierInvoice
+
+def list_suppliers_controller():
+    suppliers = list_suppliers()
+    out = []
+    for s in suppliers:
+        out.append({
+            "id": s.id,
+            "name": s.name,
+            "contact_person": s.contact_person,
+            "phone": s.phone,
+            "email": s.email,
+            "address": s.address,
+            "created_at": s.created_at.isoformat()
+        })
+    return jsonify(out), 200
+
+def create_supplier_controller():
+    data = request.get_json() or {}
+    name = data.get("name")
+    if not name:
+        return jsonify({"msg": "Supplier name is required"}), 400
+    s = create_supplier(
+        name=name,
+        contact_person=data.get("contact_person"),
+        phone=data.get("phone"),
+        email=data.get("email"),
+        address=data.get("address")
+    )
+    return jsonify({"id": s.id, "name": s.name}), 201
+
+def update_supplier_controller(supplier_id):
+    data = request.get_json() or {}
+    s = update_supplier(supplier_id, **data)
+    if not s:
+        return jsonify({"msg": "Supplier not found"}), 404
+    return jsonify({"msg": "Supplier updated", "id": s.id}), 200
+
+def delete_supplier_controller(supplier_id):
+    success = delete_supplier(supplier_id)
+    if not success:
+        return jsonify({"msg": "Supplier not found"}), 404
+    return jsonify({"msg": "Supplier deleted"}), 200
+
+def list_invoices_controller():
+    invoices = list_supplier_invoices()
+    out = []
+    for inv in invoices:
+        out.append({
+            "id": inv.id,
+            "supplier_id": inv.supplier_id,
+            "supplier_name": inv.supplier.name,
+            "invoice_number": inv.invoice_number,
+            "total_amount": float(inv.total_amount),
+            "amount_paid": float(inv.amount_paid),
+            "status": inv.status,
+            "received_date": inv.received_date.isoformat(),
+            "due_date": inv.due_date.isoformat() if inv.due_date else None,
+            "notes": inv.notes,
+            "created_at": inv.created_at.isoformat()
+        })
+    return jsonify(out), 200
+
+def create_invoice_controller():
+    data = request.get_json() or {}
+    supplier_id = data.get("supplier_id")
+    invoice_number = data.get("invoice_number")
+    items_data = data.get("items") # list of {item_id, quantity, unit_cost}
+    
+    if not all([supplier_id, invoice_number, items_data]):
+        return jsonify({"msg": "supplier_id, invoice_number, and items are required"}), 400
+    
+    try:
+        inv = create_supplier_invoice(
+            supplier_id=supplier_id,
+            invoice_number=invoice_number,
+            items_data=items_data,
+            shop_id=data.get("shop_id", 1),
+            status=data.get("status", "Pending"),
+            received_date=data.get("received_date"),
+            due_date=data.get("due_date"),
+            notes=data.get("notes")
+        )
+        return jsonify({"id": inv.id, "invoice_number": inv.invoice_number}), 201
+    except Exception as e:
+        return jsonify({"msg": str(e)}), 400
+
+def get_invoice_controller(invoice_id):
+    inv = get_supplier_invoice(invoice_id)
+    if not inv:
+        return jsonify({"msg": "Invoice not found"}), 404
+    
+    items_out = []
+    for item in inv.items:
+        items_out.append({
+            "id": item.id,
+            "item_id": item.item_id,
+            "item_name": item.item.name,
+            "quantity": item.quantity,
+            "unit_cost": float(item.unit_cost),
+            "total_cost": float(item.total_cost)
+        })
+
+    return jsonify({
+        "id": inv.id,
+        "supplier_id": inv.supplier_id,
+        "supplier_name": inv.supplier.name,
+        "invoice_number": inv.invoice_number,
+        "total_amount": float(inv.total_amount),
+        "amount_paid": float(inv.amount_paid),
+        "status": inv.status,
+        "received_date": inv.received_date.isoformat(),
+        "due_date": inv.due_date.isoformat() if inv.due_date else None,
+        "notes": inv.notes,
+        "items": items_out
+    }), 200
+
+def update_invoice_status_controller(invoice_id):
+    data = request.get_json() or {}
+    status = data.get("status")
+    if not status:
+        return jsonify({"msg": "Status is required"}), 400
+    inv = update_invoice_status(invoice_id, status)
+    if not inv:
+        return jsonify({"msg": "Invoice not found"}), 404
+    return jsonify({"msg": "Status updated", "id": inv.id}), 200

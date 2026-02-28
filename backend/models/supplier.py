@@ -1,0 +1,40 @@
+from datetime import datetime
+from extensions import db
+
+class Supplier(db.Model):
+    __tablename__ = "suppliers"
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(255), nullable=False)
+    contact_person = db.Column(db.String(255))
+    phone = db.Column(db.String(50))
+    email = db.Column(db.String(255))
+    address = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+class SupplierInvoice(db.Model):
+    __tablename__ = "supplier_invoices"
+    id = db.Column(db.Integer, primary_key=True)
+    supplier_id = db.Column(db.Integer, db.ForeignKey("suppliers.id"), nullable=False)
+    invoice_number = db.Column(db.String(100), unique=True, nullable=False)
+    total_amount = db.Column(db.Numeric(12,2), nullable=False)
+    amount_paid = db.Column(db.Numeric(12,2), default=0)
+    status = db.Column(db.String(50), default="Pending") # Pending, Partial, Paid
+    received_date = db.Column(db.DateTime, default=datetime.utcnow)
+    due_date = db.Column(db.DateTime)
+    notes = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    items = db.relationship("SupplierInvoiceItem", backref="invoice", lazy=True, cascade="all, delete-orphan")
+    supplier = db.relationship("Supplier", backref=db.backref("invoices", lazy=True))
+
+class SupplierInvoiceItem(db.Model):
+    __tablename__ = "supplier_invoice_items"
+    id = db.Column(db.Integer, primary_key=True)
+    invoice_id = db.Column(db.Integer, db.ForeignKey("supplier_invoices.id"), nullable=False)
+    item_id = db.Column(db.Integer, db.ForeignKey("items.id"), nullable=False)
+    quantity = db.Column(db.Integer, nullable=False)
+    unit_cost = db.Column(db.Numeric(12,2), nullable=False)
+    total_cost = db.Column(db.Numeric(12,2), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    item = db.relationship("Item", backref=db.backref("supplied_items", lazy=True))
