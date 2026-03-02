@@ -11,8 +11,8 @@ def list_notifications():
     ident = get_jwt_identity()
     role = ident.get("role")
     user_id = ident.get("id")
-    notes = Notification.query.filter((Notification.user_role==role) | (Notification.user_id==user_id)).all()
-    return jsonify([{"id":n.id,"type":n.type,"msg":n.message,"status":n.status} for n in notes]), 200
+    notes = Notification.query.filter((Notification.user_role==role) | (Notification.user_id==user_id)).order_by(Notification.created_at.desc()).all()
+    return jsonify([{"id":n.id,"type":n.type,"msg":n.message,"status":n.status, "created_at": n.created_at.isoformat()} for n in notes]), 200
 
 @bp.route("/mark-read/<int:id>", methods=["POST"])
 @jwt_required()

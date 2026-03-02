@@ -93,6 +93,29 @@ def create_sale(shop_id, user_id, items, payment_type="cash"):
                 
                 total += unit_price * qty
 
+                # Check for low stock notification
+                if stock.quantity <= 2:
+                    product = Item.query.get(item_id)
+                    shop_obj = Shop.query.get(shop_id)
+                    # Notify current attendant
+                    n_attendant = Notification(
+                        user_id=user_id,
+                        user_role='attendant',
+                        type='low_stock',
+                        message=f'Low Stock Alert: {product.name} is down to {stock.quantity} in {shop_obj.name}.'
+                    )
+                    # Notify all admins
+                    admins = User.query.filter_by(role='admin').all()
+                    for admin in admins:
+                        n_admin = Notification(
+                            user_id=admin.id,
+                            user_role='admin',
+                            type='low_stock',
+                            message=f'Low Stock Alert: {product.name} is down to {stock.quantity} in {shop_obj.name}.'
+                        )
+                        db.session.add(n_admin)
+                    db.session.add(n_attendant)
+
             sale.total_amount = total
             db.session.add_all(sale_items)
 

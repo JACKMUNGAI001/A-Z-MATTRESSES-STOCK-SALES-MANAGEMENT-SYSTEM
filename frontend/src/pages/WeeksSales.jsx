@@ -1,11 +1,13 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import api, { API_BASE } from '../api/api';
-import { FileText, CalendarDays, Receipt } from "lucide-react";
+import { FileText, CalendarDays, Receipt, SearchX } from "lucide-react";
 import { formatDate } from "../utils/helpers";
+import { SearchContext } from '../context/SearchContext';
 
 export default function WeeksSales() {
   const [sales, setSales] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { searchQuery } = useContext(SearchContext);
 
   useEffect(() => {
     const fetchSales = async () => {
@@ -25,6 +27,14 @@ export default function WeeksSales() {
     return new Intl.NumberFormat('en-KE', { style: 'currency', currency: 'KES', minimumFractionDigits: 0 }).format(val || 0);
   };
 
+  const filteredSales = searchQuery 
+    ? sales.filter(sale => 
+        sale.items?.some(item => 
+          item.item_name.toLowerCase().includes(searchQuery.toLowerCase())
+        )
+      )
+    : sales;
+
   return (
     <>
         <div className="mb-8 flex items-center gap-3">
@@ -34,6 +44,7 @@ export default function WeeksSales() {
           <div>
             <h1 className="text-3xl font-black text-gray-900 dark:text-white tracking-tight transition-colors">Weekly Sales</h1>
             <p className="text-gray-500 dark:text-gray-400 font-medium transition-colors">Detailed transactions for the current week</p>
+            {searchQuery && <p className="text-sm text-blue-500 font-bold mt-1 transition-all">Searching for: "{searchQuery}"</p>}
           </div>
         </div>
 
@@ -44,15 +55,18 @@ export default function WeeksSales() {
               Weekly Record
             </h2>
             <span className="bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-400 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest transition-colors">
-              {sales.length} Sales
+              {filteredSales.length} {searchQuery ? 'Matching' : ''} Sales
             </span>
           </div>
           
           <div className="overflow-x-auto">
             {loading ? (
               <div className="p-20 text-center text-gray-400 dark:text-gray-500 font-bold uppercase tracking-widest animate-pulse transition-colors">Loading data...</div>
-            ) : sales.length === 0 ? (
-              <div className="p-20 text-center text-gray-400 dark:text-gray-500 italic transition-colors">No sales recorded for this week yet.</div>
+            ) : filteredSales.length === 0 ? (
+              <div className="p-20 text-center border-t border-gray-100 dark:border-gray-700 transition-colors">
+                <SearchX size={48} className="mx-auto text-gray-300 dark:text-gray-600 mb-4 transition-colors" />
+                <p className="text-gray-500 dark:text-gray-400 font-bold uppercase tracking-widest text-sm transition-colors">{searchQuery ? `No matches found for "${searchQuery}"` : 'No sales recorded for this week yet.'}</p>
+              </div>
             ) : (
               <table className="w-full">
                 <thead className="bg-gray-50/50 dark:bg-gray-900/50 transition-colors">
@@ -65,16 +79,19 @@ export default function WeeksSales() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50 dark:divide-gray-700 bg-white dark:bg-gray-800 transition-colors">
-                  {sales.map((sale) => (
+                  {filteredSales.map((sale) => (
                     <tr key={sale.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-900/50 transition-colors">
                       <td className="px-8 py-4 font-bold text-gray-400 dark:text-gray-500 transition-colors">#{sale.id}</td>
                       <td className="px-8 py-4">
                         <div className="flex flex-wrap gap-1 max-w-xs">
-                          {sale.items?.map((item, idx) => (
-                            <span key={idx} className="bg-gray-100 dark:bg-gray-700/50 text-gray-700 dark:text-gray-300 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-tight">
-                              {item.item_name} (x{item.qty})
-                            </span>
-                          ))}
+                          {sale.items?.map((item, idx) => {
+                            const isMatch = searchQuery && item.item_name.toLowerCase().includes(searchQuery.toLowerCase());
+                            return (
+                              <span key={idx} className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-tight ${isMatch ? 'bg-blue-600 text-white shadow-sm' : 'bg-gray-100 dark:bg-gray-700/50 text-gray-700 dark:text-gray-300'}`}>
+                                {item.item_name} (x{item.qty})
+                              </span>
+                            );
+                          })}
                         </div>
                       </td>
                       <td className="px-8 py-4 text-right font-black text-gray-900 dark:text-white text-lg transition-colors">{formatCurrency(sale.total_amount)}</td>

@@ -1,13 +1,15 @@
 import React, { useState, useEffect, useContext } from "react";
 import api, { API_BASE } from "../api/api";
-import { History, ShoppingBag, Store, User, FileText, Trash2 } from "lucide-react";
+import { History, ShoppingBag, Store, User, FileText, Trash2, SearchX } from "lucide-react";
 import { formatDate } from "../utils/helpers";
 import { AuthContext } from "../context/AuthContext";
+import { SearchContext } from "../context/SearchContext";
 
 export default function AllSales() {
   const [sales, setSales] = useState([]);
   const [loading, setLoading] = useState(false);
   const { user } = useContext(AuthContext);
+  const { searchQuery } = useContext(SearchContext);
 
   useEffect(() => {
     fetchSales();
@@ -40,6 +42,14 @@ export default function AllSales() {
     return new Intl.NumberFormat('en-KE', { style: 'currency', currency: 'KES', minimumFractionDigits: 0 }).format(val || 0);
   };
 
+  const filteredSales = searchQuery 
+    ? sales.filter(sale => 
+        sale.items?.some(item => 
+          item.item_name.toLowerCase().includes(searchQuery.toLowerCase())
+        )
+      )
+    : sales;
+
   return (
     <>
         <div className="mb-8 flex items-center gap-3">
@@ -56,19 +66,25 @@ export default function AllSales() {
           <div className="bg-gray-50 dark:bg-gray-900/50 px-8 py-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center transition-colors">
             <h2 className="text-lg font-bold text-gray-800 dark:text-white flex items-center gap-2">
               <ShoppingBag size={20} className="text-blue-600 dark:text-blue-400" />
-              Transaction History
+              Transaction History {searchQuery && <span className="text-xs font-medium text-blue-500 bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded-full ml-2 transition-all">Searching: "{searchQuery}"</span>}
             </h2>
-            <span className="bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-400 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest">
-              {sales.length} Total Records
+            <span className="bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-400 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest transition-all">
+              {filteredSales.length} {searchQuery ? 'Matching' : 'Total'} Records
             </span>
           </div>
           
           <div className="overflow-x-auto">
             {loading ? (
-              <div className="p-20 text-center text-gray-400 dark:text-gray-500 font-bold uppercase tracking-widest animate-pulse">Retrieving sales data...</div>
+              <div className="p-20 text-center text-gray-400 dark:text-gray-500 font-bold uppercase tracking-widest animate-pulse transition-colors">Retrieving sales data...</div>
+            ) : filteredSales.length === 0 ? (
+              <div className="p-20 text-center border-t border-gray-100 dark:border-gray-700 transition-colors">
+                <SearchX size={48} className="mx-auto text-gray-300 dark:text-gray-600 mb-4 transition-colors" />
+                <p className="text-gray-500 dark:text-gray-400 font-bold uppercase tracking-widest text-sm transition-colors">No matches found for "{searchQuery}"</p>
+                {searchQuery && <p className="text-xs text-gray-400 mt-2 transition-colors">Try searching for a different product name</p>}
+              </div>
             ) : (
               <table className="w-full">
-                <thead className="bg-gray-50/50 dark:bg-gray-900/50">
+                <thead className="bg-gray-50/50 dark:bg-gray-900/50 transition-colors">
                   <tr>
                     <th className="px-8 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Date & Time</th>
                     <th className="px-8 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Shop / Attendant</th>
@@ -77,8 +93,8 @@ export default function AllSales() {
                     <th className="px-8 py-4 text-center text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-50 dark:divide-gray-700 bg-white dark:bg-gray-800">
-                  {sales.map((sale) => (
+                <tbody className="divide-y divide-gray-50 dark:divide-gray-700 bg-white dark:bg-gray-800 transition-colors">
+                  {filteredSales.map((sale) => (
                     <tr key={sale.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-900/50 transition-colors">
                       <td className="px-8 py-4">
                         <div className="font-bold text-gray-900 dark:text-white transition-colors">{formatDate(sale.created_at)}</div>
@@ -94,11 +110,14 @@ export default function AllSales() {
                       </td>
                       <td className="px-8 py-4">
                         <div className="flex flex-wrap gap-1 max-w-md">
-                          {sale.items?.map((item, idx) => (
-                            <span key={idx} className="bg-gray-100 dark:bg-gray-700/50 text-gray-700 dark:text-gray-300 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-tight">
-                              {item.item_name} (x{item.qty})
-                            </span>
-                          ))}
+                          {sale.items?.map((item, idx) => {
+                            const isMatch = searchQuery && item.item_name.toLowerCase().includes(searchQuery.toLowerCase());
+                            return (
+                              <span key={idx} className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-tight ${isMatch ? 'bg-blue-600 text-white shadow-sm' : 'bg-gray-100 dark:bg-gray-700/50 text-gray-700 dark:text-gray-300'}`}>
+                                {item.item_name} (x{item.qty})
+                              </span>
+                            );
+                          })}
                         </div>
                       </td>
                       <td className="px-8 py-4 text-right">

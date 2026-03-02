@@ -1,13 +1,15 @@
 import React, { useState, useEffect, useContext } from "react";
 import api, { API_BASE } from "../api/api";
-import { History, Store, FileText, Wallet, Trash2 } from "lucide-react";
+import { History, Store, FileText, Wallet, Trash2, SearchX } from "lucide-react";
 import { formatDate } from "../utils/helpers";
 import { AuthContext } from "../context/AuthContext";
+import { SearchContext } from "../context/SearchContext";
 
 export default function AllDeposits() {
   const [deposits, setDeposits] = useState([]);
   const [loading, setLoading] = useState(false);
   const { user } = useContext(AuthContext);
+  const { searchQuery } = useContext(SearchContext);
 
   useEffect(() => {
     fetchDeposits();
@@ -40,6 +42,13 @@ export default function AllDeposits() {
     return new Intl.NumberFormat('en-KE', { style: 'currency', currency: 'KES', minimumFractionDigits: 0 }).format(val || 0);
   };
 
+  const filteredDeposits = searchQuery 
+    ? deposits.filter(deposit => 
+        deposit.item_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        deposit.buyer_name.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : deposits;
+
   return (
     <>
         <div className="mb-8 flex items-center gap-3 transition-colors">
@@ -56,16 +65,22 @@ export default function AllDeposits() {
           <div className="bg-indigo-50 dark:bg-indigo-900/30 px-8 py-4 border-b border-indigo-100 dark:border-indigo-900/50 flex justify-between items-center transition-colors">
             <h2 className="text-lg font-bold text-indigo-800 dark:text-indigo-400 flex items-center gap-2 transition-colors">
               <Wallet size={20} className="text-indigo-600 dark:text-indigo-400" />
-              Deposit Records
+              Deposit Records {searchQuery && <span className="text-xs font-medium text-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 px-2 py-0.5 rounded-full ml-2 transition-all">Searching: "{searchQuery}"</span>}
             </h2>
             <span className="bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-400 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest transition-colors">
-              {deposits.length} Total Accounts
+              {filteredDeposits.length} {searchQuery ? 'Matching' : 'Total'} Accounts
             </span>
           </div>
           
           <div className="overflow-x-auto">
             {loading ? (
               <div className="p-20 text-center text-gray-400 dark:text-gray-500 font-bold uppercase tracking-widest animate-pulse transition-colors">Loading deposit data...</div>
+            ) : filteredDeposits.length === 0 ? (
+              <div className="p-20 text-center border-t border-gray-100 dark:border-gray-700 transition-colors">
+                <SearchX size={48} className="mx-auto text-gray-300 dark:text-gray-600 mb-4 transition-colors" />
+                <p className="text-gray-500 dark:text-gray-400 font-bold uppercase tracking-widest text-sm transition-colors">No matches found for "{searchQuery}"</p>
+                {searchQuery && <p className="text-xs text-gray-400 mt-2 transition-colors">Try searching for a different product or customer name</p>}
+              </div>
             ) : (
               <table className="w-full">
                 <thead className="bg-gray-50/50 dark:bg-gray-900/50 transition-colors">
@@ -78,16 +93,16 @@ export default function AllDeposits() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50 dark:divide-gray-700 bg-white dark:bg-gray-800 transition-colors">
-                  {deposits.map((deposit) => (
+                  {filteredDeposits.map((deposit) => (
                     <tr key={deposit.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-900/50 transition-colors">
                       <td className="px-6 py-4">
-                        <div className="font-black text-gray-900 dark:text-white transition-colors">{deposit.buyer_name}</div>
+                        <div className={`font-black transition-colors ${searchQuery && deposit.buyer_name.toLowerCase().includes(searchQuery.toLowerCase()) ? 'text-blue-600 dark:text-blue-400' : 'text-gray-900 dark:text-white'}`}>{deposit.buyer_name}</div>
                         <div className="text-[10px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-tight mb-1 flex items-center gap-1 transition-colors">
                           <Store size={12} /> {deposit.shop_name}
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <div className="font-bold text-gray-700 dark:text-gray-300 text-sm transition-colors">{deposit.item_name}</div>
+                        <div className={`font-bold text-sm transition-colors ${searchQuery && deposit.item_name.toLowerCase().includes(searchQuery.toLowerCase()) ? 'text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300'}`}>{deposit.item_name}</div>
                         <div className="text-xs text-gray-400 dark:text-gray-500 transition-colors">Date: {formatDate(deposit.created_at)}</div>
                       </td>
                       <td className="px-6 py-4 text-right">
@@ -130,4 +145,3 @@ export default function AllDeposits() {
     </>
   );
 }
-

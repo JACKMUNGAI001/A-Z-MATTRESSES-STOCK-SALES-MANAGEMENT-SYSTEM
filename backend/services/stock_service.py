@@ -2,6 +2,8 @@ from extensions import db
 from models.stock import ShopStock, StockMovement
 from models.product import Item
 from models.shop import Shop
+from models.notification import Notification
+from models.user import User
 from datetime import datetime
 from sqlalchemy import func
 
@@ -18,6 +20,33 @@ def adjust_stock(shop_id, item_id, qty, movement_type="adjustment", user_id=None
     if buy_price is not None: stock.buy_price = buy_price
     if sell_price is not None: stock.sell_price = sell_price
     stock.updated_at = datetime.utcnow()
+    
+    # Check for low stock notification (only if quantity decreased)
+    if qty < 0 and stock.quantity <= 2:
+        product = Item.query.get(item_id)
+        shop_obj = Shop.query.get(shop_id)
+        # Notify all admins
+        admins = User.query.filter_by(role='admin').all()
+        for admin in admins:
+            n_admin = Notification(
+                user_id=admin.id,
+                user_role='admin',
+                type='low_stock',
+                message=f'Low Stock Alert: {product.name} is down to {stock.quantity} in {shop_obj.name}.'
+            )
+            db.session.add(n_admin)
+        
+        # Notify attendants in that shop
+        attendants = User.query.filter_by(shop_id=shop_id, role='attendant').all()
+        for attendant in attendants:
+            n_att = Notification(
+                user_id=attendant.id,
+                user_role='attendant',
+                type='low_stock',
+                message=f'Low Stock Alert: {product.name} is down to {stock.quantity} in {shop_obj.name}.'
+            )
+            db.session.add(n_att)
+
     db.session.commit()
 
     mv = StockMovement(shop_id=shop_id, item_id=item_id, movement_type=movement_type, qty=qty, unit_buy_price=buy_price, unit_sell_price=sell_price, user_id=user_id, reference=None, created_at=datetime.utcnow())

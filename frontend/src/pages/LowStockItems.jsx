@@ -1,10 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import api from '../api/api';
-import { AlertTriangle, Package, Info } from "lucide-react";
+import { AlertTriangle, Package, Info, SearchX } from "lucide-react";
+import { SearchContext } from '../context/SearchContext';
 
 export default function LowStockItems() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { searchQuery } = useContext(SearchContext);
 
   useEffect(() => {
     const fetchItems = async () => {
@@ -20,6 +22,10 @@ export default function LowStockItems() {
     fetchItems();
   }, []);
 
+  const filteredItems = searchQuery 
+    ? items.filter(item => item.item_name.toLowerCase().includes(searchQuery.toLowerCase()))
+    : items;
+
   return (
     <>
         <div className="mb-8 flex items-center gap-3 transition-colors">
@@ -29,6 +35,7 @@ export default function LowStockItems() {
           <div>
             <h1 className="text-3xl font-black text-gray-900 dark:text-white tracking-tight transition-colors">Inventory Alerts</h1>
             <p className="text-gray-500 dark:text-gray-400 font-medium transition-colors">Items that require immediate restocking (Quantity ≤ 2)</p>
+            {searchQuery && <p className="text-sm text-orange-600 font-bold mt-1 transition-all">Searching for: "{searchQuery}"</p>}
           </div>
         </div>
 
@@ -39,17 +46,26 @@ export default function LowStockItems() {
               Low Stock List
             </h2>
             <span className="bg-orange-200 dark:bg-orange-900/50 text-orange-900 dark:text-orange-400 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest transition-colors">
-              {items.length} Items
+              {filteredItems.length} {searchQuery ? 'Matching' : ''} Items
             </span>
           </div>
           
           <div className="overflow-x-auto">
             {loading ? (
               <div className="p-20 text-center text-gray-400 dark:text-gray-500 font-bold uppercase tracking-widest animate-pulse transition-colors">Checking inventory...</div>
-            ) : items.length === 0 ? (
-              <div className="p-20 text-center text-green-600 dark:text-green-400 font-medium flex flex-col items-center gap-2 transition-colors">
-                <div className="bg-green-100 dark:bg-green-900/30 p-4 rounded-full transition-colors">🎉</div>
-                All items are currently well stocked!
+            ) : filteredItems.length === 0 ? (
+              <div className="p-20 text-center transition-colors">
+                {searchQuery ? (
+                  <>
+                    <SearchX size={48} className="mx-auto text-gray-300 dark:text-gray-600 mb-4 transition-colors" />
+                    <p className="text-gray-500 dark:text-gray-400 font-bold uppercase tracking-widest text-sm transition-colors">No low-stock items match "{searchQuery}"</p>
+                  </>
+                ) : (
+                  <div className="text-green-600 dark:text-green-400 font-medium flex flex-col items-center gap-2 transition-colors">
+                    <div className="bg-green-100 dark:bg-green-900/30 p-4 rounded-full transition-colors">🎉</div>
+                    All items are currently well stocked!
+                  </div>
+                )}
               </div>
             ) : (
               <table className="w-full">
@@ -61,19 +77,24 @@ export default function LowStockItems() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50 dark:divide-gray-700 bg-white dark:bg-gray-800 transition-colors">
-                  {items.map((item) => (
-                    <tr key={item.item_id} className="hover:bg-orange-50/10 dark:hover:bg-orange-900/10 transition-colors">
-                      <td className="px-8 py-4 font-black text-gray-900 dark:text-white transition-colors">{item.item_name}</td>
-                      <td className="px-8 py-4 text-center transition-colors">
-                        <span className="text-2xl font-black text-red-600 dark:text-red-400">{item.qty}</span>
-                      </td>
-                      <td className="px-8 py-4 text-center transition-colors">
-                        <span className="inline-flex items-center gap-1 text-xs font-black uppercase tracking-widest text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/30 px-3 py-1 rounded-full border border-orange-100 dark:border-orange-900 transition-colors">
-                          <Info size={14} /> Reorder Soon
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
+                  {filteredItems.map((item) => {
+                    const isMatch = searchQuery && item.item_name.toLowerCase().includes(searchQuery.toLowerCase());
+                    return (
+                      <tr key={item.item_id} className="hover:bg-orange-50/10 dark:hover:bg-orange-900/10 transition-colors">
+                        <td className={`px-8 py-4 font-black transition-colors ${isMatch ? 'text-orange-600 dark:text-orange-400' : 'text-gray-900 dark:text-white'}`}>
+                          {item.item_name}
+                        </td>
+                        <td className="px-8 py-4 text-center transition-colors">
+                          <span className="text-2xl font-black text-red-600 dark:text-red-400">{item.qty}</span>
+                        </td>
+                        <td className="px-8 py-4 text-center transition-colors">
+                          <span className="inline-flex items-center gap-1 text-xs font-black uppercase tracking-widest text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/30 px-3 py-1 rounded-full border border-orange-100 dark:border-orange-900 transition-colors">
+                            <Info size={14} /> Reorder Soon
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             )}

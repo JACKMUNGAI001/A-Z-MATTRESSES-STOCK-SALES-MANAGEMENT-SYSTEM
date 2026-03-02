@@ -3,12 +3,14 @@ import { useParams } from 'react-router-dom';
 import api from '../api/api';
 import Card from '../components/Card';
 import { AuthContext } from '../context/AuthContext';
-import { Store, Plus, ChevronDown, ChevronUp, AlertTriangle, TrendingUp, History, Package } from 'lucide-react';
+import { SearchContext } from '../context/SearchContext';
+import { Store, Plus, ChevronDown, ChevronUp, AlertTriangle, TrendingUp, History, Package, SearchX } from 'lucide-react';
 import { formatDate } from '../utils/helpers';
 
 export default function ShopDetails() {
   const { shopId } = useParams();
   const { user } = useContext(AuthContext);
+  const { searchQuery } = useContext(SearchContext);
   const [shop, setShop] = useState(null);
   const [shopSales, setShopSales] = useState([]);
   const [shopDeposits, setShopDeposits] = useState([]);
@@ -101,6 +103,21 @@ export default function ShopDetails() {
     return new Intl.NumberFormat('en-KE', { style: 'currency', currency: 'KES', minimumFractionDigits: 0 }).format(val || 0);
   };
 
+  const filteredSales = searchQuery 
+    ? shopSales.filter(s => s.items?.some(item => item.item_name.toLowerCase().includes(searchQuery.toLowerCase())))
+    : shopSales;
+
+  const filteredDeposits = searchQuery
+    ? shopDeposits.filter(d => d.item_name.toLowerCase().includes(searchQuery.toLowerCase()) || d.buyer_name.toLowerCase().includes(searchQuery.toLowerCase()))
+    : shopDeposits;
+
+  const filteredStock = searchQuery
+    ? shopStock.filter(s => {
+        const item = availableItems.find(i => i.id === s.item_id);
+        return item?.name.toLowerCase().includes(searchQuery.toLowerCase());
+      })
+    : shopStock;
+
   if (!shop) {
     return <div className="flex bg-[#f1f5f9] dark:bg-[#0f172a] min-h-screen items-center justify-center text-gray-500 dark:text-gray-400 font-bold uppercase tracking-widest transition-colors">Loading shop data...</div>;
   }
@@ -114,19 +131,20 @@ export default function ShopDetails() {
           <div>
             <h1 className="text-3xl font-black text-gray-900 dark:text-white tracking-tight transition-colors">{shop.name}</h1>
             <p className="text-gray-500 dark:text-gray-400 font-medium transition-colors">{shop.address}</p>
+            {searchQuery && <p className="text-sm text-blue-500 font-bold mt-1">Searching for: "{searchQuery}"</p>}
           </div>
         </div>
 
         {/* SHOP METRICS */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10 transition-colors">
-          <Card title="Revenue (Total Sales)" className="border-l-4 border-l-green-500">
-            {formatCurrency(shopSales.reduce((acc, sale) => acc + (sale.total_amount || 0), 0))}
+          <Card title="Revenue (Filtered)" className="border-l-4 border-l-green-500">
+            {formatCurrency(filteredSales.reduce((acc, sale) => acc + (sale.total_amount || 0), 0))}
           </Card>
-          <Card title="Collections (Deposits)" className="border-l-4 border-l-blue-500">
-            {formatCurrency(shopDeposits.reduce((acc, dep) => acc + (dep.total_paid || 0), 0))}
+          <Card title="Collections (Filtered)" className="border-l-4 border-l-blue-500">
+            {formatCurrency(filteredDeposits.reduce((acc, dep) => acc + (dep.total_paid || 0), 0))}
           </Card>
           <Card title="Stock Asset Value" className="border-l-4 border-l-purple-500">
-            {formatCurrency(shopStock.reduce((acc, s) => acc + ((s.buy_price || 0) * (s.qty || 0)), 0))}
+            {formatCurrency(filteredStock.reduce((acc, s) => acc + ((s.buy_price || 0) * (s.qty || 0)), 0))}
           </Card>
         </div>
 
@@ -182,7 +200,7 @@ export default function ShopDetails() {
         <div className="space-y-4 transition-colors">
           <Section 
             title="Sales History" 
-            count={shopSales.length} 
+            count={filteredSales.length} 
             icon={TrendingUp} 
             color="blue"
             isExpanded={expandedSection === 'sales'} 
@@ -192,27 +210,31 @@ export default function ShopDetails() {
               <thead className="bg-gray-50/50 dark:bg-gray-900/50 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase transition-colors">
                 <tr><th className="px-6 py-4 text-left">ID</th><th className="px-6 py-4 text-left">Items Sold</th><th className="px-6 py-4 text-right">Amount</th><th className="px-6 py-4 text-left">Type</th><th className="px-6 py-4 text-left">Date</th></tr>
               </thead>
-                              <tbody className="divide-y divide-gray-50 dark:divide-gray-700 transition-colors">
-                                {shopSales.map(s => (
-                                  <tr key={s.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-900/50 transition-colors">
-                                    <td className="px-6 py-4 font-bold text-gray-900 dark:text-white">{s.id}</td>
-                                    <td className="px-6 py-4">
-                                      <div className="flex flex-wrap gap-1 max-w-xs">
-                                        {s.items?.map((item, idx) => (
-                                          <span key={idx} className="bg-gray-100 dark:bg-gray-700/50 text-gray-700 dark:text-gray-300 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-tight">
-                                            {item.item_name} (x{item.qty})
-                                          </span>
-                                        ))}
-                                      </div>
-                                    </td>
-                                    <td className="px-6 py-4 text-right font-black text-gray-900 dark:text-white">{formatCurrency(s.total_amount)}</td><td className="px-6 py-4 text-gray-500 dark:text-gray-400 uppercase text-xs font-bold tracking-widest">{s.payment_type}</td><td className="px-6 py-4 text-gray-500 dark:text-gray-400">{formatDate(s.created_at)}</td></tr>
-                                ))}
-                              </tbody>            </table>
+              <tbody className="divide-y divide-gray-50 dark:divide-gray-700 transition-colors">
+                {filteredSales.map(s => (
+                  <tr key={s.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-900/50 transition-colors">
+                    <td className="px-6 py-4 font-bold text-gray-900 dark:text-white">{s.id}</td>
+                    <td className="px-6 py-4">
+                      <div className="flex flex-wrap gap-1 max-w-xs">
+                        {s.items?.map((item, idx) => {
+                          const isMatch = searchQuery && item.item_name.toLowerCase().includes(searchQuery.toLowerCase());
+                          return (
+                            <span key={idx} className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-tight ${isMatch ? 'bg-blue-600 text-white shadow-sm' : 'bg-gray-100 dark:bg-gray-700/50 text-gray-700 dark:text-gray-300'}`}>
+                              {item.item_name} (x{item.qty})
+                            </span>
+                          );
+                        })}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-right font-black text-gray-900 dark:text-white">{formatCurrency(s.total_amount)}</td><td className="px-6 py-4 text-gray-500 dark:text-gray-400 uppercase text-xs font-bold tracking-widest">{s.payment_type}</td><td className="px-6 py-4 text-gray-500 dark:text-gray-400">{formatDate(s.created_at)}</td></tr>
+                ))}
+              </tbody>
+            </table>
           </Section>
 
           <Section 
             title="Customer Deposits" 
-            count={shopDeposits.length} 
+            count={filteredDeposits.length} 
             icon={History} 
             color="indigo"
             isExpanded={expandedSection === 'deposits'} 
@@ -223,8 +245,13 @@ export default function ShopDetails() {
                 <tr><th className="px-6 py-4 text-left">Buyer</th><th className="px-6 py-4 text-left">Item Info</th><th className="px-6 py-4 text-right">Price</th><th className="px-6 py-4 text-left">Status</th></tr>
               </thead>
               <tbody className="divide-y divide-gray-50 dark:divide-gray-700 transition-colors">
-                {shopDeposits.map(d => (
-                  <tr key={d.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-900/50 transition-colors"><td className="px-6 py-4 font-bold text-gray-900 dark:text-white">{d.buyer_name}</td><td className="px-6 py-4 text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-tight">{d.item_name}</td><td className="px-6 py-4 text-right font-black text-gray-900 dark:text-white">{formatCurrency(d.selling_price)}</td><td className="px-6 py-4 italic text-sm text-gray-500 dark:text-gray-400 uppercase tracking-widest font-bold">{d.status}</td></tr>
+                {filteredDeposits.map(d => (
+                  <tr key={d.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-900/50 transition-colors">
+                    <td className={`px-6 py-4 font-bold transition-colors ${searchQuery && d.buyer_name.toLowerCase().includes(searchQuery.toLowerCase()) ? 'text-blue-600 dark:text-blue-400' : 'text-gray-900 dark:text-white'}`}>{d.buyer_name}</td>
+                    <td className={`px-6 py-4 text-xs font-bold transition-colors uppercase tracking-tight ${searchQuery && d.item_name.toLowerCase().includes(searchQuery.toLowerCase()) ? 'text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300'}`}>{d.item_name}</td>
+                    <td className="px-6 py-4 text-right font-black text-gray-900 dark:text-white">{formatCurrency(d.selling_price)}</td>
+                    <td className="px-6 py-4 italic text-sm text-gray-500 dark:text-gray-400 uppercase tracking-widest font-bold">{d.status}</td>
+                  </tr>
                 ))}
               </tbody>
             </table>
@@ -232,7 +259,7 @@ export default function ShopDetails() {
 
           <Section 
             title="Full Inventory List" 
-            count={shopStock.length} 
+            count={filteredStock.length} 
             icon={Package} 
             color="purple"
             isExpanded={expandedSection === 'stock'} 
@@ -243,9 +270,18 @@ export default function ShopDetails() {
                 <tr><th className="px-6 py-4 text-left">Item Name</th><th className="px-6 py-4 text-center">Qty</th><th className="px-6 py-4 text-right">Buy</th><th className="px-6 py-4 text-right">Sell</th></tr>
               </thead>
               <tbody className="divide-y divide-gray-50 dark:divide-gray-700 transition-colors">
-                {shopStock.map(s => (
-                  <tr key={s.item_id} className="hover:bg-gray-50/50 dark:hover:bg-gray-900/50 transition-colors"><td className="px-6 py-4 font-bold text-gray-900 dark:text-white">{availableItems.find(i => i.id === s.item_id)?.name}</td><td className="px-6 py-4 text-center"><span className={`px-2 py-1 rounded-full text-xs font-black transition-colors ${s.qty <= 2 ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400' : 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'}`}>{s.qty}</span></td><td className="px-6 py-4 text-right font-mono text-xs text-gray-400 dark:text-gray-500 transition-colors">{formatCurrency(s.buy_price)}</td><td className="px-6 py-4 text-right font-black text-blue-600 dark:text-blue-400 transition-colors">{formatCurrency(s.sell_price)}</td></tr>
-                ))}
+                {filteredStock.map(s => {
+                  const item = availableItems.find(i => i.id === s.item_id);
+                  const isMatch = searchQuery && item?.name.toLowerCase().includes(searchQuery.toLowerCase());
+                  return (
+                    <tr key={s.item_id} className="hover:bg-gray-50/50 dark:hover:bg-gray-900/50 transition-colors">
+                      <td className={`px-6 py-4 font-bold transition-colors ${isMatch ? 'text-blue-600 dark:text-blue-400 font-black' : 'text-gray-900 dark:text-white'}`}>{item?.name}</td>
+                      <td className="px-6 py-4 text-center"><span className={`px-2 py-1 rounded-full text-xs font-black transition-colors ${s.qty <= 2 ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400' : 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'}`}>{s.qty}</span></td>
+                      <td className="px-6 py-4 text-right font-mono text-xs text-gray-400 dark:text-gray-500 transition-colors">{formatCurrency(s.buy_price)}</td>
+                      <td className="px-6 py-4 text-right font-black text-blue-600 dark:text-blue-400 transition-colors">{formatCurrency(s.sell_price)}</td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </Section>
@@ -297,7 +333,10 @@ function Section({ title, count, icon: Icon, color, isExpanded, onToggle, childr
       {isExpanded && (
         <div className="p-0 overflow-x-auto max-h-96 overflow-y-auto custom-scrollbar transition-colors">
           {count === 0 ? (
-            <div className="p-10 text-center text-gray-400 dark:text-gray-500 italic font-medium tracking-widest uppercase text-xs">No records available in this category</div>
+            <div className="p-10 text-center text-gray-400 dark:text-gray-500 italic font-medium tracking-widest uppercase text-xs transition-colors">
+                <SearchX size={32} className="mx-auto mb-2 opacity-20" />
+                No records match your search
+            </div>
           ) : children}
         </div>
       )}

@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useContext } from 'react'
 import { fetchSupplierInvoices, fetchSuppliers, createSupplierInvoice, fetchSupplierInvoiceDetails, updateSupplierInvoiceStatus } from '../api/api'
 import api from '../api/api'
 import Card from '../components/Card'
-import { Plus, Eye, FileText, Calendar, DollarSign, Truck, Package, Search, CheckCircle } from 'lucide-react'
+import { Plus, Eye, FileText, Calendar, DollarSign, Truck, Package, Search, CheckCircle, SearchX } from 'lucide-react'
+import { SearchContext } from '../context/SearchContext'
 
 export default function AdminSupplierInvoices() {
   const [invoices, setInvoices] = useState([])
@@ -13,6 +14,7 @@ export default function AdminSupplierInvoices() {
   const [showModal, setShowModal] = useState(false)
   const [showDetails, setShowDetails] = useState(null)
   const [activeTab, setActiveTab] = useState('Pending')
+  const { searchQuery } = useContext(SearchContext)
   
   const [formData, setFormData] = useState({
     supplier_id: '',
@@ -108,10 +110,23 @@ export default function AdminSupplierInvoices() {
     }
   }
 
+  const filteredInvoices = invoices.filter(inv => {
+    const statusMatch = inv.status === activeTab || (activeTab === 'Pending' && inv.status === 'Partial');
+    const searchMatch = searchQuery ? (
+      inv.invoice_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      inv.supplier_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      inv.items?.some(item => item.item_name.toLowerCase().includes(searchQuery.toLowerCase()))
+    ) : true;
+    return statusMatch && searchMatch;
+  });
+
   return (
     <>
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-semibold">Track Product Supplies</h2>
+        <div>
+            <h2 className="text-xl font-semibold dark:text-white transition-colors">Track Product Supplies</h2>
+            {searchQuery && <p className="text-sm text-blue-500 font-medium transition-all">Searching for: "{searchQuery}"</p>}
+        </div>
         <button 
           onClick={() => setShowModal(true)}
           className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-700 transition-colors shadow-sm"
@@ -124,86 +139,86 @@ export default function AdminSupplierInvoices() {
       <div className="flex gap-4 mb-6 border-b border-gray-200 dark:border-gray-700">
         <button 
           onClick={() => setActiveTab('Pending')}
-          className={`pb-2 px-4 font-bold transition-all ${activeTab === 'Pending' ? 'border-b-4 border-blue-600 text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+          className={`pb-2 px-4 font-bold transition-all ${activeTab === 'Pending' ? 'border-b-4 border-blue-600 text-blue-600' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400'}`}
         >
           Pending Invoices
         </button>
         <button 
           onClick={() => setActiveTab('Paid')}
-          className={`pb-2 px-4 font-bold transition-all ${activeTab === 'Paid' ? 'border-b-4 border-blue-600 text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+          className={`pb-2 px-4 font-bold transition-all ${activeTab === 'Paid' ? 'border-b-4 border-blue-600 text-blue-600' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400'}`}
         >
           Settled Invoices
         </button>
       </div>
 
       {loading ? (
-        <p>Loading...</p>
+        <p className="dark:text-white">Loading...</p>
       ) : (
-        <Card className="overflow-hidden">
+        <Card className="overflow-hidden dark:bg-gray-800 dark:border-gray-700 transition-colors">
           <div className="overflow-x-auto">
-            <table className="w-full text-left">
-              <thead className="bg-gray-50 border-b">
-                <tr>
-                  <th className="px-6 py-4 font-semibold text-gray-700">Invoice #</th>
-                  <th className="px-6 py-4 font-semibold text-gray-700">Supplier</th>
-                  <th className="px-6 py-4 font-semibold text-gray-700">Date</th>
-                  <th className="px-6 py-4 font-semibold text-gray-700">Amount</th>
-                  <th className="px-6 py-4 font-semibold text-gray-700">Status</th>
-                  <th className="px-6 py-4 font-semibold text-gray-700">Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {invoices.filter(inv => inv.status === activeTab || (activeTab === 'Pending' && inv.status === 'Partial')).map(inv => (
-                  <tr key={inv.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-4 font-medium text-blue-600">{inv.invoice_number}</td>
-                    <td className="px-6 py-4 text-gray-700">{inv.supplier_name}</td>
-                    <td className="px-6 py-4 text-gray-600">
-                        <div className="flex flex-col">
-                            <span>{new Date(inv.received_date).toLocaleDateString()}</span>
-                            {inv.due_date && <span className="text-xs text-red-500 font-medium">Due: {new Date(inv.due_date).toLocaleDateString()}</span>}
-                        </div>
-                    </td>
-                    <td className="px-6 py-4 font-bold text-gray-900">KES {inv.total_amount.toLocaleString()}</td>
-                    <td className="px-6 py-4">
-                      <span className={`px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
-                        inv.status === 'Paid' ? 'bg-green-100 text-green-700' : 
-                        inv.status === 'Partial' ? 'bg-yellow-100 text-yellow-700' : 
-                        'bg-red-100 text-red-700'
-                      }`}>
-                        {inv.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex gap-2">
-                        <button 
-                          onClick={() => viewDetails(inv.id)}
-                          className="text-blue-600 hover:text-blue-800 p-2 hover:bg-blue-50 rounded-full transition-colors flex items-center gap-1 text-sm font-medium"
-                          title="View Details"
-                        >
-                          <Eye size={18} />
-                        </button>
-                        {inv.status !== 'Paid' && (
-                          <button 
-                            onClick={() => handleSettle(inv.id)}
-                            className="text-green-600 hover:text-green-800 p-2 hover:bg-green-50 rounded-full transition-colors flex items-center gap-1 text-sm font-medium"
-                            title="Mark as Settled"
-                          >
-                            <CheckCircle size={18} />
-                          </button>
-                        )}
-                      </div>
-                    </td>
+            {filteredInvoices.length === 0 ? (
+                <div className="px-6 py-12 text-center transition-colors">
+                    <SearchX size={48} className="mx-auto text-gray-300 dark:text-gray-600 mb-4" />
+                    <p className="text-gray-500 dark:text-gray-400 font-bold uppercase tracking-widest text-sm">No {activeTab.toLowerCase()} invoices matches "{searchQuery}".</p>
+                </div>
+            ) : (
+                <table className="w-full text-left">
+                <thead className="bg-gray-50 dark:bg-gray-900/50 border-b dark:border-gray-700 transition-colors">
+                  <tr>
+                    <th className="px-6 py-4 font-semibold text-gray-700 dark:text-gray-300">Invoice #</th>
+                    <th className="px-6 py-4 font-semibold text-gray-700 dark:text-gray-300">Supplier</th>
+                    <th className="px-6 py-4 font-semibold text-gray-700 dark:text-gray-300">Date</th>
+                    <th className="px-6 py-4 font-semibold text-gray-700 dark:text-gray-300">Amount</th>
+                    <th className="px-6 py-4 font-semibold text-gray-700 dark:text-gray-300">Status</th>
+                    <th className="px-6 py-4 font-semibold text-gray-700 dark:text-gray-300">Action</th>
                   </tr>
-                ))}
-                {invoices.filter(inv => inv.status === activeTab || (activeTab === 'Pending' && inv.status === 'Partial')).length === 0 && (
-                    <tr>
-                        <td colSpan="6" className="px-6 py-12 text-center text-gray-500">
-                            No {activeTab.toLowerCase()} invoices found.
-                        </td>
+                </thead>
+                <tbody className="divide-y divide-gray-100 dark:divide-gray-700 transition-colors">
+                  {filteredInvoices.map(inv => (
+                    <tr key={inv.id} className="hover:bg-gray-50 dark:hover:bg-gray-900/30 transition-colors">
+                      <td className={`px-6 py-4 font-medium transition-colors ${searchQuery && inv.invoice_number.toLowerCase().includes(searchQuery.toLowerCase()) ? 'text-green-600 dark:text-green-400' : 'text-blue-600 dark:text-blue-400'}`}>{inv.invoice_number}</td>
+                      <td className={`px-6 py-4 transition-colors ${searchQuery && inv.supplier_name.toLowerCase().includes(searchQuery.toLowerCase()) ? 'text-blue-600 dark:text-blue-400 font-bold' : 'text-gray-700 dark:text-gray-300'}`}>{inv.supplier_name}</td>
+                      <td className="px-6 py-4 text-gray-600 dark:text-gray-400">
+                          <div className="flex flex-col">
+                              <span>{new Date(inv.received_date).toLocaleDateString()}</span>
+                              {inv.due_date && <span className="text-xs text-red-500 font-medium">Due: {new Date(inv.due_date).toLocaleDateString()}</span>}
+                          </div>
+                      </td>
+                      <td className="px-6 py-4 font-bold text-gray-900 dark:text-white transition-colors">KES {inv.total_amount.toLocaleString()}</td>
+                      <td className="px-6 py-4">
+                        <span className={`px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
+                          inv.status === 'Paid' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 
+                          inv.status === 'Partial' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' : 
+                          'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                        }`}>
+                          {inv.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex gap-2">
+                          <button 
+                            onClick={() => viewDetails(inv.id)}
+                            className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 p-2 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-full transition-colors flex items-center gap-1 text-sm font-medium"
+                            title="View Details"
+                          >
+                            <Eye size={18} />
+                          </button>
+                          {inv.status !== 'Paid' && (
+                            <button 
+                              onClick={() => handleSettle(inv.id)}
+                              className="text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300 p-2 hover:bg-green-50 dark:hover:bg-green-900/30 rounded-full transition-colors flex items-center gap-1 text-sm font-medium"
+                              title="Mark as Settled"
+                            >
+                              <CheckCircle size={18} />
+                            </button>
+                          )}
+                        </div>
+                      </td>
                     </tr>
-                )}
-              </tbody>
-            </table>
+                  ))}
+                </tbody>
+              </table>
+            )}
           </div>
         </Card>
       )}
@@ -211,7 +226,7 @@ export default function AdminSupplierInvoices() {
       {/* CREATE MODAL */}
       {showModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in duration-200">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in duration-200 transition-colors">
             <div className="bg-blue-600 p-6 text-white sticky top-0 z-10">
               <h3 className="text-xl font-bold">Record New Supply</h3>
               <p className="text-blue-100 text-sm mt-1">Add items received from a supplier</p>
@@ -221,13 +236,13 @@ export default function AdminSupplierInvoices() {
               {/* Header Info */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
+                  <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2 transition-colors">
                       <Truck size={16} className="text-blue-500" />
                       Supplier *
                   </label>
                   <select 
                     required
-                    className="w-full border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none"
+                    className="w-full border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-white rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                     value={formData.supplier_id}
                     onChange={e => setFormData({...formData, supplier_id: e.target.value})}
                   >
@@ -236,39 +251,39 @@ export default function AdminSupplierInvoices() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
+                  <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2 transition-colors">
                       <FileText size={16} className="text-blue-500" />
                       Invoice Number *
                   </label>
                   <input 
                     required
                     type="text" 
-                    className="w-full border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none"
+                    className="w-full border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-white rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                     value={formData.invoice_number}
                     onChange={e => setFormData({...formData, invoice_number: e.target.value})}
                     placeholder="INV-2024-001"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
+                  <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2 transition-colors">
                       <Calendar size={16} className="text-blue-500" />
                       Received Date *
                   </label>
                   <input 
                     required
                     type="date" 
-                    className="w-full border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none"
+                    className="w-full border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-white rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                     value={formData.received_date}
                     onChange={e => setFormData({...formData, received_date: e.target.value})}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
+                  <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2 transition-colors">
                       <Package size={16} className="text-blue-500" />
                       Destination Shop
                   </label>
                   <select 
-                    className="w-full border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none"
+                    className="w-full border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-white rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                     value={formData.shop_id}
                     onChange={e => setFormData({...formData, shop_id: e.target.value})}
                   >
@@ -279,15 +294,15 @@ export default function AdminSupplierInvoices() {
 
               {/* Items Table */}
               <div className="space-y-4">
-                <div className="flex justify-between items-center border-b pb-2">
-                    <h4 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                <div className="flex justify-between items-center border-b dark:border-gray-700 pb-2 transition-colors">
+                    <h4 className="text-lg font-bold text-gray-800 dark:text-white flex items-center gap-2 transition-colors">
                         <Package size={20} className="text-blue-500" />
                         Supply Items
                     </h4>
                     <button 
                         type="button" 
                         onClick={handleAddItem}
-                        className="text-sm bg-blue-50 text-blue-600 px-3 py-1.5 rounded-lg font-bold hover:bg-blue-100 transition-colors flex items-center gap-1"
+                        className="text-sm bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 px-3 py-1.5 rounded-lg font-bold hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors flex items-center gap-1"
                     >
                         <Plus size={16} /> Add Item
                     </button>
@@ -295,12 +310,12 @@ export default function AdminSupplierInvoices() {
                 
                 <div className="space-y-4">
                   {formData.items.map((item, idx) => (
-                    <div key={idx} className="flex flex-wrap md:flex-nowrap gap-4 items-end bg-gray-50 p-4 rounded-xl relative border border-gray-100">
+                    <div key={idx} className="flex flex-wrap md:flex-nowrap gap-4 items-end bg-gray-50 dark:bg-gray-900/30 p-4 rounded-xl relative border border-gray-100 dark:border-gray-700 transition-colors">
                       <div className="flex-1 min-w-[200px]">
-                        <label className="block text-xs font-bold text-gray-500 mb-1">Select Product</label>
+                        <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1">Select Product</label>
                         <select 
                           required
-                          className="w-full border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 outline-none"
+                          className="w-full border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg p-2 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                           value={item.item_id}
                           onChange={e => handleItemChange(idx, 'item_id', e.target.value)}
                         >
@@ -309,30 +324,30 @@ export default function AdminSupplierInvoices() {
                         </select>
                       </div>
                       <div className="w-24">
-                        <label className="block text-xs font-bold text-gray-500 mb-1">Qty</label>
+                        <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1">Qty</label>
                         <input 
                           required
                           type="number" 
                           min="1"
-                          className="w-full border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 outline-none"
+                          className="w-full border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg p-2 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                           value={item.quantity}
                           onChange={e => handleItemChange(idx, 'quantity', e.target.value)}
                         />
                       </div>
                       <div className="w-40">
-                        <label className="block text-xs font-bold text-gray-500 mb-1">Unit Cost (KES)</label>
+                        <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1">Unit Cost (KES)</label>
                         <input 
                           required
                           type="number" 
                           step="0.01"
-                          className="w-full border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 outline-none"
+                          className="w-full border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg p-2 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                           value={item.unit_cost}
                           onChange={e => handleItemChange(idx, 'unit_cost', e.target.value)}
                         />
                       </div>
                       <div className="w-40">
-                        <label className="block text-xs font-bold text-gray-500 mb-1">Subtotal</label>
-                        <div className="p-2 bg-gray-100 rounded-lg text-gray-600 font-bold border border-gray-200">
+                        <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1">Subtotal</label>
+                        <div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg text-gray-600 dark:text-gray-300 font-bold border border-gray-200 dark:border-gray-700 transition-colors">
                           {(item.quantity * item.unit_cost).toLocaleString()}
                         </div>
                       </div>
@@ -340,7 +355,7 @@ export default function AdminSupplierInvoices() {
                         <button 
                           type="button" 
                           onClick={() => handleRemoveItem(idx)}
-                          className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                          className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors"
                         >
                           <Plus size={20} style={{ transform: 'rotate(45deg)' }} />
                         </button>
@@ -350,11 +365,11 @@ export default function AdminSupplierInvoices() {
                 </div>
               </div>
 
-              <div className="flex justify-between items-start pt-6 border-t">
+              <div className="flex justify-between items-start pt-6 border-t dark:border-gray-700 transition-colors">
                 <div className="w-1/2">
-                    <label className="block text-sm font-bold text-gray-700 mb-2">Notes</label>
+                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2 transition-colors">Notes</label>
                     <textarea 
-                        className="w-full border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 outline-none"
+                        className="w-full border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg p-3 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                         rows="3"
                         value={formData.notes}
                         onChange={e => setFormData({...formData, notes: e.target.value})}
@@ -362,8 +377,8 @@ export default function AdminSupplierInvoices() {
                     ></textarea>
                 </div>
                 <div className="text-right">
-                    <p className="text-gray-500 text-sm mb-1 uppercase tracking-wider font-bold">Total Supply Value</p>
-                    <p className="text-4xl font-black text-blue-600">
+                    <p className="text-gray-500 dark:text-gray-400 text-sm mb-1 uppercase tracking-wider font-bold transition-colors">Total Supply Value</p>
+                    <p className="text-4xl font-black text-blue-600 dark:text-blue-400 transition-colors">
                         KES {formData.items.reduce((sum, it) => sum + (it.quantity * it.unit_cost), 0).toLocaleString()}
                     </p>
                 </div>
@@ -373,13 +388,13 @@ export default function AdminSupplierInvoices() {
                 <button 
                   type="button" 
                   onClick={() => setShowModal(false)}
-                  className="flex-1 px-6 py-3 border-2 border-gray-200 text-gray-600 rounded-xl font-bold hover:bg-gray-50 transition-all"
+                  className="flex-1 px-6 py-3 border-2 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 rounded-xl font-bold hover:bg-gray-50 dark:hover:bg-gray-700 transition-all"
                 >
                   Cancel
                 </button>
                 <button 
                   type="submit" 
-                  className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-all shadow-xl shadow-blue-200"
+                  className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-all shadow-xl shadow-blue-200 dark:shadow-none"
                 >
                   Confirm & Save Supply
                 </button>
@@ -392,7 +407,7 @@ export default function AdminSupplierInvoices() {
       {/* DETAILS MODAL */}
       {showDetails && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden animate-in fade-in zoom-in duration-200 transition-colors">
             <div className="bg-blue-600 p-6 text-white flex justify-between items-center">
               <div>
                 <h3 className="text-xl font-bold">Invoice Details</h3>
@@ -406,20 +421,20 @@ export default function AdminSupplierInvoices() {
             <div className="p-8 space-y-8">
                 <div className="grid grid-cols-2 gap-8">
                     <div>
-                        <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Supplier</p>
-                        <p className="text-lg font-bold text-gray-800">{showDetails.supplier_name}</p>
+                        <p className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1 transition-colors">Supplier</p>
+                        <p className="text-lg font-bold text-gray-800 dark:text-white transition-colors">{showDetails.supplier_name}</p>
                     </div>
                     <div>
-                        <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Received Date</p>
-                        <p className="text-lg font-bold text-gray-800">{new Date(showDetails.received_date).toLocaleDateString()}</p>
+                        <p className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1 transition-colors">Received Date</p>
+                        <p className="text-lg font-bold text-gray-800 dark:text-white transition-colors">{new Date(showDetails.received_date).toLocaleDateString()}</p>
                     </div>
                 </div>
 
                 <div>
-                    <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Items Supplied</p>
-                    <div className="bg-gray-50 rounded-xl overflow-hidden border border-gray-100">
+                    <p className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-4 transition-colors">Items Supplied</p>
+                    <div className="bg-gray-50 dark:bg-gray-900 rounded-xl overflow-hidden border border-gray-100 dark:border-gray-700 transition-colors">
                         <table className="w-full text-left">
-                            <thead className="bg-gray-100 text-gray-600 text-xs font-bold uppercase">
+                            <thead className="bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 text-xs font-bold uppercase transition-colors">
                                 <tr>
                                     <th className="px-4 py-3">Item</th>
                                     <th className="px-4 py-3 text-center">Qty</th>
@@ -427,20 +442,23 @@ export default function AdminSupplierInvoices() {
                                     <th className="px-4 py-3 text-right">Total</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-gray-200">
-                                {showDetails.items.map(it => (
-                                    <tr key={it.id}>
-                                        <td className="px-4 py-3 font-medium text-gray-700">{it.item_name}</td>
-                                        <td className="px-4 py-3 text-center text-gray-600">{it.quantity}</td>
-                                        <td className="px-4 py-3 text-right text-gray-600">{it.unit_cost.toLocaleString()}</td>
-                                        <td className="px-4 py-3 text-right font-bold text-gray-900">{it.total_cost.toLocaleString()}</td>
-                                    </tr>
-                                ))}
+                            <tbody className="divide-y divide-gray-200 dark:divide-gray-700 transition-colors">
+                                {showDetails.items.map(it => {
+                                    const isMatch = searchQuery && it.item_name.toLowerCase().includes(searchQuery.toLowerCase());
+                                    return (
+                                        <tr key={it.id} className={isMatch ? 'bg-blue-50 dark:bg-blue-900/20' : ''}>
+                                            <td className={`px-4 py-3 font-medium transition-colors ${isMatch ? 'text-blue-600 dark:text-blue-400 font-bold' : 'text-gray-700 dark:text-gray-300'}`}>{it.item_name}</td>
+                                            <td className="px-4 py-3 text-center text-gray-600 dark:text-gray-400">{it.quantity}</td>
+                                            <td className="px-4 py-3 text-right text-gray-600 dark:text-gray-400">{it.unit_cost.toLocaleString()}</td>
+                                            <td className="px-4 py-3 text-right font-bold text-gray-900 dark:text-white">{it.total_cost.toLocaleString()}</td>
+                                        </tr>
+                                    );
+                                })}
                             </tbody>
-                            <tfoot className="bg-gray-100 font-black">
+                            <tfoot className="bg-gray-100 dark:bg-gray-800 font-black transition-colors">
                                 <tr>
-                                    <td colSpan="3" className="px-4 py-3 text-right text-gray-600 uppercase text-xs">Grand Total</td>
-                                    <td className="px-4 py-3 text-right text-blue-600 text-lg">KES {showDetails.total_amount.toLocaleString()}</td>
+                                    <td colSpan="3" className="px-4 py-3 text-right text-gray-600 dark:text-gray-400 uppercase text-xs">Grand Total</td>
+                                    <td className="px-4 py-3 text-right text-blue-600 dark:text-blue-400 text-lg">KES {showDetails.total_amount.toLocaleString()}</td>
                                 </tr>
                             </tfoot>
                         </table>
@@ -449,14 +467,14 @@ export default function AdminSupplierInvoices() {
 
                 {showDetails.notes && (
                     <div>
-                        <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Notes</p>
-                        <p className="text-gray-600 bg-gray-50 p-4 rounded-lg border border-gray-100">{showDetails.notes}</p>
+                        <p className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1 transition-colors">Notes</p>
+                        <p className="text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-900 p-4 rounded-lg border border-gray-100 dark:border-gray-700 transition-colors">{showDetails.notes}</p>
                     </div>
                 )}
 
                 <button 
                     onClick={() => setShowDetails(null)}
-                    className="w-full py-3 bg-gray-800 text-white rounded-xl font-bold hover:bg-gray-900 transition-colors"
+                    className="w-full py-3 bg-gray-800 dark:bg-gray-700 text-white rounded-xl font-bold hover:bg-gray-900 dark:hover:bg-gray-600 transition-colors"
                 >
                     Close
                 </button>

@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import api from "../api/api";
-import { Receipt, Plus, Trash2, Calendar } from "lucide-react";
+import { Receipt, Plus, Trash2, Calendar, CalendarX } from "lucide-react";
 import { formatDate } from "../utils/helpers";
+import { SearchContext } from "../context/SearchContext";
 
 export default function Expenses() {
   const [expenses, setExpenses] = useState([]);
@@ -12,6 +13,7 @@ export default function Expenses() {
     shop_id: "",
   });
   const [shops, setShops] = useState([]);
+  const { searchDate } = useContext(SearchContext);
 
   useEffect(() => {
     fetchExpenses();
@@ -62,6 +64,10 @@ export default function Expenses() {
     }
   };
 
+  const filteredExpenses = searchDate 
+    ? expenses.filter(exp => exp.created_at.startsWith(searchDate))
+    : expenses;
+
   return (
     <>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -105,42 +111,53 @@ export default function Expenses() {
               <div className="bg-gray-50 dark:bg-gray-900/50 px-8 py-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center transition-colors">
                 <h2 className="text-lg font-bold text-gray-800 dark:text-white flex items-center gap-2 transition-colors">
                   <Receipt size={20} className="text-blue-600 dark:text-blue-400" />
-                  Recent Operating Expenses
+                  Recent Operating Expenses {searchDate && <span className="text-xs font-medium text-blue-500 bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded-full ml-2 transition-all">Date: {searchDate}</span>}
                 </h2>
+                <span className="bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-400 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest transition-all">
+                  {filteredExpenses.length} Records
+                </span>
               </div>
               <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-gray-50/50 dark:bg-gray-900/50 transition-colors">
-                    <tr>
-                      <th className="px-8 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Title/Shop</th>
-                      <th className="px-8 py-4 text-right text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Amount</th>
-                      <th className="px-8 py-4 text-center text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Date</th>
-                      <th className="px-8 py-4 text-center text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-50 dark:divide-gray-700 bg-white dark:bg-gray-800 transition-colors">
-                    {expenses.map((exp) => (
-                      <tr key={exp.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-900/50 transition-colors">
-                        <td className="px-8 py-4">
-                          <div className="font-bold text-gray-900 dark:text-white transition-colors">{exp.title}</div>
-                          <div className="text-xs text-gray-500 dark:text-gray-400 transition-colors">{exp.shop_name}</div>
-                        </td>
-                        <td className="px-8 py-4 text-right font-black text-gray-900 dark:text-white transition-colors">KES {(exp.amount || 0).toLocaleString()}</td>
-                        <td className="px-8 py-4 text-center text-gray-500 dark:text-gray-400 text-sm transition-colors">
-                          <div className="flex items-center justify-center gap-1">
-                            <Calendar size={14} />
-                            {formatDate(exp.created_at)}
-                          </div>
-                        </td>
-                        <td className="px-8 py-4 text-center transition-colors">
-                          <button onClick={() => handleDelete(exp.id)} className="text-red-400 hover:text-red-600 transition-colors">
-                            <Trash2 size={18} />
-                          </button>
-                        </td>
+                {filteredExpenses.length === 0 ? (
+                  <div className="p-20 text-center border-t border-gray-100 dark:border-gray-700 transition-colors">
+                    <CalendarX size={48} className="mx-auto text-gray-300 dark:text-gray-600 mb-4 transition-colors" />
+                    <p className="text-gray-500 dark:text-gray-400 font-bold uppercase tracking-widest text-sm transition-colors">No expenses found for this date</p>
+                    {searchDate && <p className="text-xs text-gray-400 mt-2 transition-colors">Try another date or clear search</p>}
+                  </div>
+                ) : (
+                  <table className="w-full">
+                    <thead className="bg-gray-50/50 dark:bg-gray-900/50 transition-colors">
+                      <tr>
+                        <th className="px-8 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Title/Shop</th>
+                        <th className="px-8 py-4 text-right text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Amount</th>
+                        <th className="px-8 py-4 text-center text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Date</th>
+                        <th className="px-8 py-4 text-center text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Action</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="divide-y divide-gray-50 dark:divide-gray-700 bg-white dark:bg-gray-800 transition-colors">
+                      {filteredExpenses.map((exp) => (
+                        <tr key={exp.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-900/50 transition-colors">
+                          <td className="px-8 py-4">
+                            <div className="font-bold text-gray-900 dark:text-white transition-colors">{exp.title}</div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400 transition-colors">{exp.shop_name}</div>
+                          </td>
+                          <td className="px-8 py-4 text-right font-black text-gray-900 dark:text-white transition-colors">KES {(exp.amount || 0).toLocaleString()}</td>
+                          <td className="px-8 py-4 text-center text-gray-500 dark:text-gray-400 text-sm transition-colors">
+                            <div className="flex items-center justify-center gap-1">
+                              <Calendar size={14} />
+                              {formatDate(exp.created_at)}
+                            </div>
+                          </td>
+                          <td className="px-8 py-4 text-center transition-colors">
+                            <button onClick={() => handleDelete(exp.id)} className="text-red-400 hover:text-red-600 transition-colors">
+                              <Trash2 size={18} />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
               </div>
             </div>
           </div>

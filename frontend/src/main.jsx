@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import './index.css'
 import { AuthProvider } from './context/AuthContext'
 import { ThemeProvider } from './context/ThemeContext'
+import { SearchProvider } from './context/SearchContext'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import Landing from './pages/Landing'
@@ -41,8 +42,9 @@ ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <AuthProvider>
       <ThemeProvider>
-        <BrowserRouter>
-          <Routes>
+        <SearchProvider>
+          <BrowserRouter>
+            <Routes>
 
             {/* Public pages */}
             <Route path="/" element={<Landing/>} />
@@ -87,6 +89,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
 
           </Routes>
         </BrowserRouter>
+        </SearchProvider>
       </ThemeProvider>
     </AuthProvider>
   </React.StrictMode>

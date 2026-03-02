@@ -2,11 +2,13 @@ import React, { useContext, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Card from '../components/Card'
 import { AuthContext } from '../context/AuthContext'
+import { SearchContext } from '../context/SearchContext'
 import api from '../api/api'
-import { Store, Package, TrendingUp, Users, Wallet } from 'lucide-react'
+import { Store, Package, TrendingUp, Users, Wallet, SearchX } from 'lucide-react'
 
 export default function AttendantDashboard(){
   const { user } = useContext(AuthContext)
+  const { searchQuery } = useContext(SearchContext)
   const [shopStock, setShopStock] = useState([]);
   const [availableItems, setAvailableItems] = useState([]);
   const [salesSummary, setSalesSummary] = useState(null);
@@ -67,6 +69,10 @@ export default function AttendantDashboard(){
   const formatCurrency = (val) => {
     return new Intl.NumberFormat('en-KE', { style: 'currency', currency: 'KES', minimumFractionDigits: 0 }).format(val || 0);
   };
+
+  const filteredStock = searchQuery 
+    ? shopStock.filter(stock => stock.item_name.toLowerCase().includes(searchQuery.toLowerCase()))
+    : shopStock;
 
   return (
     <>
@@ -150,13 +156,19 @@ export default function AttendantDashboard(){
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-bold text-gray-800 dark:text-white tracking-tight flex items-center gap-2 transition-colors">
               <TrendingUp size={24} className="text-blue-600 dark:text-blue-400" />
-              Current Inventory
+              Current Inventory {searchQuery && <span className="text-sm font-medium text-blue-500 bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded-full ml-2">Searching: "{searchQuery}"</span>}
             </h2>
           </div>
           
           {shopStock.length === 0 ? (
             <div className="bg-white dark:bg-gray-800 p-10 rounded-2xl shadow-sm border border-dashed border-gray-300 dark:border-gray-700 text-center text-gray-400 dark:text-gray-500 transition-colors">
               No stock items recorded for your shop yet.
+            </div>
+          ) : filteredStock.length === 0 ? (
+            <div className="bg-white dark:bg-gray-800 p-20 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 text-center transition-colors">
+              <SearchX size={48} className="mx-auto text-gray-300 dark:text-gray-600 mb-4 transition-colors" />
+              <p className="text-gray-500 dark:text-gray-400 font-bold uppercase tracking-widest text-sm transition-colors">No products match your search</p>
+              <p className="text-xs text-gray-400 mt-2">Try a different name or clear the search</p>
             </div>
           ) : (
             <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden transition-colors">
@@ -169,17 +181,22 @@ export default function AttendantDashboard(){
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50 dark:divide-gray-700 bg-white dark:bg-gray-800 transition-colors">
-                  {shopStock.map((stock) => (
-                    <tr key={stock.item_id} className="hover:bg-gray-50/50 dark:hover:bg-gray-900/50 transition-colors">
-                      <td className="px-6 py-4 whitespace-nowrap font-bold text-gray-900 dark:text-white">{stock.item_name}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-3 py-1 rounded-full text-sm font-bold ${stock.qty <= 2 ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400' : 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'}`}>
-                          {stock.qty}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap font-mono text-gray-600 dark:text-gray-300 transition-colors">{formatCurrency(stock.sell_price)}</td>
-                    </tr>
-                  ))}
+                  {filteredStock.map((stock) => {
+                    const isMatch = searchQuery && stock.item_name.toLowerCase().includes(searchQuery.toLowerCase());
+                    return (
+                      <tr key={stock.item_id} className="hover:bg-gray-50/50 dark:hover:bg-gray-900/50 transition-colors">
+                        <td className={`px-6 py-4 whitespace-nowrap font-bold transition-colors ${isMatch ? 'text-blue-600 dark:text-blue-400 font-black' : 'text-gray-900 dark:text-white'}`}>
+                          {stock.item_name}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`px-3 py-1 rounded-full text-sm font-bold ${stock.qty <= 2 ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400' : 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'}`}>
+                            {stock.qty}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap font-mono text-gray-600 dark:text-gray-300 transition-colors">{formatCurrency(stock.sell_price)}</td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

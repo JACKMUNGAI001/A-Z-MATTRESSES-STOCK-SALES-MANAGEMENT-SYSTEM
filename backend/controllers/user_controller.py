@@ -7,9 +7,9 @@ def update_profile_controller():
     user_id = user_data['id']
     data = request.get_json() or {}
     name = data.get("name")
-    phone_number = data.get("phone_number")
+    email = data.get("email")
     
-    user = update_profile(user_id, name, phone_number)
+    user = update_profile(user_id, name, email)
     if not user:
         return jsonify({"msg": "User not found"}), 404
     

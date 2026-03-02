@@ -1,12 +1,12 @@
 from extensions import db
 from models.user import User
 
-def update_profile(user_id, name, phone_number):
+def update_profile(user_id, name, email):
     user = User.query.get(user_id)
     if not user:
         return None
     user.name = name
-    user.phone_number = phone_number
+    user.email = email
     db.session.commit()
     return user
 

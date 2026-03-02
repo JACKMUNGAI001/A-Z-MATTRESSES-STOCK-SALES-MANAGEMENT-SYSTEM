@@ -58,7 +58,6 @@ def get_current_user_controller():
         "name": user.name,
         "email": user.email,
         "role": user.role,
-        "phone_number": user.phone_number,
         "shop_id": user.shop_id,
         "shop_name": shop_name
     }), 200

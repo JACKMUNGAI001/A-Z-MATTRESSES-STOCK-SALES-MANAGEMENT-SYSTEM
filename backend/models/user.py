@@ -7,7 +7,6 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(255))
     email = db.Column(db.String(255), unique=True, nullable=False)
-    phone_number = db.Column(db.String(50), nullable=True)
     password_hash = db.Column(db.String(255), nullable=False)
     role = db.Column(db.String(50), default="attendant")  # admin | attendant
     is_verified = db.Column(db.Boolean, default=False)
