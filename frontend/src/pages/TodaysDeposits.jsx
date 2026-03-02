@@ -1,12 +1,14 @@
 import React, { useEffect, useState, useContext } from 'react';
 import api, { API_BASE } from '../api/api';
-import { FileText, Wallet, Clock, History, SearchX } from "lucide-react";
+import { FileText, Wallet, Clock, History, SearchX, Store } from "lucide-react";
 import { SearchContext } from '../context/SearchContext';
+import { AuthContext } from '../context/AuthContext';
 
 export default function TodaysDeposits() {
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
   const { searchQuery } = useContext(SearchContext);
+  const { user } = useContext(AuthContext);
 
   useEffect(() => {
     const fetchPayments = async () => {
@@ -28,6 +30,7 @@ export default function TodaysDeposits() {
 
   const filteredPayments = searchQuery 
     ? payments.filter(p => 
+        (p.shop_name && p.shop_name.toLowerCase().includes(searchQuery.toLowerCase())) ||
         p.item_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         p.buyer_name.toLowerCase().includes(searchQuery.toLowerCase())
       )
@@ -69,6 +72,9 @@ export default function TodaysDeposits() {
               <table className="w-full">
                 <thead className="bg-gray-50/50 dark:bg-gray-900/50 transition-colors">
                   <tr>
+                    {(user?.role === 'manager' || user?.role === 'admin') && (
+                      <th className="px-8 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Shop</th>
+                    )}
                     <th className="px-8 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Customer</th>
                     <th className="px-8 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Item Info</th>
                     <th className="px-8 py-4 text-right text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Amount Paid</th>
@@ -77,11 +83,20 @@ export default function TodaysDeposits() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50 dark:divide-gray-700 bg-white dark:bg-gray-800 transition-colors">
-                  {filteredPayments.map((p) => {
+                  {filteredPayments.map((p, idx) => {
                     const isBuyerMatch = searchQuery && p.buyer_name.toLowerCase().includes(searchQuery.toLowerCase());
                     const isItemMatch = searchQuery && p.item_name.toLowerCase().includes(searchQuery.toLowerCase());
+                    const isShopMatch = searchQuery && p.shop_name && p.shop_name.toLowerCase().includes(searchQuery.toLowerCase());
                     return (
-                      <tr key={p.id} className="hover:bg-indigo-50/50 dark:hover:bg-indigo-900/20 transition-colors">
+                      <tr key={idx} className="hover:bg-indigo-50/50 dark:hover:bg-indigo-900/20 transition-colors">
+                        {(user?.role === 'manager' || user?.role === 'admin') && (
+                          <td className="px-8 py-4">
+                            <div className={`flex items-center gap-1 text-sm font-bold transition-colors ${isShopMatch ? 'text-blue-600 dark:text-blue-400 font-black' : 'text-gray-500 dark:text-gray-400'}`}>
+                              <Store size={14} className="text-gray-400" />
+                              {p.shop_name}
+                            </div>
+                          </td>
+                        )}
                         <td className="px-8 py-4">
                           <div className={`font-bold transition-colors ${isBuyerMatch ? 'text-blue-600 dark:text-blue-400 font-black' : 'text-gray-900 dark:text-white'}`}>{p.buyer_name}</div>
                         </td>

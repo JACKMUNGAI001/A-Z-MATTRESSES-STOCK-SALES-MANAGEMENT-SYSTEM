@@ -8,7 +8,7 @@ class User(db.Model):
     name = db.Column(db.String(255))
     email = db.Column(db.String(255), unique=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
-    role = db.Column(db.String(50), default="attendant")  # admin | attendant
+    role = db.Column(db.String(50), default="attendant")  # admin | manager | attendant
     is_verified = db.Column(db.Boolean, default=False)
     shop_id = db.Column(db.Integer, db.ForeignKey("shops.id"), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)

@@ -1,7 +1,7 @@
 import { useState, useEffect, useContext } from "react";
 import api, { API_BASE } from "../api/api";
 import { AuthContext } from "../context/AuthContext";
-import { ShoppingCart, Plus, Trash2, CreditCard } from "lucide-react";
+import { ShoppingCart, Plus, Trash2, CreditCard, Store } from "lucide-react";
 
 export default function POS() {
   const { user } = useContext(AuthContext);
@@ -11,6 +11,8 @@ export default function POS() {
   const [quantity, setQuantity] = useState(1);
   const [paymentType, setPaymentType] = useState("cash");
   const [receiptUuid, setReceiptUuid] = useState(null);
+  const [shops, setShops] = useState([]);
+  const [selectedShop, setSelectedShop] = useState(user?.shop_id || "");
 
   useEffect(() => {
     const fetchItems = async () => {
@@ -22,7 +24,22 @@ export default function POS() {
       }
     };
     fetchItems();
-  }, []);
+
+    if (user?.role === 'manager' || user?.role === 'admin') {
+      const fetchShops = async () => {
+        try {
+          const response = await api.get("/shops");
+          setShops(response.data);
+          if (!selectedShop && response.data.length > 0) {
+            setSelectedShop(response.data[0].id);
+          }
+        } catch (err) {
+          console.error("Error fetching shops");
+        }
+      };
+      fetchShops();
+    }
+  }, [user]);
 
   const handleAddItem = () => {
     const itemToAdd = apiItems.find((i) => i.id === parseInt(selectedItem));
@@ -54,9 +71,13 @@ export default function POS() {
       alert("Cart is empty.");
       return;
     }
+    if (!selectedShop) {
+      alert("Please select a shop.");
+      return;
+    }
     try {
       const response = await api.post("/sales", {
-        shop_id: user.shop_id,
+        shop_id: selectedShop,
         items: cartItems.map(({ item_id, qty, unit_price }) => ({ item_id, qty, unit_price })),
         payment_type: paymentType,
       });
@@ -73,6 +94,27 @@ export default function POS() {
         <div className="flex flex-col lg:flex-row gap-8">
           {/* SELECT ITEMS */}
           <div className="flex-1 space-y-6">
+            {(user?.role === 'manager' || user?.role === 'admin') && (
+              <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 transition-colors">
+                <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-6 flex items-center gap-2">
+                  <Store size={24} className="text-purple-600 dark:text-purple-400" />
+                  Select Shop
+                </h2>
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 dark:text-gray-400 uppercase tracking-wider mb-2">Acting For Shop</label>
+                  <select
+                    className="w-full p-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                    value={selectedShop}
+                    onChange={(e) => setSelectedShop(e.target.value)}
+                  >
+                    <option value="">-- Choose Shop --</option>
+                    {shops.map((s) => (
+                      <option key={s.id} value={s.id}>{s.name}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            )}
             <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 transition-colors">
               <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-6 flex items-center gap-2">
                 <Plus size={24} className="text-blue-600 dark:text-blue-400" />

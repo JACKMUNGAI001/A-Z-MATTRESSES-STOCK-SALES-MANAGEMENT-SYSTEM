@@ -44,6 +44,7 @@ export default function AllSales() {
 
   const filteredSales = searchQuery 
     ? sales.filter(sale => 
+        (sale.shop_name && sale.shop_name.toLowerCase().includes(searchQuery.toLowerCase())) ||
         sale.items?.some(item => 
           item.item_name.toLowerCase().includes(searchQuery.toLowerCase())
         )

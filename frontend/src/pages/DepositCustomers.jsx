@@ -1,12 +1,14 @@
 import React, { useEffect, useState, useContext } from 'react';
 import api from '../api/api';
-import { Users, Phone, Package, Wallet, ArrowRight, SearchX } from "lucide-react";
+import { Users, Phone, Package, Wallet, ArrowRight, SearchX, Store } from "lucide-react";
 import { SearchContext } from '../context/SearchContext';
+import { AuthContext } from '../context/AuthContext';
 
 export default function DepositCustomers() {
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
   const { searchQuery } = useContext(SearchContext);
+  const { user } = useContext(AuthContext);
 
   useEffect(() => {
     const fetchCustomers = async () => {
@@ -29,7 +31,8 @@ export default function DepositCustomers() {
   const filteredCustomers = searchQuery 
     ? customers.filter(customer => 
         customer.buyer_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        customer.item_name.toLowerCase().includes(searchQuery.toLowerCase())
+        customer.item_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (customer.shop_name && customer.shop_name.toLowerCase().includes(searchQuery.toLowerCase()))
       )
     : customers;
 
@@ -69,6 +72,9 @@ export default function DepositCustomers() {
               <table className="w-full">
                 <thead className="bg-gray-50/50 dark:bg-gray-900/50 transition-colors">
                   <tr>
+                    {(user?.role === 'manager' || user?.role === 'admin') && (
+                      <th className="px-8 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Shop</th>
+                    )}
                     <th className="px-8 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Customer</th>
                     <th className="px-8 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Item Reserved</th>
                     <th className="px-8 py-4 text-right text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Paid to Date</th>
@@ -79,8 +85,17 @@ export default function DepositCustomers() {
                   {filteredCustomers.map((customer) => {
                     const isBuyerMatch = searchQuery && customer.buyer_name.toLowerCase().includes(searchQuery.toLowerCase());
                     const isItemMatch = searchQuery && customer.item_name.toLowerCase().includes(searchQuery.toLowerCase());
+                    const isShopMatch = searchQuery && customer.shop_name && customer.shop_name.toLowerCase().includes(searchQuery.toLowerCase());
                     return (
                       <tr key={customer.id} className="hover:bg-indigo-50/10 dark:hover:bg-indigo-900/10 transition-colors">
+                        {(user?.role === 'manager' || user?.role === 'admin') && (
+                          <td className="px-8 py-4">
+                            <div className={`flex items-center gap-1 text-sm font-bold transition-colors ${isShopMatch ? 'text-blue-600 dark:text-blue-400 font-black' : 'text-gray-500 dark:text-gray-400'}`}>
+                              <Store size={14} className="text-gray-400" />
+                              {customer.shop_name}
+                            </div>
+                          </td>
+                        )}
                         <td className="px-8 py-4">
                           <div className={`font-black transition-colors ${isBuyerMatch ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-900 dark:text-white'}`}>{customer.buyer_name}</div>
                           <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 mt-1 font-medium transition-colors">

@@ -1,12 +1,14 @@
 import React, { useEffect, useState, useContext } from 'react';
 import api from '../api/api';
-import { AlertTriangle, Package, Info, SearchX } from "lucide-react";
+import { AlertTriangle, Package, Info, SearchX, Store } from "lucide-react";
 import { SearchContext } from '../context/SearchContext';
+import { AuthContext } from '../context/AuthContext';
 
 export default function LowStockItems() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const { searchQuery } = useContext(SearchContext);
+  const { user } = useContext(AuthContext);
 
   useEffect(() => {
     const fetchItems = async () => {
@@ -23,7 +25,10 @@ export default function LowStockItems() {
   }, []);
 
   const filteredItems = searchQuery 
-    ? items.filter(item => item.item_name.toLowerCase().includes(searchQuery.toLowerCase()))
+    ? items.filter(item => 
+        item.item_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (item.shop_name && item.shop_name.toLowerCase().includes(searchQuery.toLowerCase()))
+      )
     : items;
 
   return (
@@ -71,16 +76,30 @@ export default function LowStockItems() {
               <table className="w-full">
                 <thead className="bg-gray-50/50 dark:bg-gray-900/50 transition-colors">
                   <tr>
+                    {(user?.role === 'manager' || user?.role === 'admin') && (
+                      <th className="px-8 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Shop</th>
+                    )}
                     <th className="px-8 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Product Name</th>
                     <th className="px-8 py-4 text-center text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Current Qty</th>
                     <th className="px-8 py-4 text-center text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Status</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50 dark:divide-gray-700 bg-white dark:bg-gray-800 transition-colors">
-                  {filteredItems.map((item) => {
-                    const isMatch = searchQuery && item.item_name.toLowerCase().includes(searchQuery.toLowerCase());
+                  {filteredItems.map((item, idx) => {
+                    const isMatch = searchQuery && (
+                        item.item_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                        (item.shop_name && item.shop_name.toLowerCase().includes(searchQuery.toLowerCase()))
+                    );
                     return (
-                      <tr key={item.item_id} className="hover:bg-orange-50/10 dark:hover:bg-orange-900/10 transition-colors">
+                      <tr key={idx} className="hover:bg-orange-50/10 dark:hover:bg-orange-900/10 transition-colors">
+                        {(user?.role === 'manager' || user?.role === 'admin') && (
+                          <td className="px-8 py-4 text-gray-500 dark:text-gray-400 font-medium transition-colors">
+                            <div className="flex items-center gap-1">
+                                <Store size={14} className="text-gray-400" />
+                                {item.shop_name}
+                            </div>
+                          </td>
+                        )}
                         <td className={`px-8 py-4 font-black transition-colors ${isMatch ? 'text-orange-600 dark:text-orange-400' : 'text-gray-900 dark:text-white'}`}>
                           {item.item_name}
                         </td>

@@ -19,6 +19,7 @@ export default function Login(){
       localStorage.setItem('token', access_token)
       setUser(user)
       if(user.role === 'admin') navigate('/admin')
+      else if(user.role === 'manager') navigate('/manager')
       else navigate('/attendant')
     }catch(err){
       setMsg(err.response?.data?.msg || 'Login failed')

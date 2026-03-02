@@ -1,13 +1,15 @@
 import React, { useEffect, useState, useContext } from 'react';
 import api, { API_BASE } from '../api/api';
-import { FileText, CalendarDays, Clock, Receipt, SearchX } from "lucide-react";
+import { FileText, CalendarDays, Clock, Receipt, SearchX, Store } from "lucide-react";
 import { formatDate } from "../utils/helpers";
 import { SearchContext } from '../context/SearchContext';
+import { AuthContext } from '../context/AuthContext';
 
 export default function MonthsSales() {
   const [sales, setSales] = useState([]);
   const [loading, setLoading] = useState(true);
   const { searchQuery } = useContext(SearchContext);
+  const { user } = useContext(AuthContext);
 
   useEffect(() => {
     const fetchSales = async () => {
@@ -29,6 +31,7 @@ export default function MonthsSales() {
 
   const filteredSales = searchQuery 
     ? sales.filter(sale => 
+        (sale.shop_name && sale.shop_name.toLowerCase().includes(searchQuery.toLowerCase())) ||
         sale.items?.some(item => 
           item.item_name.toLowerCase().includes(searchQuery.toLowerCase())
         )
@@ -78,6 +81,9 @@ export default function MonthsSales() {
                 <thead className="bg-gray-50/50 dark:bg-gray-900/50 transition-colors">
                   <tr>
                     <th className="px-8 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">ID</th>
+                    {(user?.role === 'manager' || user?.role === 'admin') && (
+                      <th className="px-8 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Shop</th>
+                    )}
                     <th className="px-8 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Items Sold</th>
                     <th className="px-8 py-4 text-right text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Amount</th>
                     <th className="px-8 py-4 text-center text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Date</th>
@@ -88,6 +94,14 @@ export default function MonthsSales() {
                   {filteredSales.map((sale) => (
                     <tr key={sale.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-900/50 transition-colors">
                       <td className="px-8 py-4 font-bold text-gray-400 dark:text-gray-500 transition-colors">#{sale.id}</td>
+                      {(user?.role === 'manager' || user?.role === 'admin') && (
+                        <td className="px-8 py-4">
+                          <div className={`flex items-center gap-1 text-sm font-bold transition-colors ${searchQuery && sale.shop_name.toLowerCase().includes(searchQuery.toLowerCase()) ? 'text-blue-600 dark:text-blue-400 font-black' : 'text-gray-500 dark:text-gray-400'}`}>
+                            <Store size={14} className="text-gray-400" />
+                            {sale.shop_name}
+                          </div>
+                        </td>
+                      )}
                       <td className="px-8 py-4">
                         <div className="flex flex-wrap gap-1 max-w-xs">
                           {sale.items?.map((item, idx) => {

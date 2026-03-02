@@ -13,12 +13,15 @@ def run():
         u.set_password("password123")  # change in production
         db.session.add(u)
 
+    if not User.query.filter_by(email="manager@a-zmattresses.com").first():
+        m = User(name="Test Manager", email="manager@a-zmattresses.com", role="manager", is_verified=True)
+        m.set_password("manager123")
+        db.session.add(m)
+
     shops_data = [
         {"name": "Umoja", "address": "Umoja Estate, Nairobi"},
         {"name": "Mutindwa", "address": "Mutindwa Market, Nairobi"},
-        {"name": "Kabati", "address": "Kabati Town, Muranga"},
-        {"name": "Juja", "address": "Juja Town, Kiambu"},
-        {"name": "Roysambu", "address": "Roysambu, Nairobi"}
+        {"name": "Kabati", "address": "Kabati Town, Muranga"}
     ]
     for s_data in shops_data:
         if not Shop.query.filter_by(name=s_data["name"]).first():

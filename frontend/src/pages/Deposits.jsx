@@ -1,7 +1,7 @@
 import { useState, useEffect, useContext } from "react";
 import api, { API_BASE } from "../api/api";
 import { AuthContext } from "../context/AuthContext";
-import { UserPlus, History, Wallet, CheckCircle } from "lucide-react";
+import { UserPlus, History, Wallet, CheckCircle, Store } from "lucide-react";
 
 export default function Deposits() {
   const { user } = useContext(AuthContext);
@@ -16,11 +16,28 @@ export default function Deposits() {
   });
   const [paymentAmounts, setPaymentAmounts] = useState({});
   const [receiptUuid, setReceiptUuid] = useState(null);
+  const [shops, setShops] = useState([]);
+  const [selectedShop, setSelectedShop] = useState(user?.shop_id || "");
 
   useEffect(() => {
     fetchDeposits();
     fetchItems();
-  }, []);
+
+    if (user?.role === 'manager' || user?.role === 'admin') {
+      const fetchShops = async () => {
+        try {
+          const response = await api.get("/shops");
+          setShops(response.data);
+          if (!selectedShop && response.data.length > 0) {
+            setSelectedShop(response.data[0].id);
+          }
+        } catch (err) {
+          console.error("Error fetching shops");
+        }
+      };
+      fetchShops();
+    }
+  }, [user]);
 
   const fetchDeposits = async () => {
     try {
@@ -47,7 +64,11 @@ export default function Deposits() {
 
   const createDepositSale = async () => {
     try {
-      const data = { ...formData, shop_id: user.shop_id };
+      if (!selectedShop) {
+        alert("Please select a shop first.");
+        return;
+      }
+      const data = { ...formData, shop_id: selectedShop };
       await api.post("/deposits", data);
       alert("DEPOSIT SALE CREATED!");
       fetchDeposits();
@@ -90,6 +111,27 @@ export default function Deposits() {
 
   return (
     <>
+        {(user?.role === 'manager' || user?.role === 'admin') && (
+          <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 mb-10 transition-colors">
+            <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-6 flex items-center gap-2 transition-colors">
+              <Store size={24} className="text-purple-600 dark:text-purple-400" />
+              Acting For Shop
+            </h2>
+            <div className="max-w-xs">
+              <label className="block text-sm font-bold text-gray-700 dark:text-gray-400 uppercase tracking-wider mb-2 px-1">Select Shop</label>
+              <select
+                className="w-full p-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                value={selectedShop}
+                onChange={(e) => setSelectedShop(e.target.value)}
+              >
+                <option value="">-- Choose Shop --</option>
+                {shops.map((s) => (
+                  <option key={s.id} value={s.id}>{s.name}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+        )}
         {/* CREATE DEPOSIT */}
         <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 mb-10 transition-colors">
           <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-6 flex items-center gap-2 transition-colors">
@@ -141,6 +183,9 @@ export default function Deposits() {
             <table className="w-full">
               <thead className="bg-gray-50/50 dark:bg-gray-900/50 transition-colors">
                 <tr>
+                  {(user?.role === 'manager' || user?.role === 'admin') && (
+                    <th className="px-8 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Shop</th>
+                  )}
                   <th className="px-8 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Buyer</th>
                   <th className="px-8 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Item</th>
                   <th className="px-8 py-4 text-right text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Total Paid</th>
@@ -151,6 +196,14 @@ export default function Deposits() {
               <tbody className="divide-y divide-gray-50 dark:divide-gray-700 bg-white dark:bg-gray-800 transition-colors">
                 {deposits.filter(d => d.status === 'active').map((deposit) => (
                   <tr key={deposit.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-900/50 transition-colors">
+                    {(user?.role === 'manager' || user?.role === 'admin') && (
+                      <td className="px-8 py-4">
+                        <div className="flex items-center gap-1 text-sm font-bold text-gray-500 dark:text-gray-400">
+                          <Store size={14} className="text-gray-400" />
+                          {deposit.shop_name}
+                        </div>
+                      </td>
+                    )}
                     <td className="px-8 py-4">
                       <div className="font-bold text-gray-900 dark:text-white transition-colors">{deposit.buyer_name}</div>
                       <div className="text-xs text-gray-500 dark:text-gray-400 transition-colors">{deposit.buyer_phone}</div>

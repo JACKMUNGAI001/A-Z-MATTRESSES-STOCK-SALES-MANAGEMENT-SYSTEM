@@ -4,7 +4,7 @@ class UserSchema(Schema):
     id = fields.Int(dump_only=True)
     name = fields.Str()
     email = fields.Email()
-    role = fields.Str(validate=validate.OneOf(["admin","attendant"]))
+    role = fields.Str(validate=validate.OneOf(["admin","manager","attendant"]))
     is_verified = fields.Bool()
     shop_id = fields.Int(allow_none=True)
     created_at = fields.DateTime()

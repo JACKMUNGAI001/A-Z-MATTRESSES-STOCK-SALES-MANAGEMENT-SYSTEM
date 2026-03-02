@@ -27,6 +27,7 @@ import AllDeposits from './pages/AllDeposits'
 import OutstandingDeposits from './pages/OutstandingDeposits'
 import AdminSuppliers from './pages/AdminSuppliers'
 import AdminSupplierInvoices from './pages/AdminSupplierInvoices'
+import ManagerDashboard from './pages/ManagerDashboard'
 import TodaysSales from './pages/TodaysSales'
 import WeeksSales from './pages/WeeksSales'
 import MonthsSales from './pages/MonthsSales'
@@ -54,26 +55,29 @@ ReactDOM.createRoot(document.getElementById('root')).render(
             {/* Common Protected */}
             <Route path="/profile" element={<ProtectedRoute><PageLayout><Profile/></PageLayout></ProtectedRoute>} />
 
-            {/* Admin Protected */}
-            <Route path="/admin" element={<ProtectedRoute role="admin"><PageLayout role="admin"><AdminDashboard/></PageLayout></ProtectedRoute>} />
-            <Route path="/admin/shops" element={<ProtectedRoute role="admin"><PageLayout role="admin"><AdminShops/></PageLayout></ProtectedRoute>} />
-            <Route path="/admin/items" element={<ProtectedRoute role="admin"><PageLayout role="admin"><AdminItems/></PageLayout></ProtectedRoute>} />
+            {/* Admin/Manager Protected */}
+            <Route path="/admin" element={<ProtectedRoute role="admin"><PageLayout><AdminDashboard/></PageLayout></ProtectedRoute>} />
+            <Route path="/admin/shops" element={<ProtectedRoute role={['admin', 'manager']}><PageLayout><AdminShops/></PageLayout></ProtectedRoute>} />
+            <Route path="/admin/items" element={<ProtectedRoute role={['admin', 'manager']}><PageLayout><AdminItems/></PageLayout></ProtectedRoute>} />
             <Route path="/admin/suppliers" element={<ProtectedRoute role="admin"><PageLayout role="admin" title="Suppliers Management"><AdminSuppliers/></PageLayout></ProtectedRoute>} />
             <Route path="/admin/supplier-invoices" element={<ProtectedRoute role="admin"><PageLayout role="admin" title="Supplier Invoices"><AdminSupplierInvoices/></PageLayout></ProtectedRoute>} />
-            <Route path="/admin/shops/:shopId" element={<ProtectedRoute role="admin"><PageLayout role="admin"><ShopDetails/></PageLayout></ProtectedRoute>} />
-            <Route path="/admin/shops/:shopId/stock" element={<ProtectedRoute role="admin"><PageLayout role="admin"><AdminShopStock/></PageLayout></ProtectedRoute>} />
-            <Route path="/admin/all-sales" element={<ProtectedRoute role="admin"><PageLayout role="admin"><AllSales/></PageLayout></ProtectedRoute>} />
-            <Route path="/admin/all-deposits" element={<ProtectedRoute role="admin"><PageLayout role="admin"><AllDeposits/></PageLayout></ProtectedRoute>} />
-            <Route path="/admin/outstanding-deposits" element={<ProtectedRoute role="admin"><PageLayout role="admin"><OutstandingDeposits/></PageLayout></ProtectedRoute>} />
+            <Route path="/admin/shops/:shopId" element={<ProtectedRoute role={['admin', 'manager']}><PageLayout><ShopDetails/></PageLayout></ProtectedRoute>} />
+            <Route path="/admin/shops/:shopId/stock" element={<ProtectedRoute role={['admin', 'manager']}><PageLayout><AdminShopStock/></PageLayout></ProtectedRoute>} />
+            <Route path="/admin/all-sales" element={<ProtectedRoute role={['admin', 'manager']}><PageLayout><AllSales/></PageLayout></ProtectedRoute>} />
+            <Route path="/admin/all-deposits" element={<ProtectedRoute role={['admin', 'manager']}><PageLayout><AllDeposits/></PageLayout></ProtectedRoute>} />
+            <Route path="/admin/outstanding-deposits" element={<ProtectedRoute role={['admin', 'manager']}><PageLayout><OutstandingDeposits/></PageLayout></ProtectedRoute>} />
             <Route path="/admin/pnl" element={<ProtectedRoute role="admin"><PageLayout role="admin"><PNLReport/></PageLayout></ProtectedRoute>} />
-            <Route path="/admin/expenses" element={<ProtectedRoute role="admin"><PageLayout role="admin"><Expenses/></PageLayout></ProtectedRoute>} />
-            <Route path="/transfers" element={<ProtectedRoute role="admin"><PageLayout role="admin"><Transfers/></PageLayout></ProtectedRoute>} />
+            <Route path="/admin/expenses" element={<ProtectedRoute role={['admin', 'manager']}><PageLayout><Expenses/></PageLayout></ProtectedRoute>} />
+            <Route path="/transfers" element={<ProtectedRoute role={['admin', 'manager']}><PageLayout><Transfers/></PageLayout></ProtectedRoute>} />
 
             {/* Attendant Protected */}
             <Route path="/attendant" element={<ProtectedRoute role="attendant"><PageLayout role="attendant"><AttendantDashboard/></PageLayout></ProtectedRoute>} />
-            <Route path="/pos" element={<ProtectedRoute role="attendant"><PageLayout role="attendant"><POS/></PageLayout></ProtectedRoute>} />
-            <Route path="/deposits" element={<ProtectedRoute role="attendant"><PageLayout role="attendant"><Deposits/></PageLayout></ProtectedRoute>} />
-            <Route path="/attendant/low-stock" element={<ProtectedRoute role="attendant"><PageLayout role="attendant"><LowStockItems /></PageLayout></ProtectedRoute>} />
+            <Route path="/pos" element={<ProtectedRoute role={['attendant', 'manager']}><PageLayout><POS/></PageLayout></ProtectedRoute>} />
+            <Route path="/deposits" element={<ProtectedRoute role={['attendant', 'manager']}><PageLayout><Deposits/></PageLayout></ProtectedRoute>} />
+            <Route path="/attendant/low-stock" element={<ProtectedRoute role={['attendant', 'manager']}><PageLayout><LowStockItems /></PageLayout></ProtectedRoute>} />
+            
+            {/* Manager Protected */}
+            <Route path="/manager" element={<ProtectedRoute role="manager"><PageLayout role="manager"><ManagerDashboard/></PageLayout></ProtectedRoute>} />
             
             {/* Filtered Detail Views (Shared) */}
             <Route path="/attendant/sales" element={<ProtectedRoute><PageLayout><TodaysSales /></PageLayout></ProtectedRoute>} />

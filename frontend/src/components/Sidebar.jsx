@@ -51,6 +51,16 @@ export default function Sidebar({ role: propRole }){
             <NavLink to="/admin/expenses" icon={Receipt}>Expenses</NavLink>
             <NavLink to="/transfers" icon={ArrowLeftRight}>Transfers</NavLink>
           </>
+        ) : role === 'manager' ? (
+          <>
+            <NavLink to="/manager" icon={LayoutDashboard}>Dashboard</NavLink>
+            <NavLink to="/pos" icon={Receipt}>Record Sale</NavLink>
+            <NavLink to="/deposits" icon={Store}>Deposits</NavLink>
+            <NavLink to="/admin/shops" icon={Store}>Shops</NavLink>
+            <NavLink to="/admin/items" icon={Package}>Products</NavLink>
+            <NavLink to="/transfers" icon={ArrowLeftRight}>Transfers</NavLink>
+            <NavLink to="/admin/expenses" icon={Receipt}>Expenses</NavLink>
+          </>
         ) : (
           <>
             <NavLink to="/attendant" icon={LayoutDashboard}>Dashboard</NavLink>
