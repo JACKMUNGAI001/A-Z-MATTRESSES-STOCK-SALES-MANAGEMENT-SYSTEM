@@ -36,25 +36,25 @@ export default function Register(){
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-[#f1f5f9] dark:bg-[#0f172a] p-6 transition-colors duration-300">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-[#f1f5f9] dark:bg-[#0f172a] p-4 md:p-6 transition-colors duration-300 relative overflow-y-auto">
       {/* BACK BUTTON */}
       <button
         onClick={() => navigate('/')}
-        className="absolute top-8 left-8 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 py-2.5 px-5 rounded-xl shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-all flex items-center gap-2 font-bold text-sm"
+        className="mb-8 md:absolute md:top-8 md:left-8 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 py-2.5 px-5 rounded-xl shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-all flex items-center gap-2 font-bold text-sm self-start md:self-auto"
       >
         <ArrowLeft size={18} /> BACK TO HOME
       </button>
 
-      <div className="w-full max-w-lg">
-        <div className="text-center mb-10">
+      <div className="w-full max-w-lg mt-4 md:mt-0">
+        <div className="text-center mb-6 md:mb-10">
           <div className="inline-flex bg-blue-600 p-3 rounded-2xl text-white shadow-xl shadow-blue-200 mb-4">
             <UserPlus size={32} />
           </div>
-          <h1 className="text-3xl font-black text-gray-900 dark:text-white tracking-tight transition-colors">Create Account</h1>
-          <p className="text-gray-500 dark:text-gray-400 font-medium mt-2 transition-colors">Join our network of retail mattress shops</p>
+          <h1 className="text-2xl md:text-3xl font-black text-gray-900 dark:text-white tracking-tight transition-colors">Create Account</h1>
+          <p className="text-sm md:text-base text-gray-500 dark:text-gray-400 font-medium mt-2 transition-colors px-4">Join our network of retail mattress shops</p>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 p-10 rounded-[2.5rem] shadow-xl border border-gray-100 dark:border-gray-700 transition-colors">
+        <div className="bg-white dark:bg-gray-800 p-6 md:p-10 rounded-[2rem] md:rounded-[2.5rem] shadow-xl border border-gray-100 dark:border-gray-700 transition-colors">
           {msg && (
             <div className="bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 p-4 rounded-xl text-sm font-bold mb-6 border border-red-100 dark:border-red-900/50 flex items-center gap-2 transition-colors animate-bounce">
               <span className="text-lg">⚠️</span> {msg}

@@ -183,4 +183,29 @@ def get_deposits_summary(shop_id=None):
         "year": float(year_q.scalar() or 0)
     }
 
+def get_stock_summary_by_category(shop_id=None):
+    from models.product import Item, Category
+    from models.shop import Shop
+    
+    query = db.session.query(
+        Shop.name.label("shop_name"),
+        Category.name.label("category_name"),
+        func.sum(ShopStock.quantity).label("total_quantity")
+    ).join(ShopStock, ShopStock.shop_id == Shop.id) \
+     .join(Item, ShopStock.item_id == Item.id) \
+     .join(Category, Item.category_id == Category.id)
+
+    if shop_id:
+        query = query.filter(Shop.id == shop_id)
+
+    results = query.group_by(Shop.name, Category.name).all()
+
+    summary = {}
+    for shop_name, category_name, total_quantity in results:
+        if shop_name not in summary:
+            summary[shop_name] = {}
+        summary[shop_name][category_name] = int(total_quantity or 0)
+    
+    return summary
+
 

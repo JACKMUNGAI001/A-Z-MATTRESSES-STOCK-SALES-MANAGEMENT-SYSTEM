@@ -10,27 +10,27 @@ export default function Landing() {
     <div className="min-h-screen bg-[#f1f5f9] dark:bg-[#0f172a] transition-colors duration-300 font-sans">
       
       {/* NAVBAR */}
-      <nav className="flex items-center justify-between px-6 md:px-16 py-8">
+      <nav className="flex flex-col sm:flex-row items-center justify-between px-6 md:px-16 py-8 gap-6">
         <div className="flex items-center gap-2">
           <div className="bg-blue-600 p-2 rounded-xl text-white shadow-lg shadow-blue-200">
             <Zap size={24} fill="currentColor" />
           </div>
-          <h1 className="text-2xl font-black text-gray-900 dark:text-white tracking-tight">A-Z MATTRESSES</h1>
+          <h1 className="text-xl md:text-2xl font-black text-gray-900 dark:text-white tracking-tight text-center sm:text-left">A-Z MATTRESSES</h1>
         </div>
         
-        <div className="flex items-center space-x-6">
+        <div className="flex items-center space-x-4 md:space-x-6">
           <button
             onClick={toggleDarkMode}
             className="p-2.5 rounded-xl bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 shadow-sm border border-gray-200 dark:border-gray-700 hover:bg-gray-50 transition-all"
           >
             {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
           </button>
-          <Link to="/login" className="text-gray-600 dark:text-gray-400 font-bold hover:text-blue-600 transition-colors">
+          <Link to="/login" className="text-gray-600 dark:text-gray-400 font-bold hover:text-blue-600 transition-colors text-sm md:text-base">
             Login
           </Link>
           <Link
             to="/register"
-            className="px-6 py-3 bg-blue-600 text-white rounded-2xl font-black shadow-xl shadow-blue-200 hover:bg-blue-700 hover:-translate-y-0.5 transition-all"
+            className="px-4 md:px-6 py-2 md:py-3 bg-blue-600 text-white rounded-2xl font-black shadow-xl shadow-blue-200 hover:bg-blue-700 hover:-translate-y-0.5 transition-all text-sm md:text-base whitespace-nowrap"
           >
             Get Started
           </Link>

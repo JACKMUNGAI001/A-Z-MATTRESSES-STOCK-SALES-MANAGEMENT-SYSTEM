@@ -15,6 +15,7 @@ export default function ManagerDashboard(){
   const [lowStockCount, setLowStockCount] = useState(0);
   const [depositCustomersCount, setDepositCustomersCount] = useState(0);
   const [shops, setShops] = useState([]);
+  const [stockSummary, setStockSummary] = useState(null);
 
   useEffect(() => {
     fetchGlobalStock();
@@ -37,6 +38,10 @@ export default function ManagerDashboard(){
             // Fetch Deposit Customers Count (Global for Manager)
             const depositCustomersResponse = await api.get('/deposits/customers_count');
             setDepositCustomersCount(depositCustomersResponse.data.count);
+
+            // Fetch Stock Summary
+            const stockSummaryRes = await api.get('/reports/stock-summary');
+            setStockSummary(stockSummaryRes.data);
 
         } catch (err) {
             console.error('Error fetching dashboard data:', err);
@@ -153,6 +158,29 @@ export default function ManagerDashboard(){
                 <Users className="text-indigo-200 dark:text-indigo-900/30 group-hover:text-indigo-400 dark:group-hover:text-indigo-500 transition-colors" size={40} />
               </Card>
           </Link>
+        </div>
+
+        {/* STOCK SUMMARY BY CATEGORY */}
+        <div className="mb-10">
+          <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4 tracking-tight border-l-4 border-l-green-600 pl-3 text-sm uppercase tracking-widest text-gray-400 dark:text-gray-500 transition-colors">Stock Summary by Category</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {stockSummary && Object.entries(stockSummary).map(([shopName, categories]) => (
+              <div key={shopName} className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-green-100 dark:border-gray-700 bg-gradient-to-br from-white to-green-50/30 dark:from-gray-800 dark:to-green-900/10 transition-all">
+                <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                  <Store size={18} className="text-green-600 dark:text-green-400" />
+                  {shopName}
+                </h4>
+                <div className="space-y-3">
+                  {Object.entries(categories).map(([category, quantity]) => (
+                    <div key={category} className="flex justify-between items-center p-3 bg-white/50 dark:bg-gray-900/50 rounded-xl border border-gray-50 dark:border-gray-700 group hover:border-green-300 dark:hover:border-green-800 transition-all cursor-default">
+                      <span className="text-gray-600 dark:text-gray-400 font-bold tracking-tight">{category}s</span>
+                      <span className="text-lg font-black text-gray-900 dark:text-white bg-green-100 dark:bg-green-900/50 px-3 py-1 rounded-lg text-green-700 dark:text-green-400 group-hover:scale-110 transition-transform">{quantity}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
 
         <div className="mt-10">

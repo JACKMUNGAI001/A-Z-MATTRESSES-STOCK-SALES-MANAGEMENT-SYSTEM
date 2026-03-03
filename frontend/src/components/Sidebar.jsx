@@ -10,10 +10,11 @@ import {
   ArrowLeftRight, 
   UserCircle,
   FileText,
-  Truck
+  Truck,
+  X
 } from 'lucide-react'
 
-export default function Sidebar({ role: propRole }){
+export default function Sidebar({ role: propRole, onClose }){
   const location = useLocation();
   const { user } = useContext(AuthContext);
   const role = propRole || user?.role;
@@ -23,6 +24,7 @@ export default function Sidebar({ role: propRole }){
   const NavLink = ({ to, icon: Icon, children }) => (
     <Link 
       to={to} 
+      onClick={onClose}
       className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
         isActive(to) 
           ? 'bg-blue-600 text-white shadow-lg' 
@@ -36,8 +38,11 @@ export default function Sidebar({ role: propRole }){
 
   return (
     <aside className="w-64 bg-[#1e293b] text-white flex flex-col h-screen sticky top-0 shadow-2xl overflow-y-auto">
-      <div className="p-6 border-b border-gray-700 mb-4">
+      <div className="p-6 border-b border-gray-700 mb-4 flex justify-between items-center">
         <h2 className="text-xl font-bold tracking-tight">A-Z Mattresses</h2>
+        <button onClick={onClose} className="lg:hidden p-1 text-gray-400 hover:text-white transition-colors">
+          <X size={20} />
+        </button>
       </div>
       
       <nav className="flex-1 px-4 space-y-2 pb-10">
