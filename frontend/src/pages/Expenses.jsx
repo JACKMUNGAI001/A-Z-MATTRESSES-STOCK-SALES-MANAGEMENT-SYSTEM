@@ -11,6 +11,8 @@ export default function Expenses() {
     amount: "",
     description: "",
     shop_id: "",
+    recurring: false,
+    frequency: "",
   });
   const [shops, setShops] = useState([]);
   const { searchDate } = useContext(SearchContext);
@@ -39,7 +41,8 @@ export default function Expenses() {
   };
 
   const handleInputChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value, type, checked } = e.target;
+    setFormData({ ...formData, [name]: type === 'checkbox' ? checked : value });
   };
 
   const handleSubmit = async (e) => {
@@ -47,7 +50,7 @@ export default function Expenses() {
     try {
       await api.post("/expenses", formData);
       alert("Expense recorded successfully!");
-      setFormData({ title: "", amount: "", description: "", shop_id: "" });
+      setFormData({ title: "", amount: "", description: "", shop_id: "", recurring: false, frequency: "" });
       fetchExpenses();
     } catch (err) {
       alert(`Error recording expense: ${err.response?.data?.msg || err.message}`);
@@ -98,6 +101,36 @@ export default function Expenses() {
                   <label className="block text-sm font-bold text-gray-700 dark:text-gray-400 uppercase mb-1 px-1 transition-colors">Description</label>
                   <textarea name="description" value={formData.description} onChange={handleInputChange} className="w-full p-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none h-24 transition-all" />
                 </div>
+
+                <div className="flex items-center gap-2 px-1">
+                  <input
+                    type="checkbox"
+                    id="recurring"
+                    name="recurring"
+                    checked={formData.recurring}
+                    onChange={handleInputChange}
+                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  />
+                  <label htmlFor="recurring" className="text-sm font-bold text-gray-700 dark:text-gray-400 uppercase cursor-pointer">Recurring Expense</label>
+                </div>
+
+                {formData.recurring && (
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-400 uppercase mb-1 px-1">Frequency</label>
+                    <select
+                      name="frequency"
+                      value={formData.frequency}
+                      onChange={handleInputChange}
+                      className="w-full p-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                      required={formData.recurring}
+                    >
+                      <option value="">Select Frequency</option>
+                      <option value="monthly">Monthly</option>
+                      <option value="yearly">Yearly</option>
+                    </select>
+                  </div>
+                )}
+
                 <button type="submit" className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold shadow-lg shadow-blue-100 dark:shadow-none hover:bg-blue-700 transition-all">
                   Save Expense
                 </button>
@@ -140,6 +173,11 @@ export default function Expenses() {
                           <td className="px-8 py-4">
                             <div className="font-bold text-gray-900 dark:text-white transition-colors">{exp.title}</div>
                             <div className="text-xs text-gray-500 dark:text-gray-400 transition-colors">{exp.shop_name}</div>
+                            {exp.recurring && (
+                              <span className="text-[10px] font-bold text-blue-600 bg-blue-50 dark:bg-blue-900/30 px-1.5 py-0.5 rounded-md mt-1 inline-block uppercase tracking-wider">
+                                Recurring: {exp.frequency}
+                              </span>
+                            )}
                           </td>
                           <td className="px-8 py-4 text-right font-black text-gray-900 dark:text-white transition-colors">KES {(exp.amount || 0).toLocaleString()}</td>
                           <td className="px-8 py-4 text-center text-gray-500 dark:text-gray-400 text-sm transition-colors">

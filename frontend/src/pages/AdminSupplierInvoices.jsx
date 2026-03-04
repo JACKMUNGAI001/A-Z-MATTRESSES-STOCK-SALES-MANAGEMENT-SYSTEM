@@ -320,7 +320,7 @@ export default function AdminSupplierInvoices() {
                           onChange={e => handleItemChange(idx, 'item_id', e.target.value)}
                         >
                           <option value="">Select Item</option>
-                          {items.map(it => <option key={it.id} value={it.id}>{it.name} ({it.brand})</option>)}
+                          {items.map(it => <option key={it.id} value={it.id}>{it.name}</option>)}
                         </select>
                       </div>
                       <div className="w-24">

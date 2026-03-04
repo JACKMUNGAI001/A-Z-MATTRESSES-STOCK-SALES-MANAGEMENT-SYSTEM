@@ -16,7 +16,20 @@ def add_expense_controller():
 def list_expenses_controller():
     shop_id = request.args.get("shop_id")
     es = list_expenses(shop_id)
-    out = [{"id":e.id,"title":e.title,"amount":float(e.amount),"recurring":e.recurring} for e in es]
+    from models.shop import Shop
+    out = []
+    for e in es:
+        shop = Shop.query.get(e.shop_id) if e.shop_id else None
+        out.append({
+            "id": e.id,
+            "title": e.title,
+            "amount": float(e.amount),
+            "recurring": e.recurring,
+            "frequency": e.frequency,
+            "description": e.description,
+            "created_at": e.created_at.isoformat() if e.created_at else None,
+            "shop_name": shop.name if shop else "Global"
+        })
     return jsonify(out), 200
 
 def get_expense_controller(expense_id):

@@ -29,7 +29,8 @@ def add_deposit_payment_controller(deposit_id):
     data = request.get_json() or {}
     user = get_jwt_identity()
     try:
-        dp = add_deposit_payment(deposit_id=deposit_id, amount=data.get("amount"), payment_method=data.get("payment_method"), recorded_by=user.get("id"))
+        # Enforce mobile money for all deposits
+        dp = add_deposit_payment(deposit_id=deposit_id, amount=data.get("amount"), payment_method="mobile_money", recorded_by=user.get("id"))
         return jsonify({"msg":"payment recorded","payment_id":dp.id, "receipt_uuid": dp.receipt_uuid}), 201
     except Exception as e:
         print(f"DEBUG: Error in add_deposit_payment_controller: {str(e)}")

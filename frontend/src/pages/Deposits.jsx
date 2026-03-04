@@ -94,7 +94,7 @@ export default function Deposits() {
     try {
       const response = await api.post(`/deposits/${depositId}/payments`, {
         amount: amount,
-        payment_method: "cash",
+        payment_method: "mobile_money",
       });
       setReceiptUuid(response.data.receipt_uuid);
       alert("PAYMENT SUCCESSFUL");

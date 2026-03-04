@@ -58,7 +58,7 @@ def create_deposit(shop_id, item_id, buyer_name, buyer_phone, selling_price, cre
         db.session.flush()
 
         # Create initial DepositPayment
-        dp = DepositPayment(deposit_id=dep.id, amount=amount, payment_method="cash", recorded_by=created_by, paid_on=datetime.utcnow())
+        dp = DepositPayment(deposit_id=dep.id, amount=amount, payment_method="mobile_money", recorded_by=created_by, paid_on=datetime.utcnow())
         db.session.add(dp)
         db.session.flush()
 

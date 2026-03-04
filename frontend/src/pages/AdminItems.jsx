@@ -6,13 +6,10 @@ export default function AdminItems() {
   const [items, setItems] = useState([]);
   const [categories, setCategories] = useState([]);
   const [formData, setFormData] = useState({
-    sku: "",
     name: "",
     category_id: "",
-    brand: "",
     buy_price: "",
     sell_price: "",
-    description: "",
   });
   const [editingId, setEditingId] = useState(null);
 
@@ -62,13 +59,10 @@ export default function AdminItems() {
 
   const handleEdit = (item) => {
     setFormData({
-      sku: item.sku || "",
       name: item.name,
       category_id: item.category_id,
-      brand: item.brand || "",
       buy_price: item.buy_price,
       sell_price: item.sell_price,
-      description: item.description || "",
     });
     setEditingId(item.id);
   };
@@ -85,7 +79,7 @@ export default function AdminItems() {
   };
 
   const resetForm = () => {
-    setFormData({ sku: "", name: "", category_id: "", brand: "", buy_price: "", sell_price: "", description: "" });
+    setFormData({ name: "", category_id: "", buy_price: "", sell_price: "" });
     setEditingId(null);
   };
 
@@ -104,19 +98,11 @@ export default function AdminItems() {
                 <input name="name" className="w-full p-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none font-bold transition-all" value={formData.name} onChange={handleInputChange} placeholder="e.g. Super Soft Mattress" />
               </div>
               <div>
-                <label className="block text-sm font-bold text-gray-700 dark:text-gray-400 uppercase mb-1 px-1 transition-colors">SKU / Code</label>
-                <input name="sku" className="w-full p-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all" value={formData.sku} onChange={handleInputChange} placeholder="Unique code" />
-              </div>
-              <div>
                 <label className="block text-sm font-bold text-gray-700 dark:text-gray-400 uppercase mb-1 px-1 transition-colors">Category</label>
                 <select name="category_id" className="w-full p-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all" value={formData.category_id} onChange={handleInputChange}>
                   <option value="">Select Category</option>
                   {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
                 </select>
-              </div>
-              <div>
-                <label className="block text-sm font-bold text-gray-700 dark:text-gray-400 uppercase mb-1 px-1 transition-colors">Brand</label>
-                <input name="brand" className="w-full p-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all" value={formData.brand} onChange={handleInputChange} />
               </div>
               <div>
                 <label className="block text-sm font-bold text-gray-700 dark:text-gray-400 uppercase mb-1 px-1 transition-colors">Buy Price</label>
@@ -131,10 +117,6 @@ export default function AdminItems() {
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-400 font-bold transition-colors">KES</span>
                   <input name="sell_price" type="number" className="w-full pl-12 pr-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-blue-50/30 dark:bg-blue-900/20 border-blue-100 dark:border-blue-900 focus:ring-2 focus:ring-blue-500 outline-none font-black text-blue-700 dark:text-blue-400 transition-all" value={formData.sell_price} onChange={handleInputChange} />
                 </div>
-              </div>
-              <div className="md:col-span-2 lg:col-span-4">
-                <label className="block text-sm font-bold text-gray-700 dark:text-gray-400 uppercase mb-1 px-1 transition-colors">Description</label>
-                <textarea name="description" className="w-full p-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none h-20 transition-all" value={formData.description} onChange={handleInputChange} />
               </div>
             </div>
             <div className="flex gap-4 mt-8">
@@ -161,7 +143,6 @@ export default function AdminItems() {
               <table className="w-full">
                 <thead className="bg-gray-50/50 dark:bg-gray-900/50 transition-colors">
                   <tr>
-                    <th className="px-8 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">SKU</th>
                     <th className="px-8 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Product Info</th>
                     <th className="px-8 py-4 text-right text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Pricing</th>
                     <th className="px-8 py-4 text-center text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Actions</th>
@@ -170,12 +151,10 @@ export default function AdminItems() {
                 <tbody className="divide-y divide-gray-50 dark:divide-gray-700 bg-white dark:bg-gray-800 transition-colors">
                   {items.map((item) => (
                     <tr key={item.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-900/50 transition-colors">
-                      <td className="px-8 py-4 font-mono text-xs text-gray-400 dark:text-gray-500 transition-colors">{item.sku || "NO SKU"}</td>
                       <td className="px-8 py-4">
                         <div className="font-bold text-gray-900 dark:text-white transition-colors">{item.name}</div>
                         <div className="flex items-center gap-2 text-xs mt-1 transition-colors">
                           <span className="bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-0.5 rounded font-bold uppercase transition-colors">{categories.find(c => c.id === item.category_id)?.name}</span>
-                          <span className="text-gray-400 dark:text-gray-500 transition-colors">{item.brand}</span>
                         </div>
                       </td>
                       <td className="px-8 py-4 text-right">
