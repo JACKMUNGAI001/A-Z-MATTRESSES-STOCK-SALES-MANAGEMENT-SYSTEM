@@ -5,6 +5,7 @@ import { AuthContext } from '../context/AuthContext'
 import { SearchContext } from '../context/SearchContext'
 import api from '../api/api'
 import { Store, Package, TrendingUp, Users, SearchX, MapPin } from 'lucide-react'
+import TransferHistory from '../components/TransferHistory'
 
 export default function ManagerDashboard(){
   const { user } = useContext(AuthContext)
@@ -54,9 +55,6 @@ export default function ManagerDashboard(){
   const fetchGlobalStock = async () => {
     try {
       // For manager, we want to see stock across all shops
-      // We can use the low_stock_items endpoint with a very high threshold to get all items,
-      // or we can use the admin's shops endpoints.
-      // Let's use /stocks/low_stock_items?threshold=1000000 to get everything
       const response = await api.get(`/stocks/low_stock_items?threshold=1000000`);
       setGlobalStock(response.data);
     } catch (err) {
@@ -183,6 +181,9 @@ export default function ManagerDashboard(){
           </div>
         </div>
 
+        {/* TRANSFER HISTORY */}
+        <TransferHistory />
+
         <div className="mt-10">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-bold text-gray-800 dark:text-white tracking-tight flex items-center gap-2 transition-colors">
@@ -211,7 +212,7 @@ export default function ManagerDashboard(){
                     <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Quantity</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-50 dark:divide-gray-700 bg-white dark:bg-gray-800 transition-colors">
+                <tbody className="divide-y divide-gray-100 dark:divide-gray-700 bg-white dark:bg-gray-800 transition-colors">
                   {filteredStock.map((stock, idx) => {
                     const isMatch = searchQuery && (stock.item_name.toLowerCase().includes(searchQuery.toLowerCase()) || stock.shop_name.toLowerCase().includes(searchQuery.toLowerCase()));
                     return (

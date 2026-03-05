@@ -5,6 +5,7 @@ import { AuthContext } from '../context/AuthContext'
 import { SearchContext } from '../context/SearchContext'
 import api from '../api/api'
 import { Store, Package, TrendingUp, Users, Wallet, SearchX } from 'lucide-react'
+import TransferHistory from '../components/TransferHistory'
 
 export default function AttendantDashboard(){
   const { user } = useContext(AuthContext)
@@ -175,6 +176,9 @@ export default function AttendantDashboard(){
             ))}
           </div>
         </div>
+
+        {/* TRANSFER HISTORY */}
+        <TransferHistory />
 
         <div className="mt-10">
           <div className="flex justify-between items-center mb-4">

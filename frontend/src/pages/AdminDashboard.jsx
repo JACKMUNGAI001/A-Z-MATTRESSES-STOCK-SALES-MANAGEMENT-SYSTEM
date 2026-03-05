@@ -4,6 +4,7 @@ import api from '../api/api'
 import { AuthContext } from '../context/AuthContext'
 import { useNavigate, Link } from 'react-router-dom'
 import { UserCheck, UserX, MapPin, Mail, ShieldCheck, UserCircle, Store } from 'lucide-react'
+import TransferHistory from '../components/TransferHistory'
 
 export default function AdminDashboard(){
   const { user } = useContext(AuthContext)
@@ -92,7 +93,7 @@ export default function AdminDashboard(){
 
         {/* SALES SUMMARY */}
         <div className="mb-10">
-          <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4 tracking-tight border-l-4 border-l-blue-600 pl-3 transition-colors">Sales Summary</h3>
+          <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4 tracking-tight border-l-4 border-l-blue-600 pl-3 transition-colors text-sm uppercase tracking-widest text-gray-400 dark:text-gray-500">Sales Summary</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <Link to="/attendant/sales" className="no-underline"><Card title="Today's Sales" interactive={true}>{salesSummary ? formatCurrency(salesSummary.today) : '...'}</Card></Link>
             <Link to="/attendant/sales/week" className="no-underline"><Card title="This Week's" interactive={true}>{salesSummary ? formatCurrency(salesSummary.week) : '...'}</Card></Link>
@@ -103,7 +104,7 @@ export default function AdminDashboard(){
 
         {/* DEPOSITS SUMMARY */}
         <div className="mb-10">
-          <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4 tracking-tight border-l-4 border-l-indigo-600 pl-3 transition-colors">Deposits Summary</h3>
+          <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4 tracking-tight border-l-4 border-l-indigo-600 pl-3 transition-colors text-sm uppercase tracking-widest text-gray-400 dark:text-gray-500">Deposits Summary</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <Link to="/attendant/deposits/today" className="no-underline"><Card title="Today's" interactive={true}>{depositsSummary ? formatCurrency(depositsSummary.today) : '...'}</Card></Link>
             <Link to="/attendant/deposits/week" className="no-underline"><Card title="This Week's" interactive={true}>{depositsSummary ? formatCurrency(depositsSummary.week) : '...'}</Card></Link>
@@ -114,7 +115,7 @@ export default function AdminDashboard(){
 
         {/* STOCK SUMMARY BY CATEGORY */}
         <div className="mb-10">
-          <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4 tracking-tight border-l-4 border-l-green-600 pl-3 transition-colors">Stock Summary by Category</h3>
+          <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4 tracking-tight border-l-4 border-l-green-600 pl-3 transition-colors text-sm uppercase tracking-widest text-gray-400 dark:text-gray-500">Stock Summary by Category</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {stockSummary && Object.entries(stockSummary).map(([shopName, categories]) => (
               <div key={shopName} className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-green-100 dark:border-gray-700 bg-gradient-to-br from-white to-green-50/30 dark:from-gray-800 dark:to-green-900/10 transition-all">
@@ -135,12 +136,15 @@ export default function AdminDashboard(){
           </div>
         </div>
 
+        {/* TRANSFER HISTORY */}
+        <TransferHistory />
+
         {/* SHOPS SECTION */}
-        <div className="mb-10">
-          <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4 tracking-tight transition-colors">Shops Management</h3>
+        <div className="mb-10 mt-10">
+          <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4 tracking-tight transition-colors text-sm uppercase tracking-widest text-gray-400 dark:text-gray-500 border-l-4 border-l-blue-600 pl-3">Shops Management</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {shops.map(s => (
-              <div key={s.id} onClick={() => handleShopClick(s.id)} className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-blue-100 dark:border-gray-700 bg-gradient-to-br from-white to-blue-50/30 dark:from-gray-800 dark:to-blue-900/10 hover:border-blue-400 dark:hover:border-blue-500 hover:shadow-xl hover:-translate-y-1.5 transition-all cursor-pointer group relative">
+              <div key={s.id} onClick={() => handleShopClick(s.id)} className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-blue-100 dark:border-gray-700 bg-gradient-to-br from-white to-blue-50/30 dark:from-gray-800 dark:to-green-900/10 hover:border-blue-400 dark:hover:border-blue-500 hover:shadow-xl hover:-translate-y-1.5 transition-all cursor-pointer group relative">
                 <div className="absolute top-4 right-4 bg-blue-100 dark:bg-blue-900/50 p-1 rounded-lg text-blue-600 dark:text-blue-400"><Store size={14} strokeWidth={3} /></div>
                 <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-1 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{s.name}</h4>
                 <div className="flex items-start gap-2 text-gray-500 dark:text-gray-400 text-sm transition-colors"><MapPin size={16} className="mt-0.5 shrink-0" /><span>{s.address}</span></div>
@@ -152,7 +156,7 @@ export default function AdminDashboard(){
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 pb-20">
           {/* PENDING ATTENDANTS */}
           <div>
-            <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4 tracking-tight transition-colors">Pending Attendants</h3>
+            <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4 tracking-tight transition-colors text-sm uppercase tracking-widest text-gray-400 dark:text-gray-500 border-l-4 border-l-orange-600 pl-3">Pending Attendants</h3>
             <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden transition-colors">
               {pendingAttendants.length === 0 ? (<div className="p-8 text-center text-gray-400 dark:text-gray-500 italic">No pending attendants.</div>) : (
                 <div className="divide-y divide-gray-50 dark:divide-gray-700">
@@ -177,7 +181,7 @@ export default function AdminDashboard(){
 
           {/* ALL ATTENDANTS */}
           <div>
-            <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4 tracking-tight transition-colors">All Attendants</h3>
+            <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4 tracking-tight transition-colors text-sm uppercase tracking-widest text-gray-400 dark:text-gray-500 border-l-4 border-l-blue-600 pl-3">All Attendants</h3>
             <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden transition-colors">
               {allAttendants.length === 0 ? (<div className="p-8 text-center text-gray-400 dark:text-gray-500 italic">No attendants registered.</div>) : (
                 <div className="divide-y divide-gray-50 dark:divide-gray-700">

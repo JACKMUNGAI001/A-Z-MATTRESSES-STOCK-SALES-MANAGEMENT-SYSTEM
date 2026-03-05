@@ -68,3 +68,36 @@ def transfer_stock(from_shop_id, to_shop_id, items, created_by, notes=None):
     except Exception as e:
         db.session.rollback()
         raise e
+
+def get_transfers(shop_id=None):
+    query = Transfer.query.order_by(Transfer.created_at.desc())
+    if shop_id:
+        query = query.filter((Transfer.from_shop_id == shop_id) | (Transfer.to_shop_id == shop_id))
+    
+    transfers = query.all()
+    out = []
+    for t in transfers:
+        from_shop = Shop.query.get(t.from_shop_id)
+        to_shop = Shop.query.get(t.to_shop_id)
+        user = User.query.get(t.created_by)
+        
+        items = []
+        t_items = TransferItem.query.filter_by(transfer_id=t.id).all()
+        for ti in t_items:
+            item = Item.query.get(ti.item_id)
+            items.append({
+                "item_name": item.name if item else "N/A",
+                "qty": ti.qty
+            })
+            
+        out.append({
+            "id": t.id,
+            "from_shop_name": from_shop.name if from_shop else "N/A",
+            "to_shop_name": to_shop.name if to_shop else "N/A",
+            "created_by_name": user.name if user else "N/A",
+            "status": t.status,
+            "notes": t.notes,
+            "created_at": t.created_at.isoformat(),
+            "items": items
+        })
+    return out
