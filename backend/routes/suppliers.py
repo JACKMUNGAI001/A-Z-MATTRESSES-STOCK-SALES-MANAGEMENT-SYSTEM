@@ -1,7 +1,8 @@
 from flask import Blueprint
 from controllers.supplier_controller import (
     list_suppliers_controller, create_supplier_controller, update_supplier_controller, delete_supplier_controller,
-    list_invoices_controller, create_invoice_controller, get_invoice_controller, update_invoice_status_controller
+    list_invoices_controller, create_invoice_controller, get_invoice_controller, update_invoice_status_controller,
+    record_invoice_payment_controller
 )
 from flask_jwt_extended import jwt_required
 
@@ -46,3 +47,8 @@ def get_invoice(invoice_id):
 @jwt_required()
 def update_status(invoice_id):
     return update_invoice_status_controller(invoice_id)
+
+@suppliers_bp.route("/invoices/<int:invoice_id>/payments", methods=["POST"])
+@jwt_required()
+def record_payment(invoice_id):
+    return record_invoice_payment_controller(invoice_id)

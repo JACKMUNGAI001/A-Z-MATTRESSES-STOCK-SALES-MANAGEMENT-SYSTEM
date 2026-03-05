@@ -2,7 +2,7 @@ from flask import request, jsonify
 from services.supplier_service import (
     create_supplier, list_suppliers, update_supplier, delete_supplier,
     create_supplier_invoice, list_supplier_invoices, get_supplier_invoice,
-    update_invoice_status
+    update_invoice_status, record_invoice_payment
 )
 from extensions import db
 from models.supplier import Supplier, SupplierInvoice
@@ -59,7 +59,7 @@ def list_invoices_controller():
             "supplier_name": inv.supplier.name,
             "invoice_number": inv.invoice_number,
             "total_amount": float(inv.total_amount),
-            "amount_paid": float(inv.amount_paid),
+            "amount_paid": float(inv.amount_paid or 0),
             "status": inv.status,
             "received_date": inv.received_date.isoformat(),
             "due_date": inv.due_date.isoformat() if inv.due_date else None,
@@ -72,7 +72,7 @@ def create_invoice_controller():
     data = request.get_json() or {}
     supplier_id = data.get("supplier_id")
     invoice_number = data.get("invoice_number")
-    items_data = data.get("items") # list of {item_id, quantity, unit_cost}
+    items_data = data.get("items") # list of {item_id, quantity, unit_cost, shop_id}
     
     if not all([supplier_id, invoice_number, items_data]):
         return jsonify({"msg": "supplier_id, invoice_number, and items are required"}), 400
@@ -82,7 +82,6 @@ def create_invoice_controller():
             supplier_id=supplier_id,
             invoice_number=invoice_number,
             items_data=items_data,
-            shop_id=data.get("shop_id", 1),
             status=data.get("status", "Pending"),
             received_date=data.get("received_date"),
             due_date=data.get("due_date"),
@@ -103,9 +102,21 @@ def get_invoice_controller(invoice_id):
             "id": item.id,
             "item_id": item.item_id,
             "item_name": item.item.name,
+            "shop_id": item.shop_id,
+            "shop_name": item.shop.name if item.shop else "N/A",
             "quantity": item.quantity,
             "unit_cost": float(item.unit_cost),
             "total_cost": float(item.total_cost)
+        })
+
+    payments_out = []
+    for p in inv.payments:
+        payments_out.append({
+            "id": p.id,
+            "amount": float(p.amount),
+            "payment_method": p.payment_method,
+            "notes": p.notes,
+            "created_at": p.created_at.isoformat()
         })
 
     return jsonify({
@@ -114,12 +125,13 @@ def get_invoice_controller(invoice_id):
         "supplier_name": inv.supplier.name,
         "invoice_number": inv.invoice_number,
         "total_amount": float(inv.total_amount),
-        "amount_paid": float(inv.amount_paid),
+        "amount_paid": float(inv.amount_paid or 0),
         "status": inv.status,
         "received_date": inv.received_date.isoformat(),
         "due_date": inv.due_date.isoformat() if inv.due_date else None,
         "notes": inv.notes,
-        "items": items_out
+        "items": items_out,
+        "payments": payments_out
     }), 200
 
 def update_invoice_status_controller(invoice_id):
@@ -131,3 +143,25 @@ def update_invoice_status_controller(invoice_id):
     if not inv:
         return jsonify({"msg": "Invoice not found"}), 404
     return jsonify({"msg": "Status updated", "id": inv.id}), 200
+
+def record_invoice_payment_controller(invoice_id):
+    data = request.get_json() or {}
+    amount = data.get("amount")
+    payment_method = data.get("payment_method", "mobile_money")
+    notes = data.get("notes")
+    
+    if amount is None:
+        return jsonify({"msg": "Amount is required"}), 400
+    
+    try:
+        payment = record_invoice_payment(
+            invoice_id=invoice_id,
+            amount=amount,
+            payment_method=payment_method,
+            notes=notes
+        )
+        return jsonify({"msg": "Payment recorded", "payment_id": payment.id}), 201
+    except ValueError as e:
+        return jsonify({"msg": str(e)}), 400
+    except Exception as e:
+        return jsonify({"msg": "Internal Server Error"}), 500

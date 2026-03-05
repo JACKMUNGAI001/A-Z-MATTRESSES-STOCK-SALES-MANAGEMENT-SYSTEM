@@ -32,9 +32,22 @@ class SupplierInvoiceItem(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     invoice_id = db.Column(db.Integer, db.ForeignKey("supplier_invoices.id"), nullable=False)
     item_id = db.Column(db.Integer, db.ForeignKey("items.id"), nullable=False)
+    shop_id = db.Column(db.Integer, db.ForeignKey("shops.id"), nullable=False)
     quantity = db.Column(db.Integer, nullable=False)
     unit_cost = db.Column(db.Numeric(12,2), nullable=False)
     total_cost = db.Column(db.Numeric(12,2), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     item = db.relationship("Item", backref=db.backref("supplied_items", lazy=True))
+    shop = db.relationship("Shop", backref=db.backref("supplied_items", lazy=True))
+
+class SupplierInvoicePayment(db.Model):
+    __tablename__ = "supplier_invoice_payments"
+    id = db.Column(db.Integer, primary_key=True)
+    invoice_id = db.Column(db.Integer, db.ForeignKey("supplier_invoices.id"), nullable=False)
+    amount = db.Column(db.Numeric(12,2), nullable=False)
+    payment_method = db.Column(db.String(50), default="mobile_money")
+    notes = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    invoice_rel = db.relationship("SupplierInvoice", backref=db.backref("payments", lazy=True, cascade="all, delete-orphan"))

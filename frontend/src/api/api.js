@@ -35,6 +35,7 @@ export const fetchSupplierInvoices = () => api.get('/suppliers/invoices')
 export const createSupplierInvoice = (data) => api.post('/suppliers/invoices', data)
 export const fetchSupplierInvoiceDetails = (id) => api.get(`/suppliers/invoices/${id}`)
 export const updateSupplierInvoiceStatus = (id, status) => api.put(`/suppliers/invoices/${id}/status`, { status })
+export const recordSupplierInvoicePayment = (id, data) => api.post(`/suppliers/invoices/${id}/payments`, data)
 
 // Notification APIs
 export const fetchNotifications = () => api.get('/notifications/')
