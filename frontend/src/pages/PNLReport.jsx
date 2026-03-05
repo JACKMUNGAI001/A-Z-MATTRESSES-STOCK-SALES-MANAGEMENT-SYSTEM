@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import api from "../api/api";
-import { Calendar, Filter, TrendingUp, TrendingDown, Store, Clock } from "lucide-react";
+import { Calendar, Filter, TrendingUp, TrendingDown, Store, Clock, ShoppingCart } from "lucide-react";
 
 export default function PNLReport() {
   const [year, setYear] = useState(new Date().getFullYear());
@@ -183,7 +183,7 @@ export default function PNLReport() {
 
                   {/* COGS */}
                   <div className="flex justify-between items-center pb-4 border-b border-gray-50 dark:border-gray-700 transition-colors">
-                    <span className="text-gray-500 dark:text-gray-400 font-bold uppercase tracking-widest text-xs">Cost of Goods Sold (COGS)</span>
+                    <span className="text-gray-500 dark:text-gray-400 font-bold uppercase tracking-widest text-xs">Stock Value of Sales (COGS)</span>
                     <span className="text-xl font-bold text-red-500 dark:text-red-400">({formatCurrency(report.total_cogs)})</span>
                   </div>
 
@@ -197,8 +197,17 @@ export default function PNLReport() {
 
                   {/* EXPENSES */}
                   <div className="flex justify-between items-center pb-4 border-b border-gray-50 dark:border-gray-700 mt-10 transition-colors">
-                    <span className="text-gray-500 dark:text-gray-400 font-bold uppercase tracking-widest text-xs">Operating Expenses</span>
+                    <span className="text-gray-500 dark:text-gray-400 font-bold uppercase tracking-widest text-xs">Operating Expenses (Bills, etc)</span>
                     <span className="text-xl font-bold text-red-500 dark:text-red-400">({formatCurrency(report.total_expenses)})</span>
+                  </div>
+
+                  {/* INVOICES */}
+                  <div className="flex justify-between items-center pb-4 border-b border-gray-50 dark:border-gray-700 transition-colors">
+                    <div className="flex flex-col">
+                        <span className="text-gray-500 dark:text-gray-400 font-bold uppercase tracking-widest text-xs">Stock Procurement (Supplier Invoices)</span>
+                        <span className="text-[10px] text-gray-400 italic">Investments in new inventory</span>
+                    </div>
+                    <span className="text-xl font-bold text-orange-600 dark:text-orange-400">({formatCurrency(report.total_invoices)})</span>
                   </div>
 
                   {/* NET PROFIT */}
@@ -224,7 +233,7 @@ export default function PNLReport() {
               </div>
               
               <div className="bg-gray-50 dark:bg-gray-900/50 px-10 py-6 text-sm text-gray-400 dark:text-gray-500 italic text-center transition-colors border-t border-gray-100 dark:border-gray-700">
-                This dynamic statement reflects all confirmed revenue and realized operating costs for the selected window.
+                This dynamic statement reflects all confirmed revenue, stock investments, and operating costs for the selected window.
               </div>
             </div>
           </div>

@@ -14,10 +14,10 @@ def create_deposit_controller():
     data = request.get_json() or {}
     user = get_jwt_identity()
     try:
-        dep = create_deposit(shop_id=data.get("shop_id"), item_id=data.get("item_id"),
+        dep, receipt_uuid = create_deposit(shop_id=data.get("shop_id"), item_id=data.get("item_id"),
                              buyer_name=data.get("buyer_name"), buyer_phone=data.get("buyer_phone"), selling_price=data.get("selling_price"),
                              created_by=user.get("id"), amount=data.get("amount"))
-        return jsonify({"msg":"deposit created","deposit_id":dep.id,"uuid":dep.uuid}), 201
+        return jsonify({"msg":"deposit created","deposit_id":dep.id,"uuid":dep.uuid, "receipt_uuid": receipt_uuid}), 201
     except ValueError as e:
         print(f"DEBUG: ValueError in create_deposit_controller: {str(e)}")
         return jsonify({"msg":str(e)}), 400

@@ -4,6 +4,7 @@ from models.deposit import DepositPayment
 from models.expense import Expense
 from models.stock import ShopStock
 from models.deposit import DepositSale
+from models.supplier import SupplierInvoice
 from sqlalchemy import func
 from datetime import datetime, timedelta
 
@@ -83,17 +84,36 @@ def get_pnl_report(year, month=None, shop_id=None, period=None):
         Expense.created_at <= end_date
     )
 
+    invoices_query = db.session.query(func.sum(SupplierInvoice.total_amount)).filter(
+        SupplierInvoice.received_date >= start_date,
+        SupplierInvoice.received_date <= end_date
+    )
+
     if shop_id:
         sales_query = sales_query.filter(Sale.shop_id == shop_id)
         cogs_query = cogs_query.filter(Sale.shop_id == shop_id)
         expenses_query = expenses_query.filter(Expense.shop_id == shop_id)
+        # Note: Invoices are distributed per item to shops, but the invoice record itself doesn't have a shop_id.
+        # We'll filter based on distributed items if a shop_id is provided.
+        from models.supplier import SupplierInvoiceItem
+        invoices_query = db.session.query(func.sum(SupplierInvoiceItem.total_cost)).join(SupplierInvoice).filter(
+            SupplierInvoice.received_date >= start_date,
+            SupplierInvoice.received_date <= end_date,
+            SupplierInvoiceItem.shop_id == shop_id
+        )
 
     total_sales = float(sales_query.scalar() or 0)
     total_cogs = float(cogs_query.scalar() or 0)
     total_expenses = float(expenses_query.scalar() or 0)
+    total_invoices = float(invoices_query.scalar() or 0)
 
+    # Traditional Gross Profit uses COGS (cost of items SOLD)
     gross_profit = total_sales - total_cogs
-    net_profit = gross_profit - total_expenses
+    
+    # Net Profit now includes total invoice costs (purchases) as requested
+    # To avoid double counting stock costs (COGS + Invoices), 
+    # we use the formula: Revenue - Operating Expenses - Total Stock Purchases
+    net_profit = total_sales - total_expenses - total_invoices
 
     return {
         "year": year,
@@ -104,6 +124,7 @@ def get_pnl_report(year, month=None, shop_id=None, period=None):
         "total_cogs": total_cogs,
         "gross_profit": gross_profit,
         "total_expenses": total_expenses,
+        "total_invoices": total_invoices,
         "net_profit": net_profit,
         "start_date": start_date.isoformat(),
         "end_date": end_date.isoformat()

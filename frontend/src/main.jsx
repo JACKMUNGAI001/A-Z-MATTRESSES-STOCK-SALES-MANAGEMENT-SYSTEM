@@ -85,7 +85,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
             <Route path="/attendant/sales/month" element={<ProtectedRoute><PageLayout><MonthsSales /></PageLayout></ProtectedRoute>} />
             <Route path="/attendant/sales/year" element={<ProtectedRoute><PageLayout><YearsSales /></PageLayout></ProtectedRoute>} />
             
-            <Route path="/attendant/deposits/list" element={<ProtectedRoute><PageLayout><DepositCustomers /></PageLayout></ProtectedRoute>} />
+            <Route path="/attendant/deposits" element={<ProtectedRoute><PageLayout><DepositCustomers /></PageLayout></ProtectedRoute>} />
             <Route path="/attendant/deposits/today" element={<ProtectedRoute><PageLayout><TodaysDeposits /></PageLayout></ProtectedRoute>} />
             <Route path="/attendant/deposits/week" element={<ProtectedRoute><PageLayout><WeeksDeposits /></PageLayout></ProtectedRoute>} />
             <Route path="/attendant/deposits/month" element={<ProtectedRoute><PageLayout><MonthsDeposits /></PageLayout></ProtectedRoute>} />

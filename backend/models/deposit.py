@@ -7,7 +7,7 @@ class DepositSale(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     uuid = db.Column(db.String(64), default=lambda: str(uuid.uuid4()), unique=True)
     shop_id = db.Column(db.Integer)
-    item_id = db.Column(db.Integer)
+    item_id = db.Column(db.Integer, db.ForeignKey("items.id"))
     buyer_name = db.Column(db.String(255))
     buyer_phone = db.Column(db.String(50))
     selling_price = db.Column(db.Numeric(12,2))
@@ -16,6 +16,7 @@ class DepositSale(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     payments = db.relationship("DepositPayment", backref="deposit", lazy=True)
+    item = db.relationship("Item", backref=db.backref("deposits", lazy=True))
 
 class DepositPayment(db.Model):
     __tablename__ = "deposit_payments"

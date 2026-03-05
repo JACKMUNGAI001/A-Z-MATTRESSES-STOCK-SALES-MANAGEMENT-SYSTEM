@@ -149,8 +149,8 @@ export default function AttendantDashboard(){
                 <Package className="text-orange-200 dark:text-orange-900/30 group-hover:text-orange-400 dark:group-hover:text-orange-500 transition-colors" size={40} />
               </Card>
           </Link>
-          <Link to="/deposits" className="no-underline group">
-              <Card title="Manage Deposits" interactive={true} className="border-l-4 border-l-indigo-500 flex justify-between items-center">
+          <Link to="/attendant/deposits" className="no-underline group">
+              <Card title="Manage Active Deposits" interactive={true} className="border-l-4 border-l-indigo-500 flex justify-between items-center">
                 <span>{depositCustomersCount} Accounts</span>
                 <Users className="text-indigo-200 dark:text-indigo-900/30 group-hover:text-indigo-400 dark:group-hover:text-indigo-500 transition-colors" size={40} />
               </Card>

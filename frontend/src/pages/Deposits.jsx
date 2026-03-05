@@ -58,13 +58,8 @@ export default function Deposits() {
     }
     try {
       const res = await api.post("/deposits", formData);
-      const deposit_id = res.data.deposit_id;
-      // Record initial payment
-      const payRes = await api.post(`/deposits/${deposit_id}/payments`, {
-        amount: formData.amount,
-        payment_method: "mobile_money",
-      });
-      setLastReceipt(payRes.data.receipt_uuid);
+      // The backend now handles the initial payment recording automatically if amount is in formData
+      setLastReceipt(res.data.receipt_uuid || null); 
       alert("Deposit account created successfully!");
       setFormData({
         buyer_name: "",

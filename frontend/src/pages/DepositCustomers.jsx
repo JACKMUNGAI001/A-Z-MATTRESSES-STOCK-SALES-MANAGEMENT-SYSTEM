@@ -1,28 +1,55 @@
 import React, { useEffect, useState, useContext } from 'react';
-import api from '../api/api';
-import { Users, Phone, Package, Wallet, ArrowRight, SearchX, Store } from "lucide-react";
+import api, { API_BASE } from '../api/api';
+import { Users, Phone, Package, Wallet, ArrowRight, SearchX, Store, CheckCircle, X } from "lucide-react";
 import { SearchContext } from '../context/SearchContext';
 import { AuthContext } from '../context/AuthContext';
 
 export default function DepositCustomers() {
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [selectedAccount, setSelectedAccount] = useState(null);
+  const [paymentAmount, setPaymentAmount] = useState("");
+  const [lastReceipt, setLastReceipt] = useState(null);
+  
   const { searchQuery } = useContext(SearchContext);
   const { user } = useContext(AuthContext);
 
   useEffect(() => {
-    const fetchCustomers = async () => {
-      try {
-        const response = await api.get('/deposits/customers');
-        setCustomers(response.data);
-        setLoading(false);
-      } catch (error) {
-        console.error('Error fetching deposit customers:', error);
-        setLoading(false);
-      }
-    };
     fetchCustomers();
   }, []);
+
+  const fetchCustomers = async () => {
+    try {
+      const response = await api.get('/deposits/customers');
+      setCustomers(response.data);
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching deposit customers:', error);
+      setLoading(false);
+    }
+  };
+
+  const handleRecordPayment = async (e) => {
+    e.preventDefault();
+    if (!paymentAmount || parseFloat(paymentAmount) <= 0) {
+      alert("Please enter a valid payment amount");
+      return;
+    }
+    try {
+      const response = await api.post(`/deposits/${selectedAccount.id}/payments`, {
+        amount: parseFloat(paymentAmount),
+        payment_method: "mobile_money",
+      });
+      setLastReceipt(response.data.receipt_uuid);
+      alert("Payment recorded successfully!");
+      setShowPaymentModal(false);
+      setPaymentAmount("");
+      fetchCustomers(); // Refresh list
+    } catch (err) {
+      alert(`Error recording payment: ${err.response?.data?.msg || err.message}`);
+    }
+  };
 
   const formatCurrency = (val) => {
     return new Intl.NumberFormat('en-KE', { style: 'currency', currency: 'KES', minimumFractionDigits: 0 }).format(val || 0);
@@ -79,6 +106,7 @@ export default function DepositCustomers() {
                     <th className="px-8 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Item Reserved</th>
                     <th className="px-8 py-4 text-right text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Paid to Date</th>
                     <th className="px-8 py-4 text-right text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Balance Due</th>
+                    <th className="px-8 py-4 text-center text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Action</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50 dark:divide-gray-700 bg-white dark:bg-gray-800 transition-colors">
@@ -114,8 +142,18 @@ export default function DepositCustomers() {
                         <td className="px-8 py-4 text-right">
                           <div className="flex items-center justify-end gap-2">
                             <span className="font-black text-red-600 dark:text-red-400 text-lg transition-colors">{formatCurrency(customer.balance)}</span>
-                            <ArrowRight size={16} className="text-gray-200 dark:text-gray-700" />
                           </div>
+                        </td>
+                        <td className="px-8 py-4 text-center">
+                            <button 
+                                onClick={() => {
+                                    setSelectedAccount(customer);
+                                    setShowPaymentModal(true);
+                                }}
+                                className="bg-green-600 text-white px-4 py-2 rounded-lg font-bold text-xs hover:bg-green-700 transition-all flex items-center gap-2 mx-auto"
+                            >
+                                <Wallet size={14} /> PAY
+                            </button>
                         </td>
                       </tr>
                     );
@@ -125,6 +163,74 @@ export default function DepositCustomers() {
             )}
           </div>
         </div>
+
+        {/* PAYMENT MODAL */}
+        {showPaymentModal && selectedAccount && (
+            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md animate-in fade-in zoom-in duration-200 transition-colors">
+                    <div className="bg-green-600 p-6 text-white rounded-t-2xl flex justify-between items-center">
+                        <div>
+                            <h3 className="text-xl font-bold">Record Installment</h3>
+                            <p className="text-green-100 text-sm mt-1">{selectedAccount.buyer_name} - {selectedAccount.item_name}</p>
+                        </div>
+                        <button onClick={() => setShowPaymentModal(false)} className="text-white/80 hover:text-white">
+                            <X size={24} />
+                        </button>
+                    </div>
+                    <form onSubmit={handleRecordPayment} className="p-8 space-y-6">
+                        <div>
+                            <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-4">
+                                Outstanding Balance: <span className="font-bold text-red-500">{formatCurrency(selectedAccount.balance)}</span>
+                            </p>
+                            <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2 uppercase tracking-widest">Installment Amount (KES)</label>
+                            <input 
+                                required
+                                autoFocus
+                                type="number" 
+                                step="0.01"
+                                max={selectedAccount.balance}
+                                className="w-full border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-white rounded-xl p-4 text-2xl font-black focus:ring-2 focus:ring-green-500 outline-none transition-all"
+                                value={paymentAmount}
+                                onChange={e => setPaymentAmount(e.target.value)}
+                                placeholder="0.00"
+                            />
+                        </div>
+                        <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl text-blue-700 dark:text-blue-400 font-bold flex items-center gap-2">
+                            <span>📱 Payment via M-PESA</span>
+                        </div>
+                        <div className="flex gap-4 pt-4">
+                            <button 
+                                type="button" 
+                                onClick={() => setShowPaymentModal(false)}
+                                className="flex-1 px-6 py-3 border-2 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 rounded-xl font-bold hover:bg-gray-50 dark:hover:bg-gray-700 transition-all"
+                            >
+                                Cancel
+                            </button>
+                            <button 
+                                type="submit" 
+                                className="flex-1 px-6 py-3 bg-green-600 text-white rounded-xl font-bold hover:bg-green-700 transition-all shadow-xl shadow-green-200 dark:shadow-none"
+                            >
+                                Confirm Payment
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        )}
+
+        {lastReceipt && (
+            <div className="mt-8 text-center bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
+                <p className="text-gray-500 dark:text-gray-400 font-bold uppercase tracking-widest text-xs mb-4">Transaction Successful</p>
+                <a
+                    href={`${API_BASE}/receipts/${lastReceipt}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-3 bg-blue-600 text-white px-8 py-4 rounded-xl font-black shadow-lg shadow-blue-100 dark:shadow-none hover:bg-blue-700 transition-all"
+                >
+                    <CheckCircle size={20} /> VIEW PAYMENT RECEIPT
+                </a>
+            </div>
+        )}
     </>
   );
 }

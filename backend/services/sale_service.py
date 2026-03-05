@@ -63,13 +63,15 @@ def create_sale(shop_id, user_id, items, payment_type="mobile_money"):
         if not items:
             raise ValueError("Cannot create a sale with no items.")
 
+        sale_items = []
+        sale = None
+        
         with db.session.begin_nested():
             total = 0
             sale = Sale(shop_id=shop_id, user_id=user_id, total_amount=0, payment_type=payment_type)
             db.session.add(sale)
             db.session.flush() # Ensure sale.id is available
 
-            sale_items = []
             for it in items:
                 item_id = it.get("item_id")
                 qty = int(it.get("qty", 1))
@@ -119,16 +121,13 @@ def create_sale(shop_id, user_id, items, payment_type="mobile_money"):
             sale.total_amount = total
             db.session.add_all(sale_items)
 
-            shop = Shop.query.get(shop_id)
-            if not shop:
-                raise ValueError("Shop not found")
-            attendant = User.query.get(user_id)
-            if not attendant:
-                raise ValueError("Attendant not found")
-
-            receipt_html = _generate_sale_receipt_html(sale, shop, attendant, sale_items)
-            receipt = create_receipt(payload=receipt_html)
-            sale.receipt_uuid = receipt.uuid
+        # After nested transaction, generate receipt and link it
+        shop = Shop.query.get(shop_id)
+        attendant = User.query.get(user_id)
+        
+        receipt_html = _generate_sale_receipt_html(sale, shop, attendant, sale_items)
+        receipt = create_receipt(payload=receipt_html)
+        sale.receipt_uuid = receipt.uuid
 
         db.session.commit()
         return sale
@@ -259,4 +258,3 @@ def delete_sale(sale_id, user_id):
     except Exception as e:
         db.session.rollback()
         raise e
-
