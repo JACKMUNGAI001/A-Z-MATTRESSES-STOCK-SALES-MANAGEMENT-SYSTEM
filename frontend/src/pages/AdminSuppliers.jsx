@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react'
 import { fetchSuppliers, createSupplier, updateSupplier, deleteSupplier } from '../api/api'
+import api from '../api/api'
 import Card from '../components/Card'
-import { Plus, Edit, Trash2, Phone, Mail, MapPin, User, FileText } from 'lucide-react'
+import { Plus, Edit, Trash2, Phone, Mail, MapPin, User, FileText, Package, X } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 export default function AdminSuppliers() {
   const [suppliers, setSuppliers] = useState([])
+  const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [editingSupplier, setEditingSupplier] = useState(null)
@@ -14,11 +16,13 @@ export default function AdminSuppliers() {
     contact_person: '',
     phone: '',
     email: '',
-    address: ''
+    address: '',
+    item_ids: []
   })
 
   useEffect(() => {
     loadSuppliers()
+    loadItems()
   }, [])
 
   const loadSuppliers = async () => {
@@ -32,6 +36,15 @@ export default function AdminSuppliers() {
     }
   }
 
+  const loadItems = async () => {
+    try {
+      const res = await api.get('/items/')
+      setItems(res.data)
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     try {
@@ -42,7 +55,7 @@ export default function AdminSuppliers() {
       }
       setShowModal(false)
       setEditingSupplier(null)
-      setFormData({ name: '', contact_person: '', phone: '', email: '', address: '' })
+      setFormData({ name: '', contact_person: '', phone: '', email: '', address: '', item_ids: [] })
       loadSuppliers()
     } catch (err) {
       alert(err.response?.data?.msg || "Error saving supplier")
@@ -56,7 +69,8 @@ export default function AdminSuppliers() {
       contact_person: s.contact_person || '',
       phone: s.phone || '',
       email: s.email || '',
-      address: s.address || ''
+      address: s.address || '',
+      item_ids: s.supplied_products?.map(p => p.id) || []
     })
     setShowModal(true)
   }
@@ -68,6 +82,15 @@ export default function AdminSuppliers() {
       loadSuppliers()
     } catch (err) {
       alert("Error deleting supplier")
+    }
+  }
+
+  const toggleProduct = (itemId) => {
+    const current = [...formData.item_ids]
+    if (current.includes(itemId)) {
+      setFormData({ ...formData, item_ids: current.filter(id => id !== itemId) })
+    } else {
+      setFormData({ ...formData, item_ids: [...current, itemId] })
     }
   }
 
@@ -84,7 +107,7 @@ export default function AdminSuppliers() {
                 Invoices
             </Link>
             <button 
-                onClick={() => { setEditingSupplier(null); setFormData({ name: '', contact_person: '', phone: '', email: '', address: '' }); setShowModal(true); }}
+                onClick={() => { setEditingSupplier(null); setFormData({ name: '', contact_person: '', phone: '', email: '', address: '', item_ids: [] }); setShowModal(true); }}
                 className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-700 transition-colors shadow-sm"
             >
                 <Plus size={20} />
@@ -112,7 +135,7 @@ export default function AdminSuppliers() {
                   </div>
                 </div>
                 
-                <div className="space-y-3 text-sm text-gray-600">
+                <div className="space-y-3 text-sm text-gray-600 mb-4">
                   <div className="flex items-center gap-3">
                     <User size={16} className="text-gray-400" />
                     <span>{s.contact_person || 'No contact person'}</span>
@@ -130,6 +153,23 @@ export default function AdminSuppliers() {
                     <span className="line-clamp-2">{s.address || 'No address'}</span>
                   </div>
                 </div>
+
+                <div className="border-t pt-3">
+                    <div className="flex items-center gap-2 text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">
+                        <Package size={14} /> Supplied Products ({s.supplied_products?.length || 0})
+                    </div>
+                    <div className="flex flex-wrap gap-1">
+                        {s.supplied_products && s.supplied_products.length > 0 ? (
+                            s.supplied_products.map(p => (
+                                <span key={p.id} className="bg-blue-50 text-blue-600 px-2 py-0.5 rounded text-[10px] font-bold border border-blue-100">
+                                    {p.name}
+                                </span>
+                            ))
+                        ) : (
+                            <span className="text-xs italic text-gray-400">No products associated</span>
+                        )}
+                    </div>
+                </div>
               </div>
             </Card>
           ))}
@@ -143,78 +183,109 @@ export default function AdminSuppliers() {
 
       {showModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200">
-            <div className="bg-blue-600 p-6 text-white">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden animate-in fade-in zoom-in duration-200 max-h-[90vh] flex flex-col">
+            <div className="bg-blue-600 p-6 text-white shrink-0">
               <h3 className="text-xl font-bold">{editingSupplier ? 'Edit Supplier' : 'Add New Supplier'}</h3>
-              <p className="text-blue-100 text-sm mt-1">Fill in the details below</p>
+              <p className="text-blue-100 text-sm mt-1">Fill in the details and associate products</p>
             </div>
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Supplier Name *</label>
-                <input 
-                  required
-                  type="text" 
-                  className="w-full border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-                  value={formData.name}
-                  onChange={e => setFormData({...formData, name: e.target.value})}
-                  placeholder="e.g. Super Mattresses Ltd"
-                />
+            <form onSubmit={handleSubmit} className="p-6 space-y-6 overflow-y-auto flex-1">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <h4 className="text-sm font-bold text-gray-400 uppercase tracking-widest border-b pb-1">General Info</h4>
+                    <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-1">Supplier Name *</label>
+                        <input 
+                        required
+                        type="text" 
+                        className="w-full border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm"
+                        value={formData.name}
+                        onChange={e => setFormData({...formData, name: e.target.value})}
+                        placeholder="e.g. Super Mattresses Ltd"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-1">Contact Person</label>
+                        <input 
+                        type="text" 
+                        className="w-full border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm"
+                        value={formData.contact_person}
+                        onChange={e => setFormData({...formData, contact_person: e.target.value})}
+                        placeholder="John Doe"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-1">Phone</label>
+                        <input 
+                            type="text" 
+                            className="w-full border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm"
+                            value={formData.phone}
+                            onChange={e => setFormData({...formData, phone: e.target.value})}
+                            placeholder="+254..."
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-1">Email</label>
+                        <input 
+                            type="email" 
+                            className="w-full border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm"
+                            value={formData.email}
+                            onChange={e => setFormData({...formData, email: e.target.value})}
+                            placeholder="supplier@example.com"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-1">Address</label>
+                        <textarea 
+                        className="w-full border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm"
+                        value={formData.address}
+                        onChange={e => setFormData({...formData, address: e.target.value})}
+                        rows="2"
+                        placeholder="Physical address..."
+                        ></textarea>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4 flex flex-col h-full">
+                    <h4 className="text-sm font-bold text-gray-400 uppercase tracking-widest border-b pb-1">Products Supplied</h4>
+                    <div className="bg-gray-50 rounded-xl p-4 border border-gray-100 flex-1 overflow-y-auto max-h-[300px]">
+                        {items.length === 0 ? (
+                            <p className="text-xs text-gray-400 italic">No products registered in the catalog yet.</p>
+                        ) : (
+                            <div className="space-y-2">
+                                {items.map(item => (
+                                    <label key={item.id} className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-all border ${formData.item_ids.includes(item.id) ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-100'}`}>
+                                        <input 
+                                            type="checkbox" 
+                                            className="hidden" 
+                                            checked={formData.item_ids.includes(item.id)}
+                                            onChange={() => toggleProduct(item.id)}
+                                        />
+                                        <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${formData.item_ids.includes(item.id) ? 'bg-white border-white' : 'bg-gray-100 border-gray-300'}`}>
+                                            {formData.item_ids.includes(item.id) && <div className="w-2 h-2 bg-blue-600 rounded-sm" />}
+                                        </div>
+                                        <span className="text-xs font-bold truncate">{item.name}</span>
+                                    </label>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                    <div className="text-[10px] text-gray-400">Selected {formData.item_ids.length} products</div>
+                  </div>
               </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Contact Person</label>
-                <input 
-                  type="text" 
-                  className="w-full border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-                  value={formData.contact_person}
-                  onChange={e => setFormData({...formData, contact_person: e.target.value})}
-                  placeholder="John Doe"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1">Phone</label>
-                  <input 
-                    type="text" 
-                    className="w-full border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-                    value={formData.phone}
-                    onChange={e => setFormData({...formData, phone: e.target.value})}
-                    placeholder="+254..."
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1">Email</label>
-                  <input 
-                    type="email" 
-                    className="w-full border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-                    value={formData.email}
-                    onChange={e => setFormData({...formData, email: e.target.value})}
-                    placeholder="supplier@example.com"
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Address</label>
-                <textarea 
-                  className="w-full border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-                  value={formData.address}
-                  onChange={e => setFormData({...formData, address: e.target.value})}
-                  rows="3"
-                  placeholder="Physical address..."
-                ></textarea>
-              </div>
-              <div className="flex gap-3 mt-6">
+
+              <div className="flex gap-3 pt-2 shrink-0">
                 <button 
                   type="button" 
                   onClick={() => setShowModal(false)}
-                  className="flex-1 px-4 py-2.5 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors"
+                  className="flex-1 px-4 py-3 border-2 border-gray-200 text-gray-700 rounded-xl font-bold hover:bg-gray-50 transition-all"
                 >
                   Cancel
                 </button>
                 <button 
                   type="submit" 
-                  className="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors shadow-lg shadow-blue-200"
+                  className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-all shadow-xl shadow-blue-200"
                 >
-                  {editingSupplier ? 'Update' : 'Create'}
+                  {editingSupplier ? 'Update Supplier' : 'Create Supplier'}
                 </button>
               </div>
             </form>

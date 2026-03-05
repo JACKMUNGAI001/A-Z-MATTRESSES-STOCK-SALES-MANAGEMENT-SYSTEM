@@ -1,10 +1,14 @@
 from extensions import db
 from models.supplier import Supplier, SupplierInvoice, SupplierInvoiceItem, SupplierInvoicePayment
 from models.stock import ShopStock, StockMovement
+from models.product import Item
 from datetime import datetime
 
-def create_supplier(name, contact_person=None, phone=None, email=None, address=None):
+def create_supplier(name, contact_person=None, phone=None, email=None, address=None, item_ids=None):
     s = Supplier(name=name, contact_person=contact_person, phone=phone, email=email, address=address)
+    if item_ids:
+        items = Item.query.filter(Item.id.in_(item_ids)).all()
+        s.supplied_products = items
     db.session.add(s)
     db.session.commit()
     return s
@@ -16,6 +20,12 @@ def update_supplier(supplier_id, **kwargs):
     s = Supplier.query.get(supplier_id)
     if not s:
         return None
+    
+    item_ids = kwargs.pop('item_ids', None)
+    if item_ids is not None:
+        items = Item.query.filter(Item.id.in_(item_ids)).all()
+        s.supplied_products = items
+
     for k, v in kwargs.items():
         if hasattr(s, k):
             setattr(s, k, v)
@@ -149,3 +159,9 @@ def record_invoice_payment(invoice_id, amount, payment_method="mobile_money", no
         
     db.session.commit()
     return payment
+
+def get_supplier_products(supplier_id):
+    s = Supplier.query.get(supplier_id)
+    if not s:
+        return []
+    return s.supplied_products

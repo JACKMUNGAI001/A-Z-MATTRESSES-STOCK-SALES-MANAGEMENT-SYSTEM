@@ -1,6 +1,11 @@
 from datetime import datetime
 from extensions import db
 
+supplier_items = db.Table('supplier_items',
+    db.Column('supplier_id', db.Integer, db.ForeignKey('suppliers.id'), primary_key=True),
+    db.Column('item_id', db.Integer, db.ForeignKey('items.id'), primary_key=True)
+)
+
 class Supplier(db.Model):
     __tablename__ = "suppliers"
     id = db.Column(db.Integer, primary_key=True)
@@ -10,6 +15,8 @@ class Supplier(db.Model):
     email = db.Column(db.String(255))
     address = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    supplied_products = db.relationship('Item', secondary=supplier_items, backref=db.backref('suppliers', lazy='dynamic'))
 
 class SupplierInvoice(db.Model):
     __tablename__ = "supplier_invoices"

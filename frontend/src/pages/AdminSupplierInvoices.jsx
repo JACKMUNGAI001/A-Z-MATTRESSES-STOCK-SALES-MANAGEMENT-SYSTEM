@@ -9,7 +9,7 @@ import { formatDate } from '../utils/helpers'
 export default function AdminSupplierInvoices() {
   const [invoices, setInvoices] = useState([])
   const [suppliers, setSuppliers] = useState([])
-  const [items, setItems] = useState([])
+  const [supplierProducts, setSupplierProducts] = useState([])
   const [shops, setShops] = useState([])
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
@@ -33,17 +33,24 @@ export default function AdminSupplierInvoices() {
     loadData()
   }, [])
 
+  // Fetch items for specific supplier when supplier changes
+  useEffect(() => {
+    if (formData.supplier_id) {
+        fetchSupplierProducts(formData.supplier_id)
+    } else {
+        setSupplierProducts([])
+    }
+  }, [formData.supplier_id])
+
   const loadData = async () => {
     try {
-      const [invRes, supRes, itemRes, shopRes] = await Promise.all([
+      const [invRes, supRes, shopRes] = await Promise.all([
         fetchSupplierInvoices(),
         fetchSuppliers(),
-        api.get('/items/'),
         api.get('/shops/')
       ])
       setInvoices(invRes.data)
       setSuppliers(supRes.data)
-      setItems(itemRes.data)
       setShops(shopRes.data)
       
       // Default shop for first item if shops exist
@@ -58,6 +65,15 @@ export default function AdminSupplierInvoices() {
     } finally {
       setLoading(false)
     }
+  }
+
+  const fetchSupplierProducts = async (supplierId) => {
+      try {
+          const res = await api.get(`/suppliers/${supplierId}/products`)
+          setSupplierProducts(res.data)
+      } catch (err) {
+          console.error("Error fetching supplier products")
+      }
   }
 
   const handleAddItem = () => {
@@ -385,9 +401,10 @@ export default function AdminSupplierInvoices() {
                           className="w-full border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg p-2 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                           value={item.item_id}
                           onChange={e => handleItemChange(idx, 'item_id', e.target.value)}
+                          disabled={!formData.supplier_id}
                         >
-                          <option value="">Select Item</option>
-                          {items.map(it => <option key={it.id} value={it.id}>{it.name}</option>)}
+                          <option value="">{formData.supplier_id ? "Select Item" : "Select Supplier First"}</option>
+                          {supplierProducts.map(it => <option key={it.id} value={it.id}>{it.name}</option>)}
                         </select>
                       </div>
                       <div className="flex-1 min-w-[180px]">
@@ -537,8 +554,10 @@ export default function AdminSupplierInvoices() {
                                 {showDetails.items.map(it => (
                                     <tr key={it.id}>
                                         <td className="px-4 py-3 font-medium text-gray-700 dark:text-gray-300">{it.item_name}</td>
-                                        <td className="px-4 py-3 text-xs font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-tight flex items-center gap-1 mt-3">
-                                            <Store size={12} /> {it.shop_name}
+                                        <td className="px-4 py-3 text-xs font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-tight">
+                                            <div className="flex items-center gap-1">
+                                                <Store size={12} /> {it.shop_name}
+                                            </div>
                                         </td>
                                         <td className="px-4 py-3 text-center text-gray-600 dark:text-gray-400">{it.quantity}</td>
                                         <td className="px-4 py-3 text-right text-gray-600 dark:text-gray-400">{it.unit_cost.toLocaleString()}</td>

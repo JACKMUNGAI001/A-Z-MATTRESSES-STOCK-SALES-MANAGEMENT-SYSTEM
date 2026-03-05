@@ -2,7 +2,7 @@ from flask import request, jsonify
 from services.supplier_service import (
     create_supplier, list_suppliers, update_supplier, delete_supplier,
     create_supplier_invoice, list_supplier_invoices, get_supplier_invoice,
-    update_invoice_status, record_invoice_payment
+    update_invoice_status, record_invoice_payment, get_supplier_products
 )
 from extensions import db
 from models.supplier import Supplier, SupplierInvoice
@@ -18,7 +18,8 @@ def list_suppliers_controller():
             "phone": s.phone,
             "email": s.email,
             "address": s.address,
-            "created_at": s.created_at.isoformat()
+            "created_at": s.created_at.isoformat(),
+            "supplied_products": [{"id": p.id, "name": p.name} for p in s.supplied_products]
         })
     return jsonify(out), 200
 
@@ -32,7 +33,8 @@ def create_supplier_controller():
         contact_person=data.get("contact_person"),
         phone=data.get("phone"),
         email=data.get("email"),
-        address=data.get("address")
+        address=data.get("address"),
+        item_ids=data.get("item_ids", [])
     )
     return jsonify({"id": s.id, "name": s.name}), 201
 
@@ -165,3 +167,8 @@ def record_invoice_payment_controller(invoice_id):
         return jsonify({"msg": str(e)}), 400
     except Exception as e:
         return jsonify({"msg": "Internal Server Error"}), 500
+
+def list_supplier_products_controller(supplier_id):
+    products = get_supplier_products(supplier_id)
+    out = [{"id": p.id, "name": p.name} for p in products]
+    return jsonify(out), 200
