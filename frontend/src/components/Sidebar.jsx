@@ -62,7 +62,6 @@ export default function Sidebar({ role: propRole, onClose }){
             <NavLink to="/pos" icon={Receipt}>Record Sale</NavLink>
             <NavLink to="/deposits" icon={Store}>Deposits</NavLink>
             <NavLink to="/admin/shops" icon={Store}>Shops</NavLink>
-            <NavLink to="/admin/items" icon={Package}>Products</NavLink>
             <NavLink to="/transfers" icon={ArrowLeftRight}>Transfers</NavLink>
             <NavLink to="/admin/expenses" icon={Receipt}>Expenses</NavLink>
           </>

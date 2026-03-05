@@ -31,7 +31,7 @@ def get_shop_stock(shop_id):
             "item_name": item.name,
             "qty":int(s.total_qty)
         }
-        if user_role != "attendant":
+        if user_role == "admin":
             stock_data["buy_price"] = float(s.buy_price or 0)
         out.append(stock_data)
     return jsonify(out), 200
@@ -68,8 +68,8 @@ def low_stock_items_controller(threshold=2):
     
     items = get_low_stock_items(threshold, shop_id=shop_id)
     
-    # Filter out buy_price for attendants
-    if user_role == "attendant":
+    # Filter out buy_price for non-admins (attendants and managers)
+    if user_role != "admin":
         for item in items:
             item.pop("buy_price", None)
             

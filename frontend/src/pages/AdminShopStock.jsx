@@ -1,10 +1,12 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { useParams } from "react-router-dom";
 import api from "../api/api";
 import { Package, Trash2, Store, AlertCircle } from "lucide-react";
+import { AuthContext } from "../context/AuthContext";
 
 export default function AdminShopStock() {
   const { shopId } = useParams();
+  const { user } = useContext(AuthContext);
   const [shopName, setShopName] = useState("");
   const [shopStock, setShopStock] = useState([]);
   const [availableItems, setAvailableItems] = useState([]);
@@ -92,7 +94,7 @@ export default function AdminShopStock() {
                   <tr>
                     <th className="px-8 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Product Name</th>
                     <th className="px-8 py-4 text-center text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Quantity</th>
-                    <th className="px-8 py-4 text-right text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Buy Price</th>
+                    {user?.role === 'admin' && <th className="px-8 py-4 text-right text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Buy Price</th>}
                     <th className="px-8 py-4 text-center text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Actions</th>
                   </tr>
                 </thead>
@@ -107,9 +109,11 @@ export default function AdminShopStock() {
                           {stock.qty}
                         </span>
                       </td>
-                      <td className="px-8 py-4 text-right font-mono text-xs text-gray-400 dark:text-gray-500 transition-colors">
-                        {formatCurrency(stock.buy_price)}
-                      </td>
+                      {user?.role === 'admin' && (
+                        <td className="px-8 py-4 text-right font-mono text-xs text-gray-400 dark:text-gray-500 transition-colors">
+                          {formatCurrency(stock.buy_price)}
+                        </td>
+                      )}
                       <td className="px-8 py-4">
                         <div className="flex justify-center transition-colors">
                           <button 

@@ -2,20 +2,27 @@ from flask import request, jsonify
 from services.product_service import create_item, list_items
 from models.product import Category, Item
 from extensions import db
+from flask_jwt_extended import get_jwt_identity
 
 def list_items_controller():
     items = list_items()
+    user_identity = get_jwt_identity()
+    user_role = user_identity.get("role")
+    
     out = []
     for it in items:
-        out.append({
+        item_data = {
             "id":it.id,
             "sku": it.sku,
             "name":it.name,
             "brand":it.brand,
             "category_id":it.category_id,
-            "buy_price": float(it.buy_price or 0),
             "description": it.description,
-        })
+        }
+        if user_role == "admin":
+            item_data["buy_price"] = float(it.buy_price or 0)
+            
+        out.append(item_data)
     return jsonify(out), 200
 
 def create_item_controller():
