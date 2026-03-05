@@ -14,7 +14,6 @@ def list_items_controller():
             "brand":it.brand,
             "category_id":it.category_id,
             "buy_price": float(it.buy_price or 0),
-            "sell_price": float(it.sell_price or 0),
             "description": it.description,
         })
     return jsonify(out), 200
@@ -25,7 +24,7 @@ def create_item_controller():
     category_id = data.get("category_id")
     if not all([name, category_id]):
         return jsonify({"msg":"name and category_id required"}), 400
-    it = create_item(name, category_id, sku=data.get("sku"), brand=data.get("brand"), buy_price=data.get("buy_price"), sell_price=data.get("sell_price"), description=data.get("description"))
+    it = create_item(name, category_id, sku=data.get("sku"), brand=data.get("brand"), buy_price=data.get("buy_price"), description=data.get("description"))
     return jsonify({"id":it.id,"name":it.name}), 201
 
 def list_categories_controller():
@@ -43,7 +42,6 @@ def update_item_controller(item_id):
     item.category_id = data.get("category_id", item.category_id)
     item.brand = data.get("brand", item.brand)
     item.buy_price = data.get("buy_price", item.buy_price)
-    item.sell_price = data.get("sell_price", item.sell_price)
     item.description = data.get("description", item.description)
     db.session.commit()
     return jsonify({"msg": "Item updated", "id": item.id}), 200
@@ -57,8 +55,7 @@ def delete_item_controller(item_id):
     from models.stock import ShopStock
     from models.deposit import DepositSale, DepositPayment
     
-    # Optionally: Only allow delete if no active deposits exist? 
-    # For now, let's just cleanup to be safe as requested.
+    # Handle shop stock
     ShopStock.query.filter_by(item_id=item_id).delete()
     
     # Handle deposits: Delete payments first then the sales

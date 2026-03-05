@@ -15,7 +15,6 @@ def get_shop_stock(shop_id):
     q = db.session.query(
         ShopStock.item_id,
         func.sum(ShopStock.quantity).label('total_qty'),
-        func.max(ShopStock.sell_price).label('sell_price'),
         func.max(ShopStock.buy_price).label('buy_price')
     ).join(Item).filter(ShopStock.shop_id == shop_id).group_by(ShopStock.item_id).all()
     
@@ -30,8 +29,7 @@ def get_shop_stock(shop_id):
         stock_data = {
             "item_id":s.item_id,
             "item_name": item.name,
-            "qty":int(s.total_qty),
-            "sell_price":float(s.sell_price or 0)
+            "qty":int(s.total_qty)
         }
         if user_role != "attendant":
             stock_data["buy_price"] = float(s.buy_price or 0)
@@ -45,6 +43,8 @@ def adjust_stock_controller(identity):
     qty = int(data.get("qty",0))
     movement_type = data.get("movement_type","adjustment")
     user_id = identity.get("id")
+    # We still accept sell_price in the request for StockMovement if needed, 
+    # but we won't store it in ShopStock anymore.
     stock = adjust_stock(shop_id, item_id, qty, movement_type=movement_type, user_id=user_id, buy_price=data.get("buy_price"), sell_price=data.get("sell_price"))
     return jsonify({"msg":"adjusted","qty":stock.quantity}), 200
 

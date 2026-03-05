@@ -14,6 +14,5 @@ class Item(db.Model):
     category_id = db.Column(db.Integer, db.ForeignKey("categories.id"), nullable=False)
     brand = db.Column(db.String(255), nullable=True)
     buy_price = db.Column(db.Numeric(10,2), nullable=True) # Changed from default_buy_price
-    sell_price = db.Column(db.Numeric(10,2), nullable=True) # Changed from default_sell_price
     description = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)

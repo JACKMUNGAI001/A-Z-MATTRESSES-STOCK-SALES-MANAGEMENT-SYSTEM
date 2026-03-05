@@ -27,7 +27,7 @@ def transfer_stock(from_shop_id, to_shop_id, items, created_by, notes=None):
                 s_from.quantity -= qty
                 s_to = ShopStock.query.filter_by(shop_id=to_shop_id, item_id=item_id).first()
                 if not s_to:
-                    s_to = ShopStock(shop_id=to_shop_id, item_id=item_id, quantity=0, buy_price=s_from.buy_price, sell_price=s_from.sell_price)
+                    s_to = ShopStock(shop_id=to_shop_id, item_id=item_id, quantity=0, buy_price=s_from.buy_price)
                     db.session.add(s_to)
                 
                 s_to.quantity += qty

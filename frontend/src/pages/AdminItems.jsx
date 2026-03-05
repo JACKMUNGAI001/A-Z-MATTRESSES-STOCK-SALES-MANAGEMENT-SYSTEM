@@ -9,7 +9,6 @@ export default function AdminItems() {
     name: "",
     category_id: "",
     buy_price: "",
-    sell_price: "",
   });
   const [editingId, setEditingId] = useState(null);
 
@@ -62,7 +61,6 @@ export default function AdminItems() {
       name: item.name,
       category_id: item.category_id,
       buy_price: item.buy_price,
-      sell_price: item.sell_price,
     });
     setEditingId(item.id);
   };
@@ -79,7 +77,7 @@ export default function AdminItems() {
   };
 
   const resetForm = () => {
-    setFormData({ name: "", category_id: "", buy_price: "", sell_price: "" });
+    setFormData({ name: "", category_id: "", buy_price: "" });
     setEditingId(null);
   };
 
@@ -92,8 +90,8 @@ export default function AdminItems() {
               {editingId ? <Edit className="text-blue-600 dark:text-blue-400" /> : <Plus className="text-blue-600 dark:text-blue-400" />}
               {editingId ? "Edit Product Details" : "Register New Product"}
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div className="lg:col-span-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-1">
                 <label className="block text-sm font-bold text-gray-700 dark:text-gray-400 uppercase mb-1 px-1 transition-colors">Product Name</label>
                 <input name="name" className="w-full p-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none font-bold transition-all" value={formData.name} onChange={handleInputChange} placeholder="e.g. Super Soft Mattress" />
               </div>
@@ -109,13 +107,6 @@ export default function AdminItems() {
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 font-bold transition-colors">KES</span>
                   <input name="buy_price" type="number" className="w-full pl-12 pr-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none font-black transition-all" value={formData.buy_price} onChange={handleInputChange} />
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-bold text-gray-700 dark:text-gray-400 uppercase mb-1 px-1 transition-colors">Sell Price</label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-400 font-bold transition-colors">KES</span>
-                  <input name="sell_price" type="number" className="w-full pl-12 pr-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-blue-50/30 dark:bg-blue-900/20 border-blue-100 dark:border-blue-900 focus:ring-2 focus:ring-blue-500 outline-none font-black text-blue-700 dark:text-blue-400 transition-all" value={formData.sell_price} onChange={handleInputChange} />
                 </div>
               </div>
             </div>
@@ -144,7 +135,7 @@ export default function AdminItems() {
                 <thead className="bg-gray-50/50 dark:bg-gray-900/50 transition-colors">
                   <tr>
                     <th className="px-8 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Product Info</th>
-                    <th className="px-8 py-4 text-right text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Pricing</th>
+                    <th className="px-8 py-4 text-right text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Buy Price</th>
                     <th className="px-8 py-4 text-center text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Actions</th>
                   </tr>
                 </thead>
@@ -157,9 +148,8 @@ export default function AdminItems() {
                           <span className="bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-0.5 rounded font-bold uppercase transition-colors">{categories.find(c => c.id === item.category_id)?.name}</span>
                         </div>
                       </td>
-                      <td className="px-8 py-4 text-right">
-                        <div className="text-xs text-gray-400 dark:text-gray-500 line-through transition-colors">KES {parseFloat(item.buy_price || 0).toLocaleString()}</div>
-                        <div className="font-black text-blue-600 dark:text-blue-400 text-lg transition-colors">KES {parseFloat(item.sell_price || 0).toLocaleString()}</div>
+                      <td className="px-8 py-4 text-right font-black text-gray-600 dark:text-gray-400">
+                        KES {parseFloat(item.buy_price || 0).toLocaleString()}
                       </td>
                       <td className="px-8 py-4">
                         <div className="flex items-center justify-center gap-2">

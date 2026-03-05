@@ -9,6 +9,7 @@ export default function POS() {
   const [cartItems, setCartItems] = useState([]);
   const [selectedItem, setSelectedItem] = useState("");
   const [quantity, setQuantity] = useState(1);
+  const [unitPrice, setUnitPrice] = useState("");
   const [paymentType, setPaymentType] = useState("cash");
   const [receiptUuid, setReceiptUuid] = useState(null);
   const [shops, setShops] = useState([]);
@@ -43,9 +44,18 @@ export default function POS() {
 
   const handleAddItem = () => {
     const itemToAdd = apiItems.find((i) => i.id === parseInt(selectedItem));
-    if (!itemToAdd || !quantity) return;
+    if (!itemToAdd || !quantity || !unitPrice) {
+      alert("Please select item, quantity and enter price.");
+      return;
+    }
 
-    const existingCartItemIndex = cartItems.findIndex((i) => i.item_id === itemToAdd.id);
+    const price = parseFloat(unitPrice);
+    if (isNaN(price) || price <= 0) {
+      alert("Please enter a valid price.");
+      return;
+    }
+
+    const existingCartItemIndex = cartItems.findIndex((i) => i.item_id === itemToAdd.id && i.unit_price === price);
 
     if (existingCartItemIndex > -1) {
       setCartItems(cartItems.map((item, index) =>
@@ -56,10 +66,12 @@ export default function POS() {
         item_id: itemToAdd.id,
         name: itemToAdd.name,
         qty: quantity,
-        unit_price: itemToAdd.sell_price,
+        unit_price: price,
       }]);
     }
     setQuantity(1);
+    setUnitPrice("");
+    setSelectedItem("");
   };
 
   const handleRemoveFromCart = (indexToRemove) => {
@@ -120,7 +132,7 @@ export default function POS() {
                 <Plus size={24} className="text-blue-600 dark:text-blue-400" />
                 Add Items to Cart
               </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
                   <label className="block text-sm font-bold text-gray-700 dark:text-gray-400 uppercase tracking-wider mb-2">Select Item</label>
                   <select
@@ -131,7 +143,7 @@ export default function POS() {
                     <option value="">-- Choose Product --</option>
                     {apiItems.map((it) => (
                       <option key={it.id} value={it.id}>
-                        {it.name} (KES {it.sell_price.toFixed(0)})
+                        {it.name}
                       </option>
                     ))}
                   </select>
@@ -144,6 +156,16 @@ export default function POS() {
                     value={quantity}
                     onChange={(e) => setQuantity(parseInt(e.target.value))}
                     min="1"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 dark:text-gray-400 uppercase tracking-wider mb-2">Unit Price</label>
+                  <input
+                    type="number"
+                    className="w-full p-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none font-bold transition-all"
+                    value={unitPrice}
+                    onChange={(e) => setUnitPrice(e.target.value)}
+                    placeholder="KES"
                   />
                 </div>
               </div>
@@ -175,6 +197,7 @@ export default function POS() {
                       <tr>
                         <th className="px-8 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Item</th>
                         <th className="px-8 py-4 text-center text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Qty</th>
+                        <th className="px-8 py-4 text-right text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Unit Price</th>
                         <th className="px-8 py-4 text-right text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Total</th>
                         <th className="px-8 py-4 text-center text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Action</th>
                       </tr>
@@ -184,6 +207,9 @@ export default function POS() {
                         <tr key={index} className="hover:bg-gray-50/50 dark:hover:bg-gray-900/50 transition-colors">
                           <td className="px-8 py-4 font-bold text-gray-900 dark:text-white">{item.name}</td>
                           <td className="px-8 py-4 text-center text-gray-600 dark:text-gray-400 font-medium">{item.qty}</td>
+                          <td className="px-8 py-4 text-right font-medium text-gray-600 dark:text-gray-400">
+                            KES {item.unit_price.toLocaleString()}
+                          </td>
                           <td className="px-8 py-4 text-right font-bold text-blue-600 dark:text-blue-400">
                             KES {(item.qty * item.unit_price).toLocaleString()}
                           </td>

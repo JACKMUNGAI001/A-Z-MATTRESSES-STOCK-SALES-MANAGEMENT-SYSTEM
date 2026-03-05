@@ -17,7 +17,7 @@ export default function ShopDetails() {
   const [shopStock, setShopStock] = useState([]);
   const [availableItems, setAvailableItems] = useState([]);
   const [stockFormData, setStockFormData] = useState({
-    itemId: "", quantity: 1, buyPrice: "", sellPrice: "",
+    itemId: "", quantity: 1, buyPrice: "",
   });
 
   const [expandedSection, setExpandedSection] = useState(null);
@@ -89,11 +89,10 @@ export default function ShopDetails() {
         qty: parseInt(stockFormData.quantity),
         movement_type: "purchase_in",
         buy_price: parseFloat(stockFormData.buyPrice),
-        sell_price: parseFloat(stockFormData.sellPrice),
       });
       alert("Stock added successfully!");
       fetchShopStock();
-      setStockFormData({ itemId: "", quantity: 1, buyPrice: "", sellPrice: "" });
+      setStockFormData({ itemId: "", quantity: 1, buyPrice: "" });
     } catch (err) {
       alert(`Error adding stock: ${err.response?.data?.msg || err.message}`);
     }
@@ -154,7 +153,7 @@ export default function ShopDetails() {
             <Plus size={24} className="text-blue-600 dark:text-blue-400" />
             Replenish Inventory
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <div>
               <label className="block text-sm font-bold text-gray-700 dark:text-gray-400 uppercase mb-1 px-1 transition-colors">Product</label>
               <select
@@ -168,7 +167,6 @@ export default function ShopDetails() {
                     ...stockFormData,
                     itemId: id,
                     buyPrice: item ? item.buy_price : "",
-                    sellPrice: item ? item.sell_price : ""
                   });
                 }}
               >
@@ -185,10 +183,6 @@ export default function ShopDetails() {
             <div>
               <label className="block text-sm font-bold text-gray-700 dark:text-gray-400 uppercase mb-1 px-1 transition-colors">Buy Price</label>
               <input name="buyPrice" type="number" className="w-full p-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all" value={stockFormData.buyPrice} onChange={handleStockInputChange} />
-            </div>
-            <div>
-              <label className="block text-sm font-bold text-gray-700 dark:text-gray-400 uppercase mb-1 px-1 transition-colors">Sell Price</label>
-              <input name="sellPrice" type="number" className="w-full p-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all" value={stockFormData.sellPrice} onChange={handleStockInputChange} />
             </div>
           </div>
           <button onClick={handleAddStock} className="mt-6 bg-blue-600 text-white py-3 px-10 rounded-xl font-bold shadow-lg shadow-blue-100 dark:shadow-none hover:bg-blue-700 transition-all">
@@ -267,7 +261,7 @@ export default function ShopDetails() {
           >
             <table className="w-full">
               <thead className="bg-gray-50/50 dark:bg-gray-900/50 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase transition-colors">
-                <tr><th className="px-6 py-4 text-left">Item Name</th><th className="px-6 py-4 text-center">Qty</th><th className="px-6 py-4 text-right">Buy</th><th className="px-6 py-4 text-right">Sell</th></tr>
+                <tr><th className="px-6 py-4 text-left">Item Name</th><th className="px-6 py-4 text-center">Qty</th><th className="px-6 py-4 text-right">Cost Price</th></tr>
               </thead>
               <tbody className="divide-y divide-gray-50 dark:divide-gray-700 transition-colors">
                 {filteredStock.map(s => {
@@ -278,7 +272,6 @@ export default function ShopDetails() {
                       <td className={`px-6 py-4 font-bold transition-colors ${isMatch ? 'text-blue-600 dark:text-blue-400 font-black' : 'text-gray-900 dark:text-white'}`}>{item?.name}</td>
                       <td className="px-6 py-4 text-center"><span className={`px-2 py-1 rounded-full text-xs font-black transition-colors ${s.qty <= 2 ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400' : 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'}`}>{s.qty}</span></td>
                       <td className="px-6 py-4 text-right font-mono text-xs text-gray-400 dark:text-gray-500 transition-colors">{formatCurrency(s.buy_price)}</td>
-                      <td className="px-6 py-4 text-right font-black text-blue-600 dark:text-blue-400 transition-colors">{formatCurrency(s.sell_price)}</td>
                     </tr>
                   );
                 })}

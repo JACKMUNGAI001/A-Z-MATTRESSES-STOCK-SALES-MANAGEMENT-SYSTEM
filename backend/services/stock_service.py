@@ -13,12 +13,11 @@ def adjust_stock(shop_id, item_id, qty, movement_type="adjustment", user_id=None
     if not stock:
         # Check if there are any duplicates (just in case) and merge them or pick one
         # For new records, we just create one
-        stock = ShopStock(shop_id=shop_id, item_id=item_id, quantity=0, buy_price=buy_price, sell_price=sell_price)
+        stock = ShopStock(shop_id=shop_id, item_id=item_id, quantity=0, buy_price=buy_price)
         db.session.add(stock)
     
     stock.quantity += qty
     if buy_price is not None: stock.buy_price = buy_price
-    if sell_price is not None: stock.sell_price = sell_price
     stock.updated_at = datetime.utcnow()
     
     # Check for low stock notification (only if quantity decreased)
@@ -84,7 +83,6 @@ def get_low_stock_items(threshold=2, shop_id=None):
         ShopStock.item_id,
         ShopStock.shop_id,
         func.sum(ShopStock.quantity).label('qty'),
-        func.max(ShopStock.sell_price).label('sell_price'),
         func.max(ShopStock.buy_price).label('buy_price')
     ).join(Item).group_by(ShopStock.shop_id, ShopStock.item_id).having(func.sum(ShopStock.quantity) <= threshold)
     
@@ -102,7 +100,6 @@ def get_low_stock_items(threshold=2, shop_id=None):
             "shop_id":s.shop_id,
             "shop_name": shop.name if shop else "N/A",
             "qty":int(s.qty),
-            "sell_price":float(s.sell_price or 0),
             "buy_price":float(s.buy_price or 0)
         })
     return out

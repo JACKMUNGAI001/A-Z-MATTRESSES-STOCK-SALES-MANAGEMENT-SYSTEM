@@ -9,34 +9,24 @@ class UserSchema(Schema):
     shop_id = fields.Int(allow_none=True)
     created_at = fields.DateTime()
 
-class ItemSizeSchema(Schema):
-    id = fields.Int()
-    label = fields.Str()
-    buy_price = fields.Float()
-    sell_price = fields.Float()
-
 class ItemSchema(Schema):
     id = fields.Int()
     sku = fields.Str()
     name = fields.Str()
     brand = fields.Str()
-    default_buy_price = fields.Float()
-    default_sell_price = fields.Float()
-    sizes = fields.Nested(ItemSizeSchema, many=True)
+    buy_price = fields.Float()
+    description = fields.Str()
 
 class ShopStockSchema(Schema):
     id = fields.Int()
     shop_id = fields.Int()
     item_id = fields.Int()
-    item_size_id = fields.Int()
     quantity = fields.Int()
     buy_price = fields.Float()
-    sell_price = fields.Float()
     updated_at = fields.DateTime()
 
 class SaleItemSchema(Schema):
     item_id = fields.Int()
-    item_size_id = fields.Int()
     qty = fields.Int()
     unit_price = fields.Float()
 
@@ -62,7 +52,6 @@ class DepositSchema(Schema):
     uuid = fields.Str()
     shop_id = fields.Int()
     item_id = fields.Int()
-    item_size_id = fields.Int()
     buyer_name = fields.Str()
     buyer_phone = fields.Str()
     selling_price = fields.Float()

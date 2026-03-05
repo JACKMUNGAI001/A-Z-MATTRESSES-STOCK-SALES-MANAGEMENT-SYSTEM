@@ -93,7 +93,6 @@ export default function AdminShopStock() {
                     <th className="px-8 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Product Name</th>
                     <th className="px-8 py-4 text-center text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Quantity</th>
                     <th className="px-8 py-4 text-right text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Buy Price</th>
-                    <th className="px-8 py-4 text-right text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Sell Price</th>
                     <th className="px-8 py-4 text-center text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Actions</th>
                   </tr>
                 </thead>
@@ -110,9 +109,6 @@ export default function AdminShopStock() {
                       </td>
                       <td className="px-8 py-4 text-right font-mono text-xs text-gray-400 dark:text-gray-500 transition-colors">
                         {formatCurrency(stock.buy_price)}
-                      </td>
-                      <td className="px-8 py-4 text-right font-black text-blue-600 dark:text-blue-400 transition-colors">
-                        {formatCurrency(stock.sell_price)}
                       </td>
                       <td className="px-8 py-4">
                         <div className="flex justify-center transition-colors">

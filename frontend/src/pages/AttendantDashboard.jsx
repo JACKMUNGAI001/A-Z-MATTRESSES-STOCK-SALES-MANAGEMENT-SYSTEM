@@ -201,7 +201,6 @@ export default function AttendantDashboard(){
                   <tr className="bg-gray-50/50 dark:bg-gray-900/50 transition-colors">
                     <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Item Name</th>
                     <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Quantity</th>
-                    <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Sell Price</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50 dark:divide-gray-700 bg-white dark:bg-gray-800 transition-colors">
@@ -217,7 +216,6 @@ export default function AttendantDashboard(){
                             {stock.qty}
                           </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap font-mono text-gray-600 dark:text-gray-300 transition-colors">{formatCurrency(stock.sell_price)}</td>
                       </tr>
                     );
                   })}

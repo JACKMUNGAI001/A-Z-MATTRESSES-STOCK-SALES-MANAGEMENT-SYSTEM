@@ -8,7 +8,6 @@ class ShopStock(db.Model):
     item_id = db.Column(db.Integer, db.ForeignKey("items.id"), nullable=False)
     quantity = db.Column(db.Integer, default=0)
     buy_price = db.Column(db.Numeric(10,2))
-    sell_price = db.Column(db.Numeric(10,2))
     updated_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     __table_args__ = (db.UniqueConstraint("shop_id", "item_id", name="uq_shop_item"),)
