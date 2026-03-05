@@ -3,6 +3,7 @@ import api, { API_BASE } from '../api/api';
 import { FileText, Calendar, Clock, CreditCard, Receipt, SearchX, Store } from "lucide-react";
 import { SearchContext } from '../context/SearchContext';
 import { AuthContext } from '../context/AuthContext';
+import { formatPaymentMethod } from '../utils/helpers';
 
 export default function TodaysSales() {
   const [sales, setSales] = useState([]);
@@ -110,8 +111,8 @@ export default function TodaysSales() {
                       </td>
                       <td className="px-8 py-4 text-right font-black text-gray-900 dark:text-white text-lg transition-colors">{formatCurrency(sale.total_amount)}</td>
                       <td className="px-8 py-4 text-center">
-                        <span className="bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border border-gray-200 dark:border-gray-600 transition-colors">
-                          {sale.payment_type}
+                        <span className="bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-400 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border border-blue-200 dark:border-blue-600 transition-colors">
+                          {formatPaymentMethod(sale.payment_type)}
                         </span>
                       </td>
                       <td className="px-8 py-4 text-center text-gray-500 dark:text-gray-400 font-medium transition-colors">

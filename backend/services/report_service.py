@@ -35,15 +35,6 @@ def get_global_financial_overview():
 
         customers_with_balances = DepositSale.query.filter(DepositSale.status == 'active').count()
 
-        cash_sales = db.session.query(func.sum(Sale.total_amount)).filter(Sale.payment_type == 'cash').scalar() or 0
-        mobile_money_sales = db.session.query(func.sum(Sale.total_amount)).filter(Sale.payment_type == 'mobile_money').scalar() or 0
-
-        cash_deposits = db.session.query(func.sum(DepositPayment.amount)).filter(DepositPayment.payment_method == 'cash').scalar() or 0
-        mobile_money_deposits = db.session.query(func.sum(DepositPayment.amount)).filter(DepositPayment.payment_method == 'mobile_money').scalar() or 0
-
-        total_cash = cash_sales + cash_deposits
-        total_mobile_money = mobile_money_sales + mobile_money_deposits
-
         return {
             "total_sales": float(total_sales),
             "total_profit": float(total_profit),
@@ -51,8 +42,6 @@ def get_global_financial_overview():
             "total_expenses": float(total_expenses),
             "combined_stock_value": float(combined_stock_value),
             "customers_with_balances": customers_with_balances,
-            "total_cash": float(total_cash),
-            "total_mobile_money": float(total_mobile_money)
         }
     except Exception as e:
         from flask import current_app

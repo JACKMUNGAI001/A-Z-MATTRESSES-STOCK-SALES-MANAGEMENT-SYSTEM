@@ -7,7 +7,7 @@ class Sale(db.Model):
     shop_id = db.Column(db.Integer)
     user_id = db.Column(db.Integer)
     total_amount = db.Column(db.Numeric(12,2))
-    payment_type = db.Column(db.String(50))  # cash, mobile_money
+    payment_type = db.Column(db.String(50))  # mobile_money
     receipt_uuid = db.Column(db.String(64), db.ForeignKey("receipts.uuid"), nullable=True, index=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 

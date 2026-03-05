@@ -6,7 +6,7 @@ export default function Transfers() {
   const [fromShop, setFromShop] = useState("");
   const [toShop, setToShop] = useState("");
   const [itemId, setItemId] = useState("");
-  const [quantity, setQuantity] = useState(1);
+  const [quantity, setQuantity] = useState(0);
   const [notes, setNotes] = useState("");
   const [shops, setShops] = useState([]);
   const [items, setItems] = useState([]);
@@ -34,16 +34,21 @@ export default function Transfers() {
       alert("Source and destination shops cannot be the same.");
       return;
     }
+    const qty = parseInt(quantity);
+    if(isNaN(qty) || qty <= 0) {
+      alert("Please enter a valid quantity.");
+      return;
+    }
     try {
       await api.post("/transfers", {
         from_shop_id: fromShop,
         to_shop_id: toShop,
-        items: [{ item_id: itemId, qty: quantity }],
+        items: [{ item_id: itemId, qty: qty }],
         notes: notes,
       });
 
       alert("Transfer completed successfully!");
-      setFromShop(""); setToShop(""); setItemId(""); setQuantity(1); setNotes("");
+      setFromShop(""); setToShop(""); setItemId(""); setQuantity(0); setNotes("");
     } catch (err) {
       alert(`Error creating transfer: ${err.response?.data?.msg || err.message}`);
     }
@@ -132,7 +137,7 @@ export default function Transfers() {
                   className="w-full p-4 border border-gray-200 dark:border-gray-700 rounded-2xl bg-gray-50 dark:bg-gray-900 focus:ring-2 focus:ring-blue-500 outline-none font-black text-blue-600 dark:text-blue-400 text-lg transition-all"
                   type="number"
                   value={quantity}
-                  min="1"
+                  min="0"
                   onChange={(e) => setQuantity(e.target.value)}
                 />
               </div>

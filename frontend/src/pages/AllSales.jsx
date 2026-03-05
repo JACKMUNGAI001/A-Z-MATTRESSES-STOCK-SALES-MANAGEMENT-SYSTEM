@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from "react";
 import api, { API_BASE } from "../api/api";
 import { History, ShoppingBag, Store, User, FileText, Trash2, SearchX } from "lucide-react";
-import { formatDate } from "../utils/helpers";
+import { formatDate, formatPaymentMethod } from "../utils/helpers";
 import { AuthContext } from "../context/AuthContext";
 import { SearchContext } from "../context/SearchContext";
 
@@ -123,7 +123,7 @@ export default function AllSales() {
                       </td>
                       <td className="px-8 py-4 text-right">
                         <div className="font-black text-gray-900 dark:text-white text-lg transition-colors">{formatCurrency(sale.total_amount)}</div>
-                        <div className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">{sale.payment_type}</div>
+                        <div className="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest">{formatPaymentMethod(sale.payment_type)}</div>
                       </td>
                       <td className="px-8 py-4 text-center transition-colors">
                         <div className="flex items-center justify-center gap-2">

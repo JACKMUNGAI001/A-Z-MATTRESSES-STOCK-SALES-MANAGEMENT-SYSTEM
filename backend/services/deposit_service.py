@@ -39,6 +39,7 @@ def _generate_deposit_receipt_html(payment, deposit, shop, attendant):
             <p><strong>Customer:</strong> {deposit.buyer_name}</p>
             <p><strong>Item:</strong> {item_name}</p>
             <p><strong>Amount Paid:</strong> {payment.amount}</p>
+            <p><strong>Payment Method:</strong> {'M-PESA' if payment.payment_method == 'mobile_money' else payment.payment_method}</p>
             <p><strong>Date:</strong> {payment.paid_on.strftime('%Y-%m-%d %H:%M:%S')}</p>
             <hr/>
             <p><strong>Total Paid to Date:</strong> {total_paid}</p>

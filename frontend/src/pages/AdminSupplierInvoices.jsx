@@ -23,7 +23,7 @@ export default function AdminSupplierInvoices() {
     received_date: new Date().toISOString().split('T')[0],
     due_date: '',
     notes: '',
-    items: [{ item_id: '', quantity: 1, unit_cost: 0 }]
+    items: [{ item_id: '', quantity: 0, unit_cost: 0 }]
   })
 
   useEffect(() => {
@@ -62,7 +62,7 @@ export default function AdminSupplierInvoices() {
   const handleAddItem = () => {
     setFormData({
       ...formData,
-      items: [...formData.items, { item_id: '', quantity: 1, unit_cost: 0 }]
+      items: [...formData.items, { item_id: '', quantity: 0, unit_cost: 0 }]
     })
   }
 
@@ -83,6 +83,10 @@ export default function AdminSupplierInvoices() {
       alert("Please fill all required fields")
       return
     }
+    if (formData.items.some(it => parseInt(it.quantity) <= 0)) {
+      alert("Please enter a valid quantity for all items")
+      return
+    }
     try {
       await createSupplierInvoice(formData)
       setShowModal(false)
@@ -93,7 +97,7 @@ export default function AdminSupplierInvoices() {
         received_date: new Date().toISOString().split('T')[0],
         due_date: '',
         notes: '',
-        items: [{ item_id: '', quantity: 1, unit_cost: 0 }]
+        items: [{ item_id: '', quantity: 0, unit_cost: 0 }]
       })
       loadData()
     } catch (err) {
@@ -206,7 +210,7 @@ export default function AdminSupplierInvoices() {
                           {inv.status !== 'Paid' && (
                             <button 
                               onClick={() => handleSettle(inv.id)}
-                              className="text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300 p-2 hover:bg-green-50 dark:hover:bg-green-900/30 rounded-full transition-colors flex items-center gap-1 text-sm font-medium"
+                              className="text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-blue-300 p-2 hover:bg-green-50 dark:hover:bg-blue-900/30 rounded-full transition-colors flex items-center gap-1 text-sm font-medium"
                               title="Mark as Settled"
                             >
                               <CheckCircle size={18} />
@@ -251,7 +255,7 @@ export default function AdminSupplierInvoices() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2 transition-colors">
+                  <label className="block text-sm font-bold text-gray-700 dark:text-gray-400 uppercase mb-2 flex items-center gap-2 transition-colors">
                       <FileText size={16} className="text-blue-500" />
                       Invoice Number *
                   </label>
@@ -328,7 +332,7 @@ export default function AdminSupplierInvoices() {
                         <input 
                           required
                           type="number" 
-                          min="1"
+                          min="0"
                           className="w-full border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg p-2 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                           value={item.quantity}
                           onChange={e => handleItemChange(idx, 'quantity', e.target.value)}

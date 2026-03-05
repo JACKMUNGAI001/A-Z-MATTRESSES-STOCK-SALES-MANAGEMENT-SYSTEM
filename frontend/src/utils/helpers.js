@@ -8,6 +8,11 @@ export const formatDate = (dateString) => {
   return `${month}/${day}/${year}`;
 };
 
+export const formatPaymentMethod = (method) => {
+  if (method === "mobile_money") return "M-PESA";
+  return method?.toUpperCase() || "N/A";
+};
+
 export const timeAgo = (date) => {
   const seconds = Math.floor((new Date() - new Date(date)) / 1000);
   let interval = Math.floor(seconds / 31536000);

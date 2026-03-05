@@ -8,9 +8,9 @@ export default function POS() {
   const [apiItems, setApiItems] = useState([]);
   const [cartItems, setCartItems] = useState([]);
   const [selectedItem, setSelectedItem] = useState("");
-  const [quantity, setQuantity] = useState(1);
+  const [quantity, setQuantity] = useState(0);
   const [unitPrice, setUnitPrice] = useState("");
-  const [paymentType, setPaymentType] = useState("cash");
+  const [paymentType, setPaymentType] = useState("mobile_money");
   const [receiptUuid, setReceiptUuid] = useState(null);
   const [shops, setShops] = useState([]);
   const [selectedShop, setSelectedShop] = useState(user?.shop_id || "");
@@ -49,6 +49,12 @@ export default function POS() {
       return;
     }
 
+    const qty = parseInt(quantity);
+    if (isNaN(qty) || qty <= 0) {
+      alert("Please enter a valid quantity.");
+      return;
+    }
+
     const price = parseFloat(unitPrice);
     if (isNaN(price) || price <= 0) {
       alert("Please enter a valid price.");
@@ -59,17 +65,17 @@ export default function POS() {
 
     if (existingCartItemIndex > -1) {
       setCartItems(cartItems.map((item, index) =>
-        index === existingCartItemIndex ? { ...item, qty: item.qty + quantity } : item
+        index === existingCartItemIndex ? { ...item, qty: item.qty + qty } : item
       ));
     } else {
       setCartItems([...cartItems, {
         item_id: itemToAdd.id,
         name: itemToAdd.name,
-        qty: quantity,
+        qty: qty,
         unit_price: price,
       }]);
     }
-    setQuantity(1);
+    setQuantity(0);
     setUnitPrice("");
     setSelectedItem("");
   };
@@ -154,8 +160,8 @@ export default function POS() {
                     type="number"
                     className="w-full p-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                     value={quantity}
-                    onChange={(e) => setQuantity(parseInt(e.target.value))}
-                    min="1"
+                    onChange={(e) => setQuantity(e.target.value)}
+                    min="0"
                   />
                 </div>
                 <div>
@@ -237,14 +243,9 @@ export default function POS() {
               <div className="space-y-6">
                 <div>
                   <label className="block text-sm font-bold text-gray-700 dark:text-gray-400 uppercase tracking-wider mb-2">Payment Method</label>
-                  <select
-                    className="w-full p-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-                    value={paymentType}
-                    onChange={(e) => setPaymentType(e.target.value)}
-                  >
-                    <option value="cash">💵 Cash Payment</option>
-                    <option value="mobile_money">📱 Mobile Money</option>
-                  </select>
+                  <div className="w-full p-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 font-bold flex items-center gap-2">
+                    <span>📱 Mobile Money (M-PESA)</span>
+                  </div>
                 </div>
                 
                 <div className="pt-6 border-t border-gray-100 dark:border-gray-700">

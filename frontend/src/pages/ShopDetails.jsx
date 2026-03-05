@@ -5,7 +5,7 @@ import Card from '../components/Card';
 import { AuthContext } from '../context/AuthContext';
 import { SearchContext } from '../context/SearchContext';
 import { Store, Plus, ChevronDown, ChevronUp, AlertTriangle, TrendingUp, History, Package, SearchX } from 'lucide-react';
-import { formatDate } from '../utils/helpers';
+import { formatDate, formatPaymentMethod } from '../utils/helpers';
 
 export default function ShopDetails() {
   const { shopId } = useParams();
@@ -17,7 +17,7 @@ export default function ShopDetails() {
   const [shopStock, setShopStock] = useState([]);
   const [availableItems, setAvailableItems] = useState([]);
   const [stockFormData, setStockFormData] = useState({
-    itemId: "", quantity: 1, buyPrice: "",
+    itemId: "", quantity: 0, buyPrice: "",
   });
 
   const [expandedSection, setExpandedSection] = useState(null);
@@ -83,6 +83,10 @@ export default function ShopDetails() {
 
   const handleAddStock = async () => {
     try {
+      if (parseInt(stockFormData.quantity) <= 0) {
+        alert("Please enter a valid quantity.");
+        return;
+      }
       await api.post("/stocks/adjust", {
         shop_id: shopId,
         item_id: stockFormData.itemId,
@@ -92,7 +96,7 @@ export default function ShopDetails() {
       });
       alert("Stock added successfully!");
       fetchShopStock();
-      setStockFormData({ itemId: "", quantity: 1, buyPrice: "" });
+      setStockFormData({ itemId: "", quantity: 0, buyPrice: "" });
     } catch (err) {
       alert(`Error adding stock: ${err.response?.data?.msg || err.message}`);
     }
@@ -178,7 +182,7 @@ export default function ShopDetails() {
             </div>
             <div>
               <label className="block text-sm font-bold text-gray-700 dark:text-gray-400 uppercase mb-1 px-1 transition-colors">Quantity</label>
-              <input name="quantity" type="number" className="w-full p-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-blue-600 dark:text-blue-400 focus:ring-2 focus:ring-blue-500 outline-none font-bold transition-all" value={stockFormData.quantity} onChange={handleStockInputChange} />
+              <input name="quantity" type="number" className="w-full p-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-blue-600 dark:text-blue-400 focus:ring-2 focus:ring-blue-500 outline-none font-bold transition-all" value={stockFormData.quantity} onChange={handleStockInputChange} min="0" />
             </div>
             <div>
               <label className="block text-sm font-bold text-gray-700 dark:text-gray-400 uppercase mb-1 px-1 transition-colors">Buy Price</label>
@@ -220,7 +224,7 @@ export default function ShopDetails() {
                         })}
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-right font-black text-gray-900 dark:text-white">{formatCurrency(s.total_amount)}</td><td className="px-6 py-4 text-gray-500 dark:text-gray-400 uppercase text-xs font-bold tracking-widest">{s.payment_type}</td><td className="px-6 py-4 text-gray-500 dark:text-gray-400">{formatDate(s.created_at)}</td></tr>
+                    <td className="px-6 py-4 text-right font-black text-gray-900 dark:text-white">{formatCurrency(s.total_amount)}</td><td className="px-6 py-4 text-blue-600 dark:text-blue-400 uppercase text-xs font-bold tracking-widest">{formatPaymentMethod(s.payment_type)}</td><td className="px-6 py-4 text-gray-500 dark:text-gray-400">{formatDate(s.created_at)}</td></tr>
                 ))}
               </tbody>
             </table>

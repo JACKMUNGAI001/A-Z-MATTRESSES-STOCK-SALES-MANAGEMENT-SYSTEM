@@ -9,7 +9,7 @@ def create_sale_controller():
     data = request.get_json() or {}
     shop_id = data.get("shop_id")
     items = data.get("items", [])
-    payment_type = data.get("payment_type", "cash")
+    payment_type = data.get("payment_type", "mobile_money")
     user = get_jwt_identity()
     try:
         sale = create_sale(shop_id=shop_id, user_id=user.get("id"), items=items, payment_type=payment_type)

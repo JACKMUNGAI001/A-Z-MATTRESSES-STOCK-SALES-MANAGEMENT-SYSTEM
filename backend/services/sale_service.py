@@ -51,14 +51,14 @@ def _generate_sale_receipt_html(sale, shop, attendant, sale_items):
                 </tbody>
             </table>
             <p><strong>Total Amount:</strong> {sale.total_amount}</p>
-            <p><strong>Payment Type:</strong> {sale.payment_type}</p>
+            <p><strong>Payment Type:</strong> {'M-PESA' if sale.payment_type == 'mobile_money' else sale.payment_type}</p>
         </div>
     </body>
     </html>
     """
     return html
 
-def create_sale(shop_id, user_id, items, payment_type="cash"):
+def create_sale(shop_id, user_id, items, payment_type="mobile_money"):
     try:
         if not items:
             raise ValueError("Cannot create a sale with no items.")
