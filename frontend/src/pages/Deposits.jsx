@@ -2,25 +2,31 @@ import { useState, useEffect, useContext } from "react";
 import api, { API_BASE } from "../api/api";
 import { AuthContext } from "../context/AuthContext";
 import { UserPlus, History, Wallet, CheckCircle, Store } from "lucide-react";
+import SearchableSelect from "../components/SearchableSelect";
 
 export default function Deposits() {
   const { user } = useContext(AuthContext);
-  const [deposits, setDeposits] = useState([]);
-  const [items, setItems] = useState([]);
+  const [apiItems, setApiItems] = useState([]);
   const [formData, setFormData] = useState({
     buyer_name: "",
     buyer_phone: "",
     item_id: "",
     selling_price: "",
     amount: "",
+    shop_id: user?.shop_id || "",
   });
-  const [paymentAmounts, setPaymentAmounts] = useState({});
-  const [receiptUuid, setReceiptUuid] = useState(null);
   const [shops, setShops] = useState([]);
-  const [selectedShop, setSelectedShop] = useState(user?.shop_id || "");
+  const [lastReceipt, setLastReceipt] = useState(null);
 
   useEffect(() => {
-    fetchDeposits();
+    const fetchItems = async () => {
+      try {
+        const response = await api.get("/items");
+        setApiItems(response.data);
+      } catch (err) {
+        console.error("Error fetching items");
+      }
+    };
     fetchItems();
 
     if (user?.role === 'manager' || user?.role === 'admin') {
@@ -28,8 +34,8 @@ export default function Deposits() {
         try {
           const response = await api.get("/shops");
           setShops(response.data);
-          if (!selectedShop && response.data.length > 0) {
-            setSelectedShop(response.data[0].id);
+          if (!formData.shop_id && response.data.length > 0) {
+            setFormData(prev => ({ ...prev, shop_id: response.data[0].id }));
           }
         } catch (err) {
           console.error("Error fetching shops");
@@ -39,201 +45,168 @@ export default function Deposits() {
     }
   }, [user]);
 
-  const fetchDeposits = async () => {
-    try {
-      const response = await api.get("/deposits");
-      setDeposits(response.data);
-    } catch (err) {
-      console.error("Error fetching deposits");
-    }
-  };
-
-  const fetchItems = async () => {
-    try {
-      const response = await api.get("/items");
-      setItems(response.data);
-    } catch (err) {
-      console.error("Error fetching items");
-    }
-  };
-
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
 
-  const createDepositSale = async () => {
-    try {
-      if (!selectedShop) {
-        alert("Please select a shop first.");
-        return;
-      }
-      const data = { ...formData, shop_id: selectedShop };
-      await api.post("/deposits", data);
-      alert("DEPOSIT SALE CREATED!");
-      fetchDeposits();
-      setFormData({ buyer_name: "", buyer_phone: "", item_id: "", selling_price: "", amount: "" });
-    } catch (err) {
-      alert(`Error creating deposit sale: ${err.response?.data?.msg || err.message}`);
-    }
-  };
-
-  const handlePayment = async (depositId) => {
-    const amount = paymentAmounts[depositId];
-    if (!amount || parseFloat(amount) <= 0) {
-      alert("Please enter a valid amount");
+  const handleCreateDeposit = async (e) => {
+    e.preventDefault();
+    if (!formData.shop_id) {
+      alert("Please select a shop.");
       return;
     }
-
-    const deposit = deposits.find(d => d.id === depositId);
-    if (deposit && parseFloat(amount) > parseFloat(deposit.balance)) {
-      alert(`Payment amount (KES ${amount}) exceeds the remaining balance (KES ${deposit.balance})`);
-      return;
-    }
-
     try {
-      const response = await api.post(`/deposits/${depositId}/payments`, {
-        amount: amount,
+      const res = await api.post("/deposits", formData);
+      const deposit_id = res.data.deposit_id;
+      // Record initial payment
+      const payRes = await api.post(`/deposits/${deposit_id}/payments`, {
+        amount: formData.amount,
         payment_method: "mobile_money",
       });
-      setReceiptUuid(response.data.receipt_uuid);
-      alert("PAYMENT SUCCESSFUL");
-      fetchDeposits();
-      setPaymentAmounts(prev => {
-        const next = { ...prev };
-        delete next[depositId];
-        return next;
+      setLastReceipt(payRes.data.receipt_uuid);
+      alert("Deposit account created successfully!");
+      setFormData({
+        buyer_name: "",
+        buyer_phone: "",
+        item_id: "",
+        selling_price: "",
+        amount: "",
+        shop_id: user?.shop_id || "",
       });
     } catch (err) {
-      alert(`Error making payment: ${err.response?.data?.msg || err.message}`);
+      alert(`Error: ${err.response?.data?.msg || err.message}`);
     }
   };
 
   return (
     <>
-        {(user?.role === 'manager' || user?.role === 'admin') && (
-          <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 mb-10 transition-colors">
-            <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-6 flex items-center gap-2 transition-colors">
-              <Store size={24} className="text-purple-600 dark:text-purple-400" />
-              Acting For Shop
-            </h2>
-            <div className="max-w-xs">
-              <label className="block text-sm font-bold text-gray-700 dark:text-gray-400 uppercase tracking-wider mb-2 px-1">Select Shop</label>
-              <select
-                className="w-full p-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-                value={selectedShop}
-                onChange={(e) => setSelectedShop(e.target.value)}
-              >
-                <option value="">-- Choose Shop --</option>
-                {shops.map((s) => (
-                  <option key={s.id} value={s.id}>{s.name}</option>
-                ))}
-              </select>
+        <div className="max-w-4xl">
+          {(user?.role === 'manager' || user?.role === 'admin') && (
+            <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 mb-8 transition-colors">
+              <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-6 flex items-center gap-2">
+                <Store size={24} className="text-purple-600 dark:text-purple-400" />
+                Select Shop
+              </h2>
+              <div>
+                <label className="block text-sm font-bold text-gray-700 dark:text-gray-400 uppercase tracking-wider mb-2">Acting For Shop</label>
+                <SearchableSelect
+                  options={shops}
+                  value={formData.shop_id}
+                  onChange={(e) => setFormData({ ...formData, shop_id: e.target.value })}
+                  placeholder="Choose Shop..."
+                />
+              </div>
             </div>
-          </div>
-        )}
-        {/* CREATE DEPOSIT */}
-        <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 mb-10 transition-colors">
-          <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-6 flex items-center gap-2 transition-colors">
-            <UserPlus size={24} className="text-blue-600 dark:text-blue-400" />
-            New Deposit Sale
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div>
-              <label className="block text-sm font-bold text-gray-700 dark:text-gray-400 uppercase tracking-wider mb-2 px-1">Buyer Name</label>
-              <input name="buyer_name" placeholder="Full Name" value={formData.buyer_name} onChange={handleInputChange} className="w-full p-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
-            </div>
-            <div>
-              <label className="block text-sm font-bold text-gray-700 dark:text-gray-400 uppercase tracking-wider mb-2 px-1">Phone Number</label>
-              <input name="buyer_phone" placeholder="07..." value={formData.buyer_phone} onChange={handleInputChange} className="w-full p-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
-            </div>
-            <div>
-              <label className="block text-sm font-bold text-gray-700 dark:text-gray-400 uppercase tracking-wider mb-2 px-1">Select Item</label>
-              <select name="item_id" value={formData.item_id} onChange={handleInputChange} className="w-full p-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all">
-                <option value="">-- Choose Product --</option>
-                {items.map((item) => (
-                  <option key={item.id} value={item.id}>{item.name}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-bold text-gray-700 dark:text-gray-400 uppercase tracking-wider mb-2 px-1">Selling Price</label>
-              <input name="selling_price" type="number" placeholder="KES" value={formData.selling_price} onChange={handleInputChange} className="w-full p-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none font-bold transition-all" />
-            </div>
-            <div>
-              <label className="block text-sm font-bold text-gray-700 dark:text-gray-400 uppercase tracking-wider mb-2 px-1">Initial Payment</label>
-              <input name="amount" type="number" placeholder="KES" value={formData.amount} onChange={handleInputChange} className="w-full p-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none font-bold text-blue-600 dark:text-blue-400 transition-all" />
-            </div>
-          </div>
-          <button onClick={createDepositSale} className="mt-8 bg-blue-600 text-white py-3 px-10 rounded-xl font-bold shadow-lg shadow-blue-100 dark:shadow-none hover:bg-blue-700 transition-all">
-            Create Deposit Sale
-          </button>
-        </div>
+          )}
 
-        {/* ACTIVE DEPOSITS */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden transition-colors">
-          <div className="bg-gray-50 dark:bg-gray-900/50 px-8 py-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center transition-colors">
-            <h2 className="text-lg font-bold text-gray-800 dark:text-white flex items-center gap-2 transition-colors">
-              <History size={20} className="text-blue-600 dark:text-blue-400" />
-              Active Installment Sales
+          <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 transition-colors">
+            <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-8 flex items-center gap-3">
+              <UserPlus className="text-blue-600 dark:text-blue-400" size={28} />
+              Open New Deposit Account
             </h2>
+            
+            <form onSubmit={handleCreateDeposit} className="space-y-8">
+              {/* CUSTOMER INFO */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 dark:text-gray-400 uppercase tracking-wider mb-2 px-1">Customer Full Name</label>
+                  <input
+                    required
+                    name="buyer_name"
+                    className="w-full p-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none font-bold transition-all"
+                    value={formData.buyer_name}
+                    onChange={handleInputChange}
+                    placeholder="e.g. Jane Doe"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 dark:text-gray-400 uppercase tracking-wider mb-2 px-1">Phone Number</label>
+                  <input
+                    required
+                    name="buyer_phone"
+                    className="w-full p-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none font-bold transition-all"
+                    value={formData.buyer_phone}
+                    onChange={handleInputChange}
+                    placeholder="07..."
+                  />
+                </div>
+              </div>
+
+              {/* ITEM & PRICE */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 dark:text-gray-400 uppercase tracking-wider mb-2 px-1">Select Product</label>
+                  <SearchableSelect
+                    options={apiItems}
+                    value={formData.item_id}
+                    onChange={(e) => setFormData({ ...formData, item_id: e.target.value })}
+                    placeholder="Choose Product..."
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 dark:text-gray-400 uppercase tracking-wider mb-2 px-1">Agreed Selling Price</label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold">KES</span>
+                    <input
+                      required
+                      type="number"
+                      name="selling_price"
+                      className="w-full pl-12 pr-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none font-black transition-all"
+                      value={formData.selling_price}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* INITIAL PAYMENT */}
+              <div className="bg-blue-50 dark:bg-blue-900/20 p-6 rounded-2xl border border-blue-100 dark:border-blue-800">
+                <div className="flex items-center gap-2 mb-4 text-blue-700 dark:text-blue-400 font-bold uppercase text-xs tracking-widest">
+                  <Wallet size={16} /> Initial Down-payment
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-400 uppercase tracking-wider mb-2">Amount Paid Now</label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-400 font-bold">KES</span>
+                      <input
+                        required
+                        type="number"
+                        name="amount"
+                        className="w-full pl-12 pr-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900 text-blue-600 dark:text-blue-400 focus:ring-2 focus:ring-blue-500 outline-none font-black text-xl transition-all"
+                        value={formData.amount}
+                        onChange={handleInputChange}
+                      />
+                    </div>
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <label className="text-xs font-bold text-gray-400 uppercase tracking-widest px-1">Payment Method</label>
+                    <div className="p-3 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-700 dark:text-gray-300 font-bold flex items-center gap-2">
+                      <CheckCircle className="text-green-500" size={18} />
+                      Mobile Money (M-PESA)
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                className="w-full bg-blue-600 text-white py-4 rounded-xl font-black text-lg shadow-xl shadow-blue-100 dark:shadow-none hover:bg-blue-700 hover:-translate-y-0.5 transition-all"
+              >
+                Confirm & Create Account
+              </button>
+            </form>
           </div>
-          
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50/50 dark:bg-gray-900/50 transition-colors">
-                <tr>
-                  {(user?.role === 'manager' || user?.role === 'admin') && (
-                    <th className="px-8 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Shop</th>
-                  )}
-                  <th className="px-8 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Buyer</th>
-                  <th className="px-8 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Item</th>
-                  <th className="px-8 py-4 text-right text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Total Paid</th>
-                  <th className="px-8 py-4 text-right text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Balance</th>
-                  <th className="px-8 py-4 text-center text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Make Payment</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-50 dark:divide-gray-700 bg-white dark:bg-gray-800 transition-colors">
-                {deposits.filter(d => d.status === 'active').map((deposit) => (
-                  <tr key={deposit.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-900/50 transition-colors">
-                    {(user?.role === 'manager' || user?.role === 'admin') && (
-                      <td className="px-8 py-4">
-                        <div className="flex items-center gap-1 text-sm font-bold text-gray-500 dark:text-gray-400">
-                          <Store size={14} className="text-gray-400" />
-                          {deposit.shop_name}
-                        </div>
-                      </td>
-                    )}
-                    <td className="px-8 py-4">
-                      <div className="font-bold text-gray-900 dark:text-white transition-colors">{deposit.buyer_name}</div>
-                      <div className="text-xs text-gray-500 dark:text-gray-400 transition-colors">{deposit.buyer_phone}</div>
-                    </td>
-                    <td className="px-8 py-4 font-medium text-gray-700 dark:text-gray-300 transition-colors">{deposit.item_name}</td>
-                    <td className="px-8 py-4 text-right font-bold text-gray-900 dark:text-white transition-colors">KES {(deposit.total_paid || 0).toLocaleString()}</td>
-                    <td className="px-8 py-4 text-right font-bold text-red-600 dark:text-red-400 transition-colors">KES {(deposit.balance || 0).toLocaleString()}</td>
-                    <td className="px-8 py-4">
-                      <div className="flex items-center justify-center gap-2">
-                        <input
-                          type="number"
-                          placeholder="Amount"
-                          value={paymentAmounts[deposit.id] || ""}
-                          onChange={(e) => setPaymentAmounts(prev => ({ ...prev, [deposit.id]: e.target.value }))}
-                          className="w-24 p-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none font-bold transition-all"
-                        />
-                        <button onClick={() => handlePayment(deposit.id)} className="bg-green-600 text-white p-2 rounded-lg hover:bg-green-700 transition-all">
-                          <CheckCircle size={18} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          
-          {receiptUuid && (
-            <div className="p-8 bg-blue-50 dark:bg-blue-900/30 border-t border-blue-100 dark:border-blue-700 text-center transition-colors">
-              <a href={`${API_BASE}/receipts/${receiptUuid}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-blue-700 dark:text-blue-400 font-bold hover:underline decoration-2 transition-colors">
+
+          {lastReceipt && (
+            <div className="mt-6 text-center animate-bounce">
+              <a
+                href={`${API_BASE}/receipts/${lastReceipt}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 text-blue-600 dark:text-blue-400 font-bold hover:underline decoration-2 transition-colors"
+              >
                 <Wallet size={20} /> Click here to View last transaction receipt
               </a>
             </div>

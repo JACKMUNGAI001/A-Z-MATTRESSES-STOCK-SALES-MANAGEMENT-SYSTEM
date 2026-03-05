@@ -3,6 +3,7 @@ import api from "../api/api";
 import { Receipt, Plus, Trash2, Calendar, CalendarX } from "lucide-react";
 import { formatDate } from "../utils/helpers";
 import { SearchContext } from "../context/SearchContext";
+import SearchableSelect from "../components/SearchableSelect";
 
 export default function Expenses() {
   const [expenses, setExpenses] = useState([]);
@@ -16,6 +17,11 @@ export default function Expenses() {
   });
   const [shops, setShops] = useState([]);
   const { searchDate } = useContext(SearchContext);
+
+  const frequencies = [
+    { id: "monthly", name: "Monthly" },
+    { id: "yearly", name: "Yearly" }
+  ];
 
   useEffect(() => {
     fetchExpenses();
@@ -47,6 +53,14 @@ export default function Expenses() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!formData.shop_id) {
+      alert("Please select a shop");
+      return;
+    }
+    if (formData.recurring && !formData.frequency) {
+      alert("Please select a frequency for recurring expense");
+      return;
+    }
     try {
       await api.post("/expenses", formData);
       alert("Expense recorded successfully!");
@@ -92,10 +106,12 @@ export default function Expenses() {
                 </div>
                 <div>
                   <label className="block text-sm font-bold text-gray-700 dark:text-gray-400 uppercase mb-1 px-1 transition-colors">Shop</label>
-                  <select name="shop_id" value={formData.shop_id} onChange={handleInputChange} className="w-full p-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all" required>
-                    <option value="">Select Shop</option>
-                    {shops.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                  </select>
+                  <SearchableSelect
+                    options={shops}
+                    value={formData.shop_id}
+                    onChange={(e) => setFormData({ ...formData, shop_id: e.target.value })}
+                    placeholder="Select Shop..."
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-bold text-gray-700 dark:text-gray-400 uppercase mb-1 px-1 transition-colors">Description</label>
@@ -117,17 +133,12 @@ export default function Expenses() {
                 {formData.recurring && (
                   <div>
                     <label className="block text-sm font-bold text-gray-700 dark:text-gray-400 uppercase mb-1 px-1">Frequency</label>
-                    <select
-                      name="frequency"
+                    <SearchableSelect
+                      options={frequencies}
                       value={formData.frequency}
-                      onChange={handleInputChange}
-                      className="w-full p-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-                      required={formData.recurring}
-                    >
-                      <option value="">Select Frequency</option>
-                      <option value="monthly">Monthly</option>
-                      <option value="yearly">Yearly</option>
-                    </select>
+                      onChange={(e) => setFormData({ ...formData, frequency: e.target.value })}
+                      placeholder="Select Frequency..."
+                    />
                   </div>
                 )}
 

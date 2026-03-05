@@ -6,6 +6,7 @@ import { AuthContext } from '../context/AuthContext';
 import { SearchContext } from '../context/SearchContext';
 import { Store, Plus, ChevronDown, ChevronUp, AlertTriangle, TrendingUp, History, Package, SearchX } from 'lucide-react';
 import { formatDate, formatPaymentMethod } from '../utils/helpers';
+import SearchableSelect from '../components/SearchableSelect';
 
 export default function ShopDetails() {
   const { shopId } = useParams();
@@ -162,9 +163,8 @@ export default function ShopDetails() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <div>
               <label className="block text-sm font-bold text-gray-700 dark:text-gray-400 uppercase mb-1 px-1 transition-colors">Product</label>
-              <select
-                name="itemId"
-                className="w-full p-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+              <SearchableSelect
+                options={availableItems}
                 value={stockFormData.itemId}
                 onChange={(e) => {
                   const id = e.target.value;
@@ -175,12 +175,8 @@ export default function ShopDetails() {
                     buyPrice: item ? item.buy_price : "",
                   });
                 }}
-              >
-                <option value="">Select Item</option>
-                {availableItems.map((item) => (
-                  <option key={item.id} value={item.id}>{item.name}</option>
-                ))}
-              </select>
+                placeholder="Choose Product..."
+              />
             </div>
             <div>
               <label className="block text-sm font-bold text-gray-700 dark:text-gray-400 uppercase mb-1 px-1 transition-colors">Quantity</label>

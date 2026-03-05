@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import api from '../api/api'
 import { useNavigate, Link } from 'react-router-dom'
 import { UserPlus, Mail, Lock, Store, User, ArrowLeft, Zap } from 'lucide-react'
+import SearchableSelect from '../components/SearchableSelect'
 
 export default function Register(){
   const [name, setName] = useState('')
@@ -26,6 +27,10 @@ export default function Register(){
 
   const submit = async (e) => {
     e.preventDefault()
+    if (!shopId) {
+      setMsg('Please select an assigned shop')
+      return
+    }
     try{
       await api.post('/auth/register', { name, email, password, shop_id: shopId })
       alert('Registration successful. Your account is pending admin verification.')
@@ -109,18 +114,14 @@ export default function Register(){
             <div>
               <label className="block text-xs font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] mb-2 px-1">Assigned Shop</label>
               <div className="relative">
-                <Store className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-                <select 
-                  className="w-full pl-12 pr-4 py-4 border border-gray-200 dark:border-gray-700 rounded-2xl bg-gray-50 dark:bg-gray-900 focus:ring-2 focus:ring-blue-500 focus:bg-white dark:focus:bg-gray-900 outline-none font-bold text-gray-900 dark:text-white appearance-none transition-all" 
-                  value={shopId} 
-                  onChange={e=>setShopId(e.target.value)}
-                  required
-                >
-                  <option value="">Select Shop</option>
-                  {shops.map(shop => (
-                    <option key={shop.id} value={shop.id}>{shop.name}</option>
-                  ))}
-                </select>
+                <Store className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 z-10" size={20} />
+                <SearchableSelect
+                  options={shops}
+                  value={shopId}
+                  onChange={(e) => setShopId(e.target.value)}
+                  placeholder="Select Shop..."
+                  className="pl-10"
+                />
               </div>
             </div>
 

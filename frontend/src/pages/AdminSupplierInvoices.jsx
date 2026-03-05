@@ -5,6 +5,7 @@ import Card from '../components/Card'
 import { Plus, Eye, FileText, Calendar, DollarSign, Truck, Package, Search, CheckCircle, SearchX, Wallet, History, Store } from 'lucide-react'
 import { SearchContext } from '../context/SearchContext'
 import { formatDate } from '../utils/helpers'
+import SearchableSelect from '../components/SearchableSelect'
 
 export default function AdminSupplierInvoices() {
   const [invoices, setInvoices] = useState([])
@@ -336,15 +337,12 @@ export default function AdminSupplierInvoices() {
                       <Truck size={16} className="text-blue-500" />
                       Supplier *
                   </label>
-                  <select 
-                    required
-                    className="w-full border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-white rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                  <SearchableSelect
+                    options={suppliers}
                     value={formData.supplier_id}
                     onChange={e => setFormData({...formData, supplier_id: e.target.value})}
-                  >
-                    <option value="">Select Supplier</option>
-                    {suppliers.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                  </select>
+                    placeholder="Select Supplier..."
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-bold text-gray-700 dark:text-gray-400 uppercase mb-2 flex items-center gap-2 transition-colors">
@@ -396,27 +394,22 @@ export default function AdminSupplierInvoices() {
                     <div key={idx} className="flex flex-wrap lg:flex-nowrap gap-4 items-end bg-gray-50 dark:bg-gray-900/30 p-4 rounded-xl relative border border-gray-100 dark:border-gray-700 transition-colors">
                       <div className="flex-1 min-w-[200px]">
                         <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1 uppercase tracking-widest">Select Product</label>
-                        <select 
-                          required
-                          className="w-full border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg p-2 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                        <SearchableSelect
+                          options={supplierProducts}
                           value={item.item_id}
                           onChange={e => handleItemChange(idx, 'item_id', e.target.value)}
+                          placeholder={formData.supplier_id ? "Select Item" : "Select Supplier First"}
                           disabled={!formData.supplier_id}
-                        >
-                          <option value="">{formData.supplier_id ? "Select Item" : "Select Supplier First"}</option>
-                          {supplierProducts.map(it => <option key={it.id} value={it.id}>{it.name}</option>)}
-                        </select>
+                        />
                       </div>
                       <div className="flex-1 min-w-[180px]">
                         <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1 uppercase tracking-widest">Target Shop</label>
-                        <select 
-                          required
-                          className="w-full border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg p-2 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                        <SearchableSelect
+                          options={shops}
                           value={item.shop_id}
                           onChange={e => handleItemChange(idx, 'shop_id', e.target.value)}
-                        >
-                          {shops.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                        </select>
+                          placeholder="Target Shop..."
+                        />
                       </div>
                       <div className="w-24">
                         <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1 uppercase tracking-widest">Qty</label>
@@ -442,7 +435,7 @@ export default function AdminSupplierInvoices() {
                       </div>
                       <div className="w-32">
                         <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1 uppercase tracking-widest">Subtotal</label>
-                        <div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg text-gray-600 dark:text-gray-300 font-bold border border-gray-200 dark:border-gray-700 transition-colors">
+                        <div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg text-gray-600 dark:text-gray-300 font-bold border border-gray-200 dark:border-gray-700 transition-colors text-xs truncate">
                           {(item.quantity * item.unit_cost).toLocaleString()}
                         </div>
                       </div>
@@ -509,7 +502,7 @@ export default function AdminSupplierInvoices() {
                 <p className="text-blue-100"># {showDetails.invoice_number}</p>
               </div>
               <button onClick={() => setShowDetails(null)} className="text-white/80 hover:text-white">
-                 <Plus size={24} style={{ transform: 'rotate(45deg)' }} />
+                 <X size={24} />
               </button>
             </div>
             

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import api from "../api/api";
 import { Package, Plus, Edit, Trash2 } from "lucide-react";
+import SearchableSelect from "../components/SearchableSelect";
 
 export default function AdminItems() {
   const [items, setItems] = useState([]);
@@ -97,10 +98,12 @@ export default function AdminItems() {
               </div>
               <div>
                 <label className="block text-sm font-bold text-gray-700 dark:text-gray-400 uppercase mb-1 px-1 transition-colors">Category</label>
-                <select name="category_id" className="w-full p-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all" value={formData.category_id} onChange={handleInputChange}>
-                  <option value="">Select Category</option>
-                  {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-                </select>
+                <SearchableSelect
+                  options={categories}
+                  value={formData.category_id}
+                  onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}
+                  placeholder="Select Category..."
+                />
               </div>
               <div>
                 <label className="block text-sm font-bold text-gray-700 dark:text-gray-400 uppercase mb-1 px-1 transition-colors">Buy Price</label>

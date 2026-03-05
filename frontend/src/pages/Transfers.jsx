@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import api from "../api/api";
 import { ArrowLeftRight, Store, Box, FileText, Send } from "lucide-react";
+import SearchableSelect from "../components/SearchableSelect";
 
 export default function Transfers() {
   const [fromShop, setFromShop] = useState("");
@@ -14,10 +15,12 @@ export default function Transfers() {
   useEffect(() => {
     const fetchShopsAndItems = async () => {
       try {
-        const shopsResponse = await api.get("/shops");
-        setShops(shopsResponse.data);
-        const itemsResponse = await api.get("/items");
-        setItems(itemsResponse.data);
+        const [shopsRes, itemsRes] = await Promise.all([
+          api.get("/shops"),
+          api.get("/items")
+        ]);
+        setShops(shopsRes.data);
+        setItems(itemsRes.data);
       } catch (err) {
         console.error("Error fetching shops or items");
       }
@@ -80,16 +83,12 @@ export default function Transfers() {
                   <Store size={14} className="text-red-400" />
                   Originating Shop
                 </label>
-                <select
-                  className="w-full p-4 border border-gray-200 dark:border-gray-700 rounded-2xl bg-gray-50 dark:bg-gray-900 focus:ring-2 focus:ring-red-500 outline-none font-bold text-gray-900 dark:text-white transition-all"
+                <SearchableSelect
+                  options={shops}
                   value={fromShop}
                   onChange={(e) => setFromShop(e.target.value)}
-                >
-                  <option value="">-- Select Source --</option>
-                  {shops.map((shop) => (
-                    <option key={shop.id} value={shop.id}>{shop.name}</option>
-                  ))}
-                </select>
+                  placeholder="Select Source..."
+                />
               </div>
 
               {/* TO */}
@@ -98,16 +97,12 @@ export default function Transfers() {
                   <Store size={14} className="text-green-400" />
                   Destination Shop
                 </label>
-                <select
-                  className="w-full p-4 border border-gray-200 dark:border-gray-700 rounded-2xl bg-gray-50 dark:bg-gray-900 focus:ring-2 focus:ring-green-500 outline-none font-bold text-gray-900 dark:text-white transition-all"
+                <SearchableSelect
+                  options={shops}
                   value={toShop}
                   onChange={(e) => setToShop(e.target.value)}
-                >
-                  <option value="">-- Select Destination --</option>
-                  {shops.map((shop) => (
-                    <option key={shop.id} value={shop.id}>{shop.name}</option>
-                  ))}
-                </select>
+                  placeholder="Select Destination..."
+                />
               </div>
 
               {/* ITEM */}
@@ -116,16 +111,12 @@ export default function Transfers() {
                   <Box size={14} className="text-blue-400" />
                   Product to Move
                 </label>
-                <select
-                  className="w-full p-4 border border-gray-200 dark:border-gray-700 rounded-2xl bg-gray-50 dark:bg-gray-900 focus:ring-2 focus:ring-blue-500 outline-none font-bold text-gray-900 dark:text-white transition-all"
+                <SearchableSelect
+                  options={items}
                   value={itemId}
                   onChange={(e) => setItemId(e.target.value)}
-                >
-                  <option value="">-- Choose Item --</option>
-                  {items.map((item) => (
-                    <option key={item.id} value={item.id}>{item.name}</option>
-                  ))}
-                </select>
+                  placeholder="Choose Item..."
+                />
               </div>
 
               {/* QTY */}

@@ -2,6 +2,7 @@ import { useState, useEffect, useContext } from "react";
 import api, { API_BASE } from "../api/api";
 import { AuthContext } from "../context/AuthContext";
 import { ShoppingCart, Plus, Trash2, CreditCard, Store } from "lucide-react";
+import SearchableSelect from "../components/SearchableSelect";
 
 export default function POS() {
   const { user } = useContext(AuthContext);
@@ -120,16 +121,12 @@ export default function POS() {
                 </h2>
                 <div>
                   <label className="block text-sm font-bold text-gray-700 dark:text-gray-400 uppercase tracking-wider mb-2">Acting For Shop</label>
-                  <select
-                    className="w-full p-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                  <SearchableSelect
+                    options={shops}
                     value={selectedShop}
                     onChange={(e) => setSelectedShop(e.target.value)}
-                  >
-                    <option value="">-- Choose Shop --</option>
-                    {shops.map((s) => (
-                      <option key={s.id} value={s.id}>{s.name}</option>
-                    ))}
-                  </select>
+                    placeholder="Choose Shop..."
+                  />
                 </div>
               </div>
             )}
@@ -141,18 +138,12 @@ export default function POS() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
                   <label className="block text-sm font-bold text-gray-700 dark:text-gray-400 uppercase tracking-wider mb-2">Select Item</label>
-                  <select
-                    className="w-full p-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                  <SearchableSelect
+                    options={apiItems}
                     value={selectedItem}
                     onChange={(e) => setSelectedItem(e.target.value)}
-                  >
-                    <option value="">-- Choose Product --</option>
-                    {apiItems.map((it) => (
-                      <option key={it.id} value={it.id}>
-                        {it.name}
-                      </option>
-                    ))}
-                  </select>
+                    placeholder="Choose Product..."
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-bold text-gray-700 dark:text-gray-400 uppercase tracking-wider mb-2">Quantity</label>
