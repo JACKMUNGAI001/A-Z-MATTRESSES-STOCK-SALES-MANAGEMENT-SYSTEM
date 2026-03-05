@@ -48,8 +48,16 @@ def get_global_financial_overview():
         current_app.logger.error(f"Error in get_global_financial_overview: {e}", exc_info=True)
         raise e
 
-def get_pnl_report(year, month=None, shop_id=None):
-    if month:
+def get_pnl_report(year, month=None, shop_id=None, period=None):
+    now = datetime.utcnow()
+    
+    if period == 'today':
+        start_date = datetime.combine(now.date(), datetime.min.time())
+        end_date = datetime.combine(now.date(), datetime.max.time())
+    elif period == 'this_week':
+        start_date = datetime.combine(now.date() - timedelta(days=now.weekday()), datetime.min.time())
+        end_date = datetime.combine(now.date(), datetime.max.time())
+    elif month:
         start_date = datetime(year, month, 1)
         if month == 12:
             end_date = datetime(year + 1, 1, 1)
@@ -62,17 +70,17 @@ def get_pnl_report(year, month=None, shop_id=None):
 
     sales_query = db.session.query(func.sum(Sale.total_amount)).filter(
         Sale.created_at >= start_date,
-        Sale.created_at < end_date
+        Sale.created_at <= end_date
     )
 
     cogs_query = db.session.query(func.sum(SaleItem.unit_cost * SaleItem.qty)).join(Sale).filter(
         Sale.created_at >= start_date,
-        Sale.created_at < end_date
+        Sale.created_at <= end_date
     )
 
     expenses_query = db.session.query(func.sum(Expense.amount)).filter(
         Expense.created_at >= start_date,
-        Expense.created_at < end_date
+        Expense.created_at <= end_date
     )
 
     if shop_id:
@@ -90,12 +98,15 @@ def get_pnl_report(year, month=None, shop_id=None):
     return {
         "year": year,
         "month": month,
+        "period": period,
         "shop_id": shop_id,
         "total_sales": total_sales,
         "total_cogs": total_cogs,
         "gross_profit": gross_profit,
         "total_expenses": total_expenses,
-        "net_profit": net_profit
+        "net_profit": net_profit,
+        "start_date": start_date.isoformat(),
+        "end_date": end_date.isoformat()
     }
 
 def get_daily_sales(shop_id=None):
@@ -196,5 +207,3 @@ def get_stock_summary_by_category(shop_id=None):
         summary[shop_name][category_name] = int(total_quantity or 0)
     
     return summary
-
-

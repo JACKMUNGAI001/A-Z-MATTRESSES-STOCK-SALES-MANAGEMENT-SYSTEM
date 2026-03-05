@@ -12,12 +12,13 @@ def pnl_report_controller():
     year = request.args.get('year', type=int, default=datetime.utcnow().year)
     month = request.args.get('month', type=int) # Now optional for yearly report
     shop_id = request.args.get('shop_id', type=int) # Optional for global report
+    period = request.args.get('period') # e.g. today, this_week
     
     user_identity = get_jwt_identity()
     if user_identity.get("role") == "attendant":
         shop_id = get_shop_id_for_attendant()
     
-    report = get_pnl_report(year, month, shop_id)
+    report = get_pnl_report(year, month, shop_id, period)
     return jsonify(report), 200
 
 def daily_sales_report_controller():
