@@ -49,14 +49,14 @@ export default function OutstandingDeposits() {
             </span>
           </div>
           
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto max-h-[calc(100vh-300px)] overflow-y-auto custom-scrollbar">
             {loading ? (
               <div className="p-20 text-center text-gray-400 dark:text-gray-500 font-bold uppercase tracking-widest animate-pulse transition-colors">Scanning accounts...</div>
             ) : deposits.length === 0 ? (
               <div className="p-20 text-center text-green-600 dark:text-green-400 font-medium italic transition-colors">No outstanding balances found. All accounts are settled!</div>
             ) : (
-              <table className="w-full">
-                <thead className="bg-gray-50/50 dark:bg-gray-900/50 transition-colors">
+              <table className="w-full relative border-collapse">
+                <thead className="bg-gray-50/50 dark:bg-gray-900/50 transition-colors sticky top-0 z-10 backdrop-blur-sm">
                   <tr>
                     <th className="px-8 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Customer / Contact</th>
                     <th className="px-8 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Item Info</th>

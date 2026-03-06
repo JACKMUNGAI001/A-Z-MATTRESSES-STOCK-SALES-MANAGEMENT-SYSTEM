@@ -85,13 +85,13 @@ export default function TransferHistory() {
               </div>
             ) : (
               <div className="overflow-x-auto max-h-96 overflow-y-auto custom-scrollbar">
-                <table className="min-w-full divide-y divide-gray-100 dark:divide-gray-700">
-                  <thead className="bg-gray-50/50 dark:bg-gray-900/50 sticky top-0 z-10">
+                <table className="min-w-full relative border-collapse">
+                  <thead className="bg-gray-50/90 dark:bg-gray-900/90 sticky top-0 z-10 backdrop-blur-sm transition-colors">
                     <tr className="transition-colors">
-                      <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Movement</th>
-                      <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Items</th>
-                      <th className="px-6 py-4 text-center text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Status/Date</th>
-                      <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Notes</th>
+                      <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest border-b border-gray-100 dark:border-gray-700">Movement</th>
+                      <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest border-b border-gray-100 dark:border-gray-700">Items</th>
+                      <th className="px-6 py-4 text-center text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest border-b border-gray-100 dark:border-gray-700">Status/Date</th>
+                      <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest border-b border-gray-100 dark:border-gray-700">Notes</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-50 dark:divide-gray-700 bg-white dark:bg-gray-800 transition-colors text-sm">

@@ -68,7 +68,7 @@ export default function MonthsSales() {
             </div>
           </div>
           
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto max-h-[calc(100vh-300px)] overflow-y-auto custom-scrollbar">
             {loading ? (
               <div className="p-20 text-center text-gray-400 dark:text-gray-500 font-bold uppercase tracking-widest animate-pulse">Loading data...</div>
             ) : filteredSales.length === 0 ? (
@@ -77,8 +77,8 @@ export default function MonthsSales() {
                 <p className="text-gray-500 dark:text-gray-400 font-bold uppercase tracking-widest text-sm transition-colors">{searchQuery ? `No matches found for "${searchQuery}"` : 'No sales recorded for this month yet.'}</p>
               </div>
             ) : (
-              <table className="w-full">
-                <thead className="bg-gray-50/50 dark:bg-gray-900/50 transition-colors">
+              <table className="w-full relative border-collapse">
+                <thead className="bg-gray-50/50 dark:bg-gray-900/50 transition-colors sticky top-0 z-10 backdrop-blur-sm">
                   <tr>
                     <th className="px-8 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">ID</th>
                     {(user?.role === 'manager' || user?.role === 'admin') && (

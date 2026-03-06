@@ -87,7 +87,7 @@ export default function DepositCustomers() {
             </span>
           </div>
           
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto max-h-[calc(100vh-300px)] overflow-y-auto custom-scrollbar">
             {loading ? (
               <div className="p-20 text-center text-gray-400 dark:text-gray-500 font-bold uppercase tracking-widest animate-pulse transition-colors">Loading accounts...</div>
             ) : filteredCustomers.length === 0 ? (
@@ -96,8 +96,8 @@ export default function DepositCustomers() {
                 <p className="text-gray-500 dark:text-gray-400 font-bold uppercase tracking-widest text-sm transition-colors">{searchQuery ? `No active accounts match "${searchQuery}"` : 'No active deposit customers found.'}</p>
               </div>
             ) : (
-              <table className="w-full">
-                <thead className="bg-gray-50/50 dark:bg-gray-900/50 transition-colors">
+              <table className="w-full relative border-collapse">
+                <thead className="bg-gray-50/50 dark:bg-gray-900/50 transition-colors sticky top-0 z-10 backdrop-blur-sm">
                   <tr>
                     {(user?.role === 'manager' || user?.role === 'admin') && (
                       <th className="px-8 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Shop</th>

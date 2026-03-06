@@ -196,21 +196,21 @@ export default function AdminSupplierInvoices() {
         <p className="dark:text-white">Loading...</p>
       ) : (
         <Card className="overflow-hidden dark:bg-gray-800 dark:border-gray-700 transition-colors">
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto max-h-[calc(100vh-300px)] overflow-y-auto custom-scrollbar">
             {filteredInvoices.length === 0 ? (
                 <div className="px-6 py-12 text-center transition-colors">
                     <SearchX size={48} className="mx-auto text-gray-300 dark:text-gray-600 mb-4" />
                     <p className="text-gray-500 dark:text-gray-400 font-bold uppercase tracking-widest text-sm">No {activeTab.toLowerCase()} invoices matches "{searchQuery}".</p>
                 </div>
             ) : (
-                <table className="w-full text-left">
-                <thead className="bg-gray-50 dark:bg-gray-900/50 border-b dark:border-gray-700 transition-colors">
+                <table className="w-full text-left relative border-collapse">
+                <thead className="bg-gray-50/90 dark:bg-gray-900/90 transition-colors sticky top-0 z-10 backdrop-blur-sm">
                   <tr>
-                    <th className="px-6 py-4 font-semibold text-gray-700 dark:text-gray-300">Invoice #</th>
-                    <th className="px-6 py-4 font-semibold text-gray-700 dark:text-gray-300">Supplier</th>
-                    <th className="px-6 py-4 font-semibold text-gray-700 dark:text-gray-300">Financials</th>
-                    <th className="px-6 py-4 font-semibold text-gray-700 dark:text-gray-300">Status</th>
-                    <th className="px-6 py-4 font-semibold text-gray-700 dark:text-gray-300">Action</th>
+                    <th className="px-6 py-4 font-semibold text-gray-700 dark:text-gray-300 border-b border-gray-100 dark:border-gray-700">Invoice #</th>
+                    <th className="px-6 py-4 font-semibold text-gray-700 dark:text-gray-300 border-b border-gray-100 dark:border-gray-700">Supplier</th>
+                    <th className="px-6 py-4 font-semibold text-gray-700 dark:text-gray-300 border-b border-gray-100 dark:border-gray-700">Financials</th>
+                    <th className="px-6 py-4 font-semibold text-gray-700 dark:text-gray-300 border-b border-gray-100 dark:border-gray-700">Status</th>
+                    <th className="px-6 py-4 font-semibold text-gray-700 dark:text-gray-300 border-b border-gray-100 dark:border-gray-700">Action</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-gray-700 transition-colors">

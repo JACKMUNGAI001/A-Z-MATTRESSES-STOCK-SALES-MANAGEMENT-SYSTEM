@@ -7,7 +7,7 @@ from models.user import User
 from datetime import datetime
 from sqlalchemy import func
 
-def adjust_stock(shop_id, item_id, qty, movement_type="adjustment", user_id=None, buy_price=None, sell_price=None):
+def adjust_stock(shop_id, item_id, qty, movement_type="adjustment", user_id=None, buy_price=None, sell_price=None, override=False):
     # Try to find existing stock record
     stock = ShopStock.query.filter_by(shop_id=shop_id, item_id=item_id).first()
     if not stock:
@@ -16,12 +16,19 @@ def adjust_stock(shop_id, item_id, qty, movement_type="adjustment", user_id=None
         stock = ShopStock(shop_id=shop_id, item_id=item_id, quantity=0, buy_price=buy_price)
         db.session.add(stock)
     
-    stock.quantity += qty
+    if override:
+        old_qty = stock.quantity
+        stock.quantity = qty
+        qty_change = qty - old_qty
+    else:
+        stock.quantity += qty
+        qty_change = qty
+
     if buy_price is not None: stock.buy_price = buy_price
     stock.updated_at = datetime.utcnow()
     
     # Check for low stock notification (only if quantity decreased)
-    if qty < 0 and stock.quantity <= 2:
+    if qty_change < 0 and stock.quantity <= 2:
         product = Item.query.get(item_id)
         shop_obj = Shop.query.get(shop_id)
         # Notify all admins
@@ -48,7 +55,7 @@ def adjust_stock(shop_id, item_id, qty, movement_type="adjustment", user_id=None
 
     db.session.commit()
 
-    mv = StockMovement(shop_id=shop_id, item_id=item_id, movement_type=movement_type, qty=qty, unit_buy_price=buy_price, unit_sell_price=sell_price, user_id=user_id, reference=None, created_at=datetime.utcnow())
+    mv = StockMovement(shop_id=shop_id, item_id=item_id, movement_type=movement_type, qty=qty_change, unit_buy_price=buy_price, unit_sell_price=sell_price, user_id=user_id, reference=None, created_at=datetime.utcnow())
     db.session.add(mv)
     db.session.commit()
     return stock

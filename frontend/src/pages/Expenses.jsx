@@ -161,7 +161,7 @@ export default function Expenses() {
                   {filteredExpenses.length} Records
                 </span>
               </div>
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto max-h-[calc(100vh-300px)] overflow-y-auto custom-scrollbar">
                 {filteredExpenses.length === 0 ? (
                   <div className="p-20 text-center border-t border-gray-100 dark:border-gray-700 transition-colors">
                     <CalendarX size={48} className="mx-auto text-gray-300 dark:text-gray-600 mb-4 transition-colors" />
@@ -169,8 +169,8 @@ export default function Expenses() {
                     {searchDate && <p className="text-xs text-gray-400 mt-2 transition-colors">Try another date or clear search</p>}
                   </div>
                 ) : (
-                  <table className="w-full">
-                    <thead className="bg-gray-50/50 dark:bg-gray-900/50 transition-colors">
+                  <table className="w-full relative border-collapse">
+                    <thead className="bg-gray-50/50 dark:bg-gray-900/50 transition-colors sticky top-0 z-10 backdrop-blur-sm">
                       <tr>
                         <th className="px-8 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Title/Shop</th>
                         <th className="px-8 py-4 text-right text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Amount</th>
