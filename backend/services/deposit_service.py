@@ -221,24 +221,24 @@ def get_todays_deposit_payments(shop_id=None):
     start_of_day = datetime(today.year, today.month, today.day)
     end_of_day = start_of_day + timedelta(days=1, microseconds=-1)
     
-    query = DepositPayment.query.filter(DepositPayment.paid_on.between(start_of_day, end_of_day))
+    query = DepositSale.query.join(DepositPayment).filter(DepositPayment.paid_on.between(start_of_day, end_of_day)).distinct()
     if shop_id:
-        query = query.join(DepositSale).filter(DepositSale.shop_id == shop_id)
+        query = query.filter(DepositSale.shop_id == shop_id)
     
-    payments = query.all()
-    return [_serialize_payment(p) for p in payments]
+    deposits = query.all()
+    return [_serialize_deposit(d) for d in deposits]
 
 def get_weeks_deposit_payments(shop_id=None):
     now = datetime.utcnow()
     start_of_week = datetime.combine(now.date() - timedelta(days=now.weekday()), datetime.min.time())
     end_of_week = start_of_week + timedelta(days=7, microseconds=-1)
 
-    query = DepositPayment.query.filter(DepositPayment.paid_on.between(start_of_week, end_of_week))
+    query = DepositSale.query.join(DepositPayment).filter(DepositPayment.paid_on.between(start_of_week, end_of_week)).distinct()
     if shop_id:
-        query = query.join(DepositSale).filter(DepositSale.shop_id == shop_id)
+        query = query.filter(DepositSale.shop_id == shop_id)
         
-    payments = query.all()
-    return [_serialize_payment(p) for p in payments]
+    deposits = query.all()
+    return [_serialize_deposit(d) for d in deposits]
 
 def get_months_deposit_payments(shop_id=None):
     now = datetime.utcnow()
@@ -248,24 +248,24 @@ def get_months_deposit_payments(shop_id=None):
     else:
         end_of_month = datetime(now.year, now.month + 1, 1) - timedelta(microseconds=1)
 
-    query = DepositPayment.query.filter(DepositPayment.paid_on.between(start_of_month, end_of_month))
+    query = DepositSale.query.join(DepositPayment).filter(DepositPayment.paid_on.between(start_of_month, end_of_month)).distinct()
     if shop_id:
-        query = query.join(DepositSale).filter(DepositSale.shop_id == shop_id)
+        query = query.filter(DepositSale.shop_id == shop_id)
         
-    payments = query.all()
-    return [_serialize_payment(p) for p in payments]
+    deposits = query.all()
+    return [_serialize_deposit(d) for d in deposits]
 
 def get_years_deposit_payments(shop_id=None):
     now = datetime.utcnow()
     start_of_year = datetime(now.year, 1, 1)
     end_of_year = datetime(now.year, 12, 31, 23, 59, 59, 999999)
 
-    query = DepositPayment.query.filter(DepositPayment.paid_on.between(start_of_year, end_of_year))
+    query = DepositSale.query.join(DepositPayment).filter(DepositPayment.paid_on.between(start_of_year, end_of_year)).distinct()
     if shop_id:
-        query = query.join(DepositSale).filter(DepositSale.shop_id == shop_id)
+        query = query.filter(DepositSale.shop_id == shop_id)
         
-    payments = query.all()
-    return [_serialize_payment(p) for p in payments]
+    deposits = query.all()
+    return [_serialize_deposit(d) for d in deposits]
 
 def delete_deposit(deposit_id):
     dep = DepositSale.query.get(deposit_id)

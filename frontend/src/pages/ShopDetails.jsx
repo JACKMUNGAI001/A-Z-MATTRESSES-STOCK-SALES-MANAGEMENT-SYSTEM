@@ -4,7 +4,7 @@ import api from '../api/api';
 import Card from '../components/Card';
 import { AuthContext } from '../context/AuthContext';
 import { SearchContext } from '../context/SearchContext';
-import { Store, Plus, ChevronDown, ChevronUp, AlertTriangle, TrendingUp, History, Package, SearchX, Edit, X, Save } from 'lucide-react';
+import { Store, Plus, ChevronDown, ChevronUp, AlertTriangle, TrendingUp, History, Package, SearchX, Edit, X, Save, History as HistoryIcon, Clock } from 'lucide-react';
 import { formatDate, formatPaymentMethod } from '../utils/helpers';
 import SearchableSelect from '../components/SearchableSelect';
 
@@ -22,6 +22,8 @@ export default function ShopDetails() {
   });
   const [editingStock, setEditingStock] = useState(null);
   const [editFormData, setEditFormData] = useState({ qty: 0, buy_price: 0 });
+  const [selectedDeposit, setSelectedDeposit] = useState(null);
+  const [showHistory, setShowHistory] = useState(false);
 
   const [expandedSection, setExpandedSection] = useState(null);
   const lowStockItems = shopStock.filter(s => s.qty <= 2);
@@ -267,15 +269,38 @@ export default function ShopDetails() {
           >
             <table className="w-full relative border-collapse">
               <thead className="bg-gray-50/90 dark:bg-gray-900/90 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase transition-colors sticky top-0 z-10 backdrop-blur-sm">
-                <tr><th className="px-6 py-4 text-left border-b border-gray-100 dark:border-gray-700">Buyer</th><th className="px-6 py-4 text-left border-b border-gray-100 dark:border-gray-700">Item Info</th><th className="px-6 py-4 text-right border-b border-gray-100 dark:border-gray-700">Price</th><th className="px-6 py-4 text-left border-b border-gray-100 dark:border-gray-700">Status</th></tr>
+                <tr>
+                    <th className="px-6 py-4 text-left border-b border-gray-100 dark:border-gray-700">Buyer</th>
+                    <th className="px-6 py-4 text-left border-b border-gray-100 dark:border-gray-700">Item Info</th>
+                    <th className="px-6 py-4 text-right border-b border-gray-100 dark:border-gray-700">Paid/Balance</th>
+                    <th className="px-6 py-4 text-center border-b border-gray-100 dark:border-gray-700">Status</th>
+                    <th className="px-6 py-4 text-center border-b border-gray-100 dark:border-gray-700">Action</th>
+                </tr>
               </thead>
               <tbody className="divide-y divide-gray-50 dark:divide-gray-700 transition-colors">
                 {filteredDeposits.map(d => (
                   <tr key={d.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-900/50 transition-colors">
-                    <td className={`px-6 py-4 font-bold transition-colors ${searchQuery && d.buyer_name.toLowerCase().includes(searchQuery.toLowerCase()) ? 'text-blue-600 dark:text-blue-400' : 'text-gray-900 dark:text-white'}`}>{d.buyer_name}</td>
+                    <td className="px-6 py-4">
+                        <div className={`font-bold transition-colors ${searchQuery && d.buyer_name.toLowerCase().includes(searchQuery.toLowerCase()) ? 'text-blue-600 dark:text-blue-400' : 'text-gray-900 dark:text-white'}`}>{d.buyer_name}</div>
+                        <div className="text-[10px] text-gray-400 font-bold uppercase">{d.buyer_phone}</div>
+                    </td>
                     <td className={`px-6 py-4 text-xs font-bold transition-colors uppercase tracking-tight ${searchQuery && d.item_name.toLowerCase().includes(searchQuery.toLowerCase()) ? 'text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300'}`}>{d.item_name}</td>
-                    <td className="px-6 py-4 text-right font-black text-gray-900 dark:text-white">{formatCurrency(d.selling_price)}</td>
-                    <td className="px-6 py-4 italic text-sm text-gray-500 dark:text-gray-400 uppercase tracking-widest font-bold">{d.status}</td>
+                    <td className="px-6 py-4 text-right">
+                        <div className="font-black text-gray-900 dark:text-white">{formatCurrency(d.total_paid)}</div>
+                        <div className="text-[10px] font-black text-red-500 uppercase tracking-tight">Due: {formatCurrency(d.balance)}</div>
+                    </td>
+                    <td className="px-6 py-4 italic text-sm text-gray-500 dark:text-gray-400 uppercase tracking-widest font-bold text-center">{d.status}</td>
+                    <td className="px-6 py-4 text-center">
+                        <button
+                            onClick={() => {
+                                setSelectedDeposit(d);
+                                setShowHistory(true);
+                            }}
+                            className="bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 px-3 py-1.5 rounded-lg hover:bg-indigo-600 hover:text-white transition-all font-black text-[10px] uppercase tracking-widest border border-indigo-100 dark:border-indigo-800"
+                        >
+                            HISTORY
+                        </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
