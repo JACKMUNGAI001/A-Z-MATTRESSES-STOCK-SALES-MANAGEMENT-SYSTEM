@@ -58,19 +58,39 @@ def delete_item_controller(item_id):
     if not item:
         return jsonify({"msg": "Item not found"}), 404
     
-    # Cleanup related records to prevent "N/A" orphans
-    from models.stock import ShopStock
+    # Cleanup related records to prevent "N/A" orphans and foreign key violations
+    from models.stock import ShopStock, StockMovement
     from models.deposit import DepositSale, DepositPayment
+    from models.supplier import SupplierInvoiceItem, supplier_items
+    from models.sale import SaleItem
+    from models.transfer import TransferItem
     
-    # Handle shop stock
+    # 1. Handle shop stock
     ShopStock.query.filter_by(item_id=item_id).delete()
     
-    # Handle deposits: Delete payments first then the sales
+    # 2. Handle deposits: Delete payments first then the sales
     deposits = DepositSale.query.filter_by(item_id=item_id).all()
     for d in deposits:
         DepositPayment.query.filter_by(deposit_id=d.id).delete()
         db.session.delete(d)
 
+    # 3. Handle Supplier records (Foreign Keys)
+    # supplier_items association table
+    db.session.execute(supplier_items.delete().where(supplier_items.c.item_id == item_id))
+    # supplier_invoice_items table
+    SupplierInvoiceItem.query.filter_by(item_id=item_id).delete()
+
+    # 4. Handle other orphan records (loose associations)
+    SaleItem.query.filter_by(item_id=item_id).delete()
+    StockMovement.query.filter_by(item_id=item_id).delete()
+    TransferItem.query.filter_by(item_id=item_id).delete()
+
     db.session.delete(item)
-    db.session.commit()
-    return jsonify({"msg": "Item and associated records deleted"}), 200
+    try:
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error deleting item {item_id}: {str(e)}")
+        return jsonify({"msg": "Error deleting item due to database constraints", "error": str(e)}), 500
+
+    return jsonify({"msg": "Item and all associated records deleted successfully"}), 200
