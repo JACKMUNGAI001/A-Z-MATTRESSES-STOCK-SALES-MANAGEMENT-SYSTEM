@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react'
 import api from '../api/api'
 import { useNavigate, Link } from 'react-router-dom'
-import { UserPlus, Mail, Lock, Store, User, ArrowLeft, Zap } from 'lucide-react'
+import { UserPlus, Mail, Lock, Store, User, ArrowLeft, Zap, Eye, EyeOff } from 'lucide-react'
 import SearchableSelect from '../components/SearchableSelect'
 
 export default function Register(){
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [shopId, setShopId] = useState('')
   const [shops, setShops] = useState([])
   const [msg, setMsg] = useState('')
@@ -101,13 +102,20 @@ export default function Register(){
               <div className="relative">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
                 <input 
-                  type="password" 
-                  className="w-full pl-12 pr-4 py-4 border border-gray-200 dark:border-gray-700 rounded-2xl bg-gray-50 dark:bg-gray-900 focus:ring-2 focus:ring-blue-500 focus:bg-white dark:focus:bg-gray-900 outline-none font-bold text-gray-900 dark:text-white transition-all placeholder:text-gray-400 dark:placeholder:text-gray-600" 
+                  type={showPassword ? 'text' : 'password'} 
+                  className="w-full pl-12 pr-12 py-4 border border-gray-200 dark:border-gray-700 rounded-2xl bg-gray-50 dark:bg-gray-900 focus:ring-2 focus:ring-blue-500 focus:bg-white dark:focus:bg-gray-900 outline-none font-bold text-gray-900 dark:text-white transition-all placeholder:text-gray-400 dark:placeholder:text-gray-600" 
                   value={password} 
                   onChange={e=>setPassword(e.target.value)} 
                   placeholder="••••••••"
                   required
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 focus:outline-none transition-colors"
+                >
+                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
               </div>
             </div>
 
