@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import api from "../api/api";
-import { Package, Plus, Edit, Trash2 } from "lucide-react";
+import { Package, Plus, Edit, Trash2, Search, CalendarX } from "lucide-react";
 import SearchableSelect from "../components/SearchableSelect";
+import { SearchContext } from "../context/SearchContext";
 
 export default function AdminItems() {
   const [items, setItems] = useState([]);
@@ -12,6 +13,7 @@ export default function AdminItems() {
     buy_price: "",
   });
   const [editingId, setEditingId] = useState(null);
+  const { searchQuery, searchType } = useContext(SearchContext);
 
   useEffect(() => {
     fetchItems();
@@ -35,6 +37,17 @@ export default function AdminItems() {
       console.error("Error fetching categories");
     }
   };
+
+  const filteredItems = searchQuery
+    ? items.filter(item => {
+        if (searchType === 'date' && item.created_at) {
+            return item.created_at.startsWith(searchQuery);
+        }
+        const searchLower = searchQuery.toLowerCase();
+        const categoryName = categories.find(c => c.id === item.category_id)?.name || "";
+        return item.name.toLowerCase().includes(searchLower) || categoryName.toLowerCase().includes(searchLower);
+      })
+    : items;
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -127,47 +140,58 @@ export default function AdminItems() {
 
           {/* ITEMS LIST */}
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden transition-colors">
-            <div className="bg-gray-50 dark:bg-gray-900/50 px-8 py-4 border-b border-gray-100 dark:border-gray-700 transition-colors">
+            <div className="bg-gray-50 dark:bg-gray-900/50 px-8 py-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center transition-colors">
               <h2 className="text-lg font-bold text-gray-800 dark:text-white flex items-center gap-2 transition-colors">
                 <Package size={20} className="text-blue-600 dark:text-blue-400" />
-                Product Catalog
+                Product Catalog {searchQuery && <span className="text-xs font-medium text-blue-500 bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded-full ml-2 transition-all">{searchType === 'date' ? `Date: ${searchQuery}` : `Searching: "${searchQuery}"`}</span>}
               </h2>
+              <span className="bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-400 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest transition-all">
+                {filteredItems.length} Products
+              </span>
             </div>
             <div className="overflow-x-auto max-h-[calc(100vh-300px)] overflow-y-auto custom-scrollbar">
-              <table className="w-full relative border-collapse">
-                <thead className="bg-gray-50/90 dark:bg-gray-900/90 transition-colors sticky top-0 z-10 backdrop-blur-sm">
-                  <tr>
-                    <th className="px-8 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest border-b border-gray-100 dark:border-gray-700">Product Info</th>
-                    <th className="px-8 py-4 text-right text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest border-b border-gray-100 dark:border-gray-700">Buy Price</th>
-                    <th className="px-8 py-4 text-center text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest border-b border-gray-100 dark:border-gray-700">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-50 dark:divide-gray-700 bg-white dark:bg-gray-800 transition-colors">
-                  {items.map((item) => (
-                    <tr key={item.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-900/50 transition-colors">
-                      <td className="px-8 py-4">
-                        <div className="font-bold text-gray-900 dark:text-white transition-colors">{item.name}</div>
-                        <div className="flex items-center gap-2 text-xs mt-1 transition-colors">
-                          <span className="bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-0.5 rounded font-bold uppercase transition-colors">{categories.find(c => c.id === item.category_id)?.name}</span>
-                        </div>
-                      </td>
-                      <td className="px-8 py-4 text-right font-black text-gray-600 dark:text-gray-400">
-                        KES {parseFloat(item.buy_price || 0).toLocaleString()}
-                      </td>
-                      <td className="px-8 py-4">
-                        <div className="flex items-center justify-center gap-2">
-                          <button onClick={() => handleEdit(item)} className="bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 p-2 rounded-lg hover:bg-blue-600 hover:text-white transition-all">
-                            <Edit size={16} />
-                          </button>
-                          <button onClick={() => handleDelete(item.id)} className="bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 p-2 rounded-lg hover:bg-red-600 hover:text-white transition-all">
-                            <Trash2 size={16} />
-                          </button>
-                        </div>
-                      </td>
+              {filteredItems.length === 0 ? (
+                <div className="p-20 text-center border-t border-gray-100 dark:border-gray-700 transition-colors">
+                    <CalendarX size={48} className="mx-auto text-gray-300 dark:text-gray-600 mb-4 transition-colors" />
+                    <p className="text-gray-500 dark:text-gray-400 font-bold uppercase tracking-widest text-sm transition-colors">{searchQuery ? 'No matching products found' : 'No products found'}</p>
+                    {searchQuery && <p className="text-xs text-gray-400 mt-2 transition-colors">Try another {searchType === 'date' ? 'date' : 'search term'} or clear search</p>}
+                </div>
+              ) : (
+                <table className="w-full relative border-collapse">
+                    <thead className="bg-gray-50/90 dark:bg-gray-900/90 transition-colors sticky top-0 z-10 backdrop-blur-sm">
+                    <tr>
+                        <th className="px-8 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest border-b border-gray-100 dark:border-gray-700">Product Info</th>
+                        <th className="px-8 py-4 text-right text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest border-b border-gray-100 dark:border-gray-700">Buy Price</th>
+                        <th className="px-8 py-4 text-center text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest border-b border-gray-100 dark:border-gray-700">Actions</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                    </thead>
+                    <tbody className="divide-y divide-gray-50 dark:divide-gray-700 bg-white dark:bg-gray-800 transition-colors">
+                    {filteredItems.map((item) => (
+                        <tr key={item.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-900/50 transition-colors">
+                        <td className="px-8 py-4">
+                            <div className="font-bold text-gray-900 dark:text-white transition-colors">{item.name}</div>
+                            <div className="flex items-center gap-2 text-xs mt-1 transition-colors">
+                            <span className="bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-0.5 rounded font-bold uppercase transition-colors">{categories.find(c => c.id === item.category_id)?.name}</span>
+                            </div>
+                        </td>
+                        <td className="px-8 py-4 text-right font-black text-gray-600 dark:text-gray-400">
+                            KES {parseFloat(item.buy_price || 0).toLocaleString()}
+                        </td>
+                        <td className="px-8 py-4">
+                            <div className="flex items-center justify-center gap-2">
+                            <button onClick={() => handleEdit(item)} className="bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 p-2 rounded-lg hover:bg-blue-600 hover:text-white transition-all">
+                                <Edit size={16} />
+                            </button>
+                            <button onClick={() => handleDelete(item.id)} className="bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 p-2 rounded-lg hover:bg-red-600 hover:text-white transition-all">
+                                <Trash2 size={16} />
+                            </button>
+                            </div>
+                        </td>
+                        </tr>
+                    ))}
+                    </tbody>
+                </table>
+              )}
             </div>
           </div>
         </div>

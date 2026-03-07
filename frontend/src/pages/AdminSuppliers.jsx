@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useContext } from 'react'
 import { fetchSuppliers, createSupplier, updateSupplier, deleteSupplier } from '../api/api'
 import api from '../api/api'
 import Card from '../components/Card'
-import { Plus, Edit, Trash2, Phone, Mail, MapPin, User, FileText, Package, X } from 'lucide-react'
+import { Plus, Edit, Trash2, Phone, Mail, MapPin, User, FileText, Package, X, Search, CalendarX } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { SearchContext } from '../context/SearchContext'
 
 export default function AdminSuppliers() {
   const [suppliers, setSuppliers] = useState([])
@@ -19,6 +20,7 @@ export default function AdminSuppliers() {
     address: '',
     item_ids: []
   })
+  const { searchQuery, searchType } = useContext(SearchContext)
 
   useEffect(() => {
     loadSuppliers()
@@ -44,6 +46,22 @@ export default function AdminSuppliers() {
       console.error(err)
     }
   }
+
+  const filteredSuppliers = searchQuery
+    ? suppliers.filter(s => {
+        if (searchType === 'date' && s.created_at) {
+          return s.created_at.startsWith(searchQuery)
+        }
+        const searchLower = searchQuery.toLowerCase()
+        return (
+          s.name.toLowerCase().includes(searchLower) ||
+          (s.contact_person && s.contact_person.toLowerCase().includes(searchLower)) ||
+          (s.phone && s.phone.toLowerCase().includes(searchLower)) ||
+          (s.email && s.email.toLowerCase().includes(searchLower)) ||
+          (s.address && s.address.toLowerCase().includes(searchLower))
+        )
+      })
+    : suppliers
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -97,7 +115,15 @@ export default function AdminSuppliers() {
   return (
     <>
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-semibold">Manage Product Suppliers</h2>
+        <div className="flex flex-col">
+            <h2 className="text-xl font-semibold">Manage Product Suppliers</h2>
+            {searchQuery && (
+                <div className="flex items-center gap-2 mt-1 text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-full w-fit">
+                    <Search size={14} />
+                    {searchType === 'date' ? `Suppliers from: ${searchQuery}` : `Searching for: "${searchQuery}"`}
+                </div>
+            )}
+        </div>
         <div className="flex gap-2">
             <Link 
                 to="/admin/supplier-invoices" 
@@ -120,7 +146,7 @@ export default function AdminSuppliers() {
         <p>Loading...</p>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {suppliers.map(s => (
+          {filteredSuppliers.map(s => (
             <Card key={s.id} className="relative group overflow-hidden border-t-4 border-blue-500">
               <div className="p-1">
                 <div className="flex justify-between items-start mb-4">
@@ -173,9 +199,11 @@ export default function AdminSuppliers() {
               </div>
             </Card>
           ))}
-          {suppliers.length === 0 && (
-            <div className="col-span-full py-12 text-center bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
-                <p className="text-gray-500">No suppliers found. Add your first supplier to get started.</p>
+          {filteredSuppliers.length === 0 && (
+            <div className="col-span-full py-20 text-center bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
+                <CalendarX size={48} className="mx-auto text-gray-300 mb-4" />
+                <p className="text-gray-500 font-bold uppercase tracking-widest text-sm">{searchQuery ? 'No matching suppliers found' : 'No suppliers found'}</p>
+                {searchQuery && <p className="text-xs text-gray-400 mt-2">Try another {searchType === 'date' ? 'date' : 'search term'} or clear search</p>}
             </div>
           )}
         </div>

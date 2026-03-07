@@ -1,12 +1,14 @@
 import React, { useState, useEffect, useContext } from "react";
 import { useParams } from "react-router-dom";
 import api from "../api/api";
-import { Package, Trash2, Store, AlertCircle, Edit, X, Save } from "lucide-react";
+import { Package, Trash2, Store, AlertCircle, Edit, X, Save, Search, CalendarX } from "lucide-react";
 import { AuthContext } from "../context/AuthContext";
+import { SearchContext } from "../context/SearchContext";
 
 export default function AdminShopStock() {
   const { shopId } = useParams();
   const { user } = useContext(AuthContext);
+  const { searchQuery, searchType } = useContext(SearchContext);
   const [shopName, setShopName] = useState("");
   const [shopStock, setShopStock] = useState([]);
   const [availableItems, setAvailableItems] = useState([]);
@@ -45,6 +47,16 @@ export default function AdminShopStock() {
       console.error("Error fetching available items");
     }
   };
+
+  const filteredStock = searchQuery
+    ? shopStock.filter(stock => {
+        if (searchType === 'date' && stock.created_at) {
+            return stock.created_at.startsWith(searchQuery);
+        }
+        const itemName = availableItems.find(item => item.id === parseInt(stock.item_id))?.name || stock.item_name || "";
+        return itemName.toLowerCase().includes(searchQuery.toLowerCase());
+      })
+    : shopStock;
 
   const handleEditStock = (stock) => {
     setEditingStock(stock);
@@ -102,17 +114,20 @@ export default function AdminShopStock() {
 
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden transition-colors">
           <div className="bg-gray-50 dark:bg-gray-900/50 px-8 py-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center transition-colors">
-            <h2 className="text-lg font-bold text-gray-800 dark:text-white transition-colors">Current Inventory</h2>
+            <h2 className="text-lg font-bold text-gray-800 dark:text-white transition-colors flex items-center gap-2">
+                Current Inventory {searchQuery && <span className="text-xs font-medium text-blue-500 bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded-full ml-2 transition-all">{searchType === 'date' ? `Date: ${searchQuery}` : `Searching: "${searchQuery}"`}</span>}
+            </h2>
             <span className="bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-400 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest transition-colors">
-              {shopStock.length} Products
+              {filteredStock.length} Products
             </span>
           </div>
           
           <div className="overflow-x-auto max-h-[calc(100vh-300px)] overflow-y-auto custom-scrollbar">
-            {shopStock.length === 0 ? (
+            {filteredStock.length === 0 ? (
               <div className="p-20 text-center text-gray-400 dark:text-gray-500 transition-colors">
-                <AlertCircle className="mx-auto mb-4 opacity-20" size={48} />
-                <p className="italic font-medium">No stock records found for this location.</p>
+                {searchQuery ? <CalendarX className="mx-auto mb-4 opacity-20" size={48} /> : <AlertCircle className="mx-auto mb-4 opacity-20" size={48} />}
+                <p className="italic font-medium">{searchQuery ? 'No matching products found' : 'No stock records found for this location.'}</p>
+                {searchQuery && <p className="text-xs text-gray-400 mt-2 transition-colors">Try another {searchType === 'date' ? 'date' : 'search term'} or clear search</p>}
               </div>
             ) : (
               <table className="w-full relative border-collapse">
@@ -125,7 +140,7 @@ export default function AdminShopStock() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50 dark:divide-gray-700 bg-white dark:bg-gray-800 transition-colors">
-                  {shopStock.map((stock) => (
+                  {filteredStock.map((stock) => (
                     <tr key={stock.item_id} className="hover:bg-gray-50/50 dark:hover:bg-gray-900/50 transition-colors">
                       <td className="px-8 py-4 font-bold text-gray-900 dark:text-white transition-colors">
                         {availableItems.find(item => item.id === parseInt(stock.item_id))?.name || stock.item_name || "Unknown Item"}

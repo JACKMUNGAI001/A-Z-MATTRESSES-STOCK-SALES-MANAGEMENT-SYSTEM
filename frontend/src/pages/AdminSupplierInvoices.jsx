@@ -2,7 +2,7 @@ import React, { useState, useEffect, useContext } from 'react'
 import { fetchSupplierInvoices, fetchSuppliers, createSupplierInvoice, fetchSupplierInvoiceDetails, updateSupplierInvoiceStatus, recordSupplierInvoicePayment } from '../api/api'
 import api from '../api/api'
 import Card from '../components/Card'
-import { Plus, Eye, FileText, Calendar, DollarSign, Truck, Package, Search, CheckCircle, SearchX, Wallet, History, Store } from 'lucide-react'
+import { Plus, Eye, FileText, Calendar, DollarSign, Truck, Package, Search, CheckCircle, SearchX, Wallet, History, Store, X } from 'lucide-react'
 import { SearchContext } from '../context/SearchContext'
 import { formatDate } from '../utils/helpers'
 import SearchableSelect from '../components/SearchableSelect'
@@ -19,7 +19,7 @@ export default function AdminSupplierInvoices() {
   const [paymentAmount, setPaymentAmount] = useState("")
   const [showDetails, setShowDetails] = useState(null)
   const [activeTab, setActiveTab] = useState('Pending')
-  const { searchQuery } = useContext(SearchContext)
+  const { searchQuery, searchType } = useContext(SearchContext)
   
   const [formData, setFormData] = useState({
     supplier_id: '',
@@ -154,9 +154,13 @@ export default function AdminSupplierInvoices() {
   const filteredInvoices = invoices.filter(inv => {
     const statusMatch = inv.status === activeTab || (activeTab === 'Pending' && inv.status === 'Partial');
     const searchMatch = searchQuery ? (
-      inv.invoice_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      inv.supplier_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      inv.items?.some(item => item.item_name.toLowerCase().includes(searchQuery.toLowerCase()))
+      searchType === 'date' ? (
+        new Date(inv.received_date).toISOString().split('T')[0] === searchQuery
+      ) : (
+        inv.invoice_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        inv.supplier_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        inv.items?.some(item => item.item_name.toLowerCase().includes(searchQuery.toLowerCase()))
+      )
     ) : true;
     return statusMatch && searchMatch;
   });

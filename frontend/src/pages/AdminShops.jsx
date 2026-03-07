@@ -1,13 +1,15 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import api from "../api/api";
 import { useNavigate } from "react-router-dom";
-import { Store, Plus, Edit, Trash2, Box, MapPin } from "lucide-react";
+import { Store, Plus, Edit, Trash2, Box, MapPin, Search, CalendarX } from "lucide-react";
+import { SearchContext } from "../context/SearchContext";
 
 export default function AdminShops() {
   const [shops, setShops] = useState([]);
   const [formData, setFormData] = useState({ name: "", address: "" });
   const [editingId, setEditingId] = useState(null);
   const navigate = useNavigate();
+  const { searchQuery, searchType } = useContext(SearchContext);
 
   useEffect(() => {
     fetchShops();
@@ -21,6 +23,16 @@ export default function AdminShops() {
       console.error("Error fetching shops");
     }
   };
+
+  const filteredShops = searchQuery
+    ? shops.filter(shop => {
+        if (searchType === 'date' && shop.created_at) {
+            return shop.created_at.startsWith(searchQuery);
+        }
+        const searchLower = searchQuery.toLowerCase();
+        return shop.name.toLowerCase().includes(searchLower) || (shop.address && shop.address.toLowerCase().includes(searchLower));
+      })
+    : shops;
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -100,47 +112,58 @@ export default function AdminShops() {
           {/* SHOPS LIST */}
           <div className="lg:col-span-2">
             <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden transition-colors">
-              <div className="bg-gray-50 dark:bg-gray-900/50 px-8 py-4 border-b border-gray-100 dark:border-gray-700 transition-colors">
+              <div className="bg-gray-50 dark:bg-gray-900/50 px-8 py-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center transition-colors">
                 <h2 className="text-lg font-bold text-gray-800 dark:text-white flex items-center gap-2 transition-colors">
                   <Store size={20} className="text-blue-600 dark:text-blue-400" />
-                  Active Locations
+                  Active Locations {searchQuery && <span className="text-xs font-medium text-blue-500 bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded-full ml-2 transition-all">{searchType === 'date' ? `Date: ${searchQuery}` : `Searching: "${searchQuery}"`}</span>}
                 </h2>
+                <span className="bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-400 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest transition-all">
+                    {filteredShops.length} Locations
+                </span>
               </div>
               <div className="overflow-x-auto max-h-[calc(100vh-300px)] overflow-y-auto custom-scrollbar">
-                <table className="w-full relative border-collapse">
-                  <thead className="bg-gray-50/90 dark:bg-gray-900/90 transition-colors sticky top-0 z-10 backdrop-blur-sm">
-                    <tr>
-                      <th className="px-8 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest border-b border-gray-100 dark:border-gray-700">Shop Details</th>
-                      <th className="px-8 py-4 text-center text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest border-b border-gray-100 dark:border-gray-700">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-50 dark:divide-gray-700 bg-white dark:bg-gray-800 transition-colors">
-                    {shops.map((shop) => (
-                      <tr key={shop.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-900/50 transition-colors">
-                        <td className="px-8 py-4">
-                          <div className="font-bold text-gray-900 dark:text-white text-lg transition-colors">{shop.name}</div>
-                          <div className="flex items-center gap-1 text-gray-500 dark:text-gray-400 text-sm mt-1 transition-colors">
-                            <MapPin size={14} />
-                            {shop.address}
-                          </div>
-                        </td>
-                        <td className="px-8 py-4">
-                          <div className="flex items-center justify-center gap-2">
-                            <button onClick={() => navigate(`/admin/shops/${shop.id}/stock`)} className="bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 p-2 rounded-lg hover:bg-green-600 hover:text-white transition-all flex items-center gap-1 font-bold text-sm">
-                              <Box size={16} /> Stock
-                            </button>
-                            <button onClick={() => handleEdit(shop)} className="bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 p-2 rounded-lg hover:bg-blue-600 hover:text-white transition-all">
-                              <Edit size={16} />
-                            </button>
-                            <button onClick={() => handleDelete(shop.id)} className="bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 p-2 rounded-lg hover:bg-red-600 hover:text-white transition-all">
-                              <Trash2 size={16} />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                {filteredShops.length === 0 ? (
+                    <div className="p-20 text-center border-t border-gray-100 dark:border-gray-700 transition-colors">
+                        <CalendarX size={48} className="mx-auto text-gray-300 dark:text-gray-600 mb-4 transition-colors" />
+                        <p className="text-gray-500 dark:text-gray-400 font-bold uppercase tracking-widest text-sm transition-colors">{searchQuery ? 'No matching locations found' : 'No locations found'}</p>
+                        {searchQuery && <p className="text-xs text-gray-400 mt-2 transition-colors">Try another {searchType === 'date' ? 'date' : 'search term'} or clear search</p>}
+                    </div>
+                ) : (
+                    <table className="w-full relative border-collapse">
+                    <thead className="bg-gray-50/90 dark:bg-gray-900/90 transition-colors sticky top-0 z-10 backdrop-blur-sm">
+                        <tr>
+                        <th className="px-8 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest border-b border-gray-100 dark:border-gray-700">Shop Details</th>
+                        <th className="px-8 py-4 text-center text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest border-b border-gray-100 dark:border-gray-700">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-50 dark:divide-gray-700 bg-white dark:bg-gray-800 transition-colors">
+                        {filteredShops.map((shop) => (
+                        <tr key={shop.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-900/50 transition-colors">
+                            <td className="px-8 py-4">
+                            <div className="font-bold text-gray-900 dark:text-white text-lg transition-colors">{shop.name}</div>
+                            <div className="flex items-center gap-1 text-gray-500 dark:text-gray-400 text-sm mt-1 transition-colors">
+                                <MapPin size={14} />
+                                {shop.address}
+                            </div>
+                            </td>
+                            <td className="px-8 py-4">
+                            <div className="flex items-center justify-center gap-2">
+                                <button onClick={() => navigate(`/admin/shops/${shop.id}/stock`)} className="bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 p-2 rounded-lg hover:bg-green-600 hover:text-white transition-all flex items-center gap-1 font-bold text-sm">
+                                <Box size={16} /> Stock
+                                </button>
+                                <button onClick={() => handleEdit(shop)} className="bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 p-2 rounded-lg hover:bg-blue-600 hover:text-white transition-all">
+                                <Edit size={16} />
+                                </button>
+                                <button onClick={() => handleDelete(shop.id)} className="bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 p-2 rounded-lg hover:bg-red-600 hover:text-white transition-all">
+                                <Trash2 size={16} />
+                                </button>
+                            </div>
+                            </td>
+                        </tr>
+                        ))}
+                    </tbody>
+                    </table>
+                )}
               </div>
             </div>
           </div>
