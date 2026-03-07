@@ -4,7 +4,8 @@ export const SearchContext = createContext();
 
 export const SearchProvider = ({ children }) => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [searchDate, setSearchDate] = useState(''); // Keeping date as an optional secondary filter
+  const [searchDate, setSearchDate] = useState('');
+  const [searchType, setSearchType] = useState('name'); // 'name' or 'date'
 
   const clearSearch = () => {
     setSearchQuery('');
@@ -12,7 +13,12 @@ export const SearchProvider = ({ children }) => {
   };
 
   return (
-    <SearchContext.Provider value={{ searchQuery, setSearchQuery, searchDate, setSearchDate, clearSearch }}>
+    <SearchContext.Provider value={{ 
+      searchQuery, setSearchQuery, 
+      searchDate, setSearchDate, 
+      searchType, setSearchType,
+      clearSearch 
+    }}>
       {children}
     </SearchContext.Provider>
   );

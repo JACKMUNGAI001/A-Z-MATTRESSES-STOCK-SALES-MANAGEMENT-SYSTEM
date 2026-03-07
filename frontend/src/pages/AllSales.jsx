@@ -9,7 +9,7 @@ export default function AllSales() {
   const [sales, setSales] = useState([]);
   const [loading, setLoading] = useState(false);
   const { user } = useContext(AuthContext);
-  const { searchQuery } = useContext(SearchContext);
+  const { searchQuery, searchType } = useContext(SearchContext);
 
   useEffect(() => {
     fetchSales();
@@ -43,12 +43,16 @@ export default function AllSales() {
   };
 
   const filteredSales = searchQuery 
-    ? sales.filter(sale => 
-        (sale.shop_name && sale.shop_name.toLowerCase().includes(searchQuery.toLowerCase())) ||
+    ? sales.filter(sale => {
+        if (searchType === 'date') {
+          const saleDate = new Date(sale.created_at).toISOString().split('T')[0];
+          return saleDate === searchQuery;
+        }
+        return (sale.shop_name && sale.shop_name.toLowerCase().includes(searchQuery.toLowerCase())) ||
         sale.items?.some(item => 
           item.item_name.toLowerCase().includes(searchQuery.toLowerCase())
         )
-      )
+      })
     : sales;
 
   return (

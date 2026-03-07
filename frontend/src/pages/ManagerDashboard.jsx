@@ -9,7 +9,7 @@ import TransferHistory from '../components/TransferHistory'
 
 export default function ManagerDashboard(){
   const { user } = useContext(AuthContext)
-  const { searchQuery } = useContext(SearchContext)
+  const { searchQuery, searchType } = useContext(SearchContext)
   const [globalStock, setGlobalStock] = useState([]);
   const [salesSummary, setSalesSummary] = useState(null);
   const [depositsSummary, setDepositsSummary] = useState(null);
@@ -77,10 +77,11 @@ export default function ManagerDashboard(){
   };
 
   const filteredStock = searchQuery 
-    ? globalStock.filter(stock => 
-        stock.item_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    ? globalStock.filter(stock => {
+        if (searchType === 'date') return true;
+        return stock.item_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         stock.shop_name.toLowerCase().includes(searchQuery.toLowerCase())
-      )
+      })
     : globalStock;
 
   return (

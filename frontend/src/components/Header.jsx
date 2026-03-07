@@ -1,14 +1,14 @@
-import { useContext, useState, useEffect, useRef } from "react";
+import { useContext, useState } from "react";
 import { AuthContext } from "../context/AuthContext";
 import { ThemeContext } from "../context/ThemeContext";
 import { SearchContext } from "../context/SearchContext";
 import { useNavigate } from "react-router-dom";
-import { LogOut, ArrowLeft, Settings, Search, Sun, Moon, X, Menu } from "lucide-react";
+import { LogOut, ArrowLeft, Settings, Search, Sun, Moon, X, Menu, Calendar, Type } from "lucide-react";
 
 export default function Header({ onMenuClick }) {
   const { user, logout } = useContext(AuthContext);
   const { isDarkMode, toggleDarkMode } = useContext(ThemeContext);
-  const { searchQuery, setSearchQuery, clearSearch } = useContext(SearchContext);
+  const { searchQuery, setSearchQuery, searchType, setSearchType, clearSearch } = useContext(SearchContext);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const navigate = useNavigate();
 
@@ -46,16 +46,28 @@ export default function Header({ onMenuClick }) {
         <div className="flex items-center gap-1 md:gap-2 px-2 md:px-4 py-2 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 transition-colors relative">
           {isSearchOpen ? (
             <div className="flex items-center gap-2 animate-in fade-in slide-in-from-right-4 duration-300">
-              <div className="relative flex items-center">
-                <Search size={16} className="absolute left-3 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search products..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  autoFocus
-                  className="pl-10 pr-2 py-1.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all w-32 sm:w-48 md:w-64"
-                />
+              <div className="flex items-center bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+                <button 
+                  onClick={() => {
+                    setSearchType(searchType === 'name' ? 'date' : 'name');
+                    setSearchQuery('');
+                  }}
+                  className="px-3 py-1.5 bg-gray-100 dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 text-gray-500 hover:text-blue-600 dark:hover:text-blue-400 transition-colors flex items-center gap-1"
+                  title={`Switch to ${searchType === 'name' ? 'Date' : 'Name'} Search`}
+                >
+                  {searchType === 'name' ? <Type size={14} /> : <Calendar size={14} />}
+                </button>
+                <div className="relative flex items-center">
+                  <Search size={14} className="absolute left-3 text-gray-400" />
+                  <input
+                    type={searchType === 'name' ? "text" : "date"}
+                    placeholder={searchType === 'name' ? "Search products..." : ""}
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    autoFocus
+                    className="pl-10 pr-2 py-1.5 bg-transparent rounded-lg text-sm text-gray-700 dark:text-gray-200 focus:outline-none transition-all w-32 sm:w-48 md:w-64"
+                  />
+                </div>
               </div>
               <button 
                 onClick={() => {
@@ -79,10 +91,10 @@ export default function Header({ onMenuClick }) {
               </button>
               <button 
                 onClick={() => setIsSearchOpen(true)}
-                className={`p-2 transition-colors ${searchQuery ? 'text-blue-600 dark:text-blue-400' : 'text-gray-400 hover:text-blue-600 dark:hover:text-blue-400'}`}
-                title="Search Products"
+                className={`p-2 transition-colors relative ${searchQuery ? 'text-blue-600 dark:text-blue-400' : 'text-gray-400 hover:text-blue-600 dark:hover:text-blue-400'}`}
+                title="Search"
               >
-                <Search size={20}/>
+                {searchType === 'name' ? <Search size={20}/> : <Calendar size={20}/>}
                 {searchQuery && <span className="absolute top-2 right-2 w-2 h-2 bg-blue-600 rounded-full"></span>}
               </button>
 

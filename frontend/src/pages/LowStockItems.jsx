@@ -7,7 +7,7 @@ import { AuthContext } from '../context/AuthContext';
 export default function LowStockItems() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
-  const { searchQuery } = useContext(SearchContext);
+  const { searchQuery, searchType } = useContext(SearchContext);
   const { user } = useContext(AuthContext);
 
   useEffect(() => {
@@ -25,10 +25,11 @@ export default function LowStockItems() {
   }, []);
 
   const filteredItems = searchQuery 
-    ? items.filter(item => 
-        item.item_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    ? items.filter(item => {
+        if (searchType === 'date') return true; // Inventory doesn't have a specific creation date in this view
+        return item.item_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         (item.shop_name && item.shop_name.toLowerCase().includes(searchQuery.toLowerCase()))
-      )
+      })
     : items;
 
   return (

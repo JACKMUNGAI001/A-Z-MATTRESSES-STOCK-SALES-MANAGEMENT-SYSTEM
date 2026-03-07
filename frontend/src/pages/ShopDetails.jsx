@@ -11,7 +11,7 @@ import SearchableSelect from '../components/SearchableSelect';
 export default function ShopDetails() {
   const { shopId } = useParams();
   const { user } = useContext(AuthContext);
-  const { searchQuery } = useContext(SearchContext);
+  const { searchQuery, searchType } = useContext(SearchContext);
   const [shop, setShop] = useState(null);
   const [shopSales, setShopSales] = useState([]);
   const [shopDeposits, setShopDeposits] = useState([]);
@@ -137,11 +137,17 @@ export default function ShopDetails() {
   };
 
   const filteredSales = searchQuery 
-    ? shopSales.filter(s => s.items?.some(item => item.item_name.toLowerCase().includes(searchQuery.toLowerCase())))
+    ? shopSales.filter(s => {
+        if (searchType === 'date') return new Date(s.created_at).toISOString().split('T')[0] === searchQuery;
+        return s.items?.some(item => item.item_name.toLowerCase().includes(searchQuery.toLowerCase()));
+      })
     : shopSales;
 
   const filteredDeposits = searchQuery
-    ? shopDeposits.filter(d => d.item_name.toLowerCase().includes(searchQuery.toLowerCase()) || d.buyer_name.toLowerCase().includes(searchQuery.toLowerCase()))
+    ? shopDeposits.filter(d => {
+        if (searchType === 'date') return new Date(d.created_at).toISOString().split('T')[0] === searchQuery;
+        return d.item_name.toLowerCase().includes(searchQuery.toLowerCase()) || d.buyer_name.toLowerCase().includes(searchQuery.toLowerCase());
+      })
     : shopDeposits;
 
   const filteredStock = searchQuery

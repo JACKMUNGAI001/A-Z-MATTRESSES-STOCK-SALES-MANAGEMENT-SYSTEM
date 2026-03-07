@@ -16,7 +16,7 @@ export default function Expenses() {
     frequency: "",
   });
   const [shops, setShops] = useState([]);
-  const { searchDate } = useContext(SearchContext);
+  const { searchQuery, searchType } = useContext(SearchContext);
 
   const frequencies = [
     { id: "monthly", name: "Monthly" },
@@ -81,8 +81,14 @@ export default function Expenses() {
     }
   };
 
-  const filteredExpenses = searchDate 
-    ? expenses.filter(exp => exp.created_at.startsWith(searchDate))
+  const filteredExpenses = searchQuery 
+    ? expenses.filter(exp => {
+        if (searchType === 'date') {
+          return exp.created_at.startsWith(searchQuery);
+        }
+        return exp.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+               (exp.shop_name && exp.shop_name.toLowerCase().includes(searchQuery.toLowerCase()));
+      })
     : expenses;
 
   return (
@@ -155,7 +161,7 @@ export default function Expenses() {
               <div className="bg-gray-50 dark:bg-gray-900/50 px-8 py-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center transition-colors">
                 <h2 className="text-lg font-bold text-gray-800 dark:text-white flex items-center gap-2 transition-colors">
                   <Receipt size={20} className="text-blue-600 dark:text-blue-400" />
-                  Recent Operating Expenses {searchDate && <span className="text-xs font-medium text-blue-500 bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded-full ml-2 transition-all">Date: {searchDate}</span>}
+                  Recent Operating Expenses {searchQuery && <span className="text-xs font-medium text-blue-500 bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded-full ml-2 transition-all">{searchType === 'date' ? `Date: ${searchQuery}` : `Searching: "${searchQuery}"`}</span>}
                 </h2>
                 <span className="bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-400 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest transition-all">
                   {filteredExpenses.length} Records
@@ -165,8 +171,8 @@ export default function Expenses() {
                 {filteredExpenses.length === 0 ? (
                   <div className="p-20 text-center border-t border-gray-100 dark:border-gray-700 transition-colors">
                     <CalendarX size={48} className="mx-auto text-gray-300 dark:text-gray-600 mb-4 transition-colors" />
-                    <p className="text-gray-500 dark:text-gray-400 font-bold uppercase tracking-widest text-sm transition-colors">No expenses found for this date</p>
-                    {searchDate && <p className="text-xs text-gray-400 mt-2 transition-colors">Try another date or clear search</p>}
+                    <p className="text-gray-500 dark:text-gray-400 font-bold uppercase tracking-widest text-sm transition-colors">No expenses found {searchType === 'date' ? 'for this date' : `matching "${searchQuery}"`}</p>
+                    {searchQuery && <p className="text-xs text-gray-400 mt-2 transition-colors">Try another {searchType === 'date' ? 'date' : 'search term'} or clear search</p>}
                   </div>
                 ) : (
                   <table className="w-full relative border-collapse">

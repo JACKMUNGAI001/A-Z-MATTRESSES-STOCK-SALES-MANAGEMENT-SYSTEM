@@ -8,7 +8,7 @@ import { AuthContext } from '../context/AuthContext';
 export default function YearsSales() {
   const [sales, setSales] = useState([]);
   const [loading, setLoading] = useState(true);
-  const { searchQuery } = useContext(SearchContext);
+  const { searchQuery, searchType } = useContext(SearchContext);
   const { user } = useContext(AuthContext);
 
   useEffect(() => {
@@ -30,12 +30,17 @@ export default function YearsSales() {
   };
 
   const filteredSales = searchQuery 
-    ? sales.filter(sale => 
-        (sale.shop_name && sale.shop_name.toLowerCase().includes(searchQuery.toLowerCase())) ||
-        sale.items?.some(item => 
-          item.item_name.toLowerCase().includes(searchQuery.toLowerCase())
-        )
-      )
+    ? sales.filter(sale => {
+        if (searchType === 'date') {
+          return new Date(sale.created_at).toISOString().split('T')[0] === searchQuery;
+        }
+        return (
+          (sale.shop_name && sale.shop_name.toLowerCase().includes(searchQuery.toLowerCase())) ||
+          sale.items?.some(item => 
+            item.item_name.toLowerCase().includes(searchQuery.toLowerCase())
+          )
+        );
+      })
     : sales;
 
   return (

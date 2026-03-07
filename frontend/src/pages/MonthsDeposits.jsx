@@ -10,7 +10,7 @@ export default function MonthsDeposits() {
   const [loading, setLoading] = useState(true);
   const [selectedDeposit, setSelectedDeposit] = useState(null);
   const [showHistory, setShowHistory] = useState(false);
-  const { searchQuery } = useContext(SearchContext);
+  const { searchQuery, searchType } = useContext(SearchContext);
   const { user } = useContext(AuthContext);
 
   useEffect(() => {
@@ -32,12 +32,17 @@ export default function MonthsDeposits() {
   };
 
   const filteredDeposits = searchQuery 
-    ? deposits.filter(p => 
-        (p.shop_name && p.shop_name.toLowerCase().includes(searchQuery.toLowerCase())) ||
-        p.item_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        p.buyer_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (p.buyer_phone && p.buyer_phone.includes(searchQuery))
-      )
+    ? deposits.filter(p => {
+        if (searchType === 'date') {
+          return new Date(p.created_at).toISOString().split('T')[0] === searchQuery;
+        }
+        return (
+          (p.shop_name && p.shop_name.toLowerCase().includes(searchQuery.toLowerCase())) ||
+          p.item_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          p.buyer_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          (p.buyer_phone && p.buyer_phone.includes(searchQuery))
+        );
+      })
     : deposits;
 
   return (

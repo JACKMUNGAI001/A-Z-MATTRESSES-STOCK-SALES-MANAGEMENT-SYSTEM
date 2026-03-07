@@ -11,7 +11,7 @@ export default function AllDeposits() {
   const [selectedDeposit, setSelectedDeposit] = useState(null);
   const [showHistory, setShowHistory] = useState(false);
   const { user } = useContext(AuthContext);
-  const { searchQuery } = useContext(SearchContext);
+  const { searchQuery, searchType } = useContext(SearchContext);
 
   useEffect(() => {
     fetchDeposits();
@@ -45,11 +45,15 @@ export default function AllDeposits() {
   };
 
   const filteredDeposits = searchQuery 
-    ? deposits.filter(deposit => 
-        deposit.item_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    ? deposits.filter(deposit => {
+        if (searchType === 'date') {
+          const depositDate = new Date(deposit.created_at).toISOString().split('T')[0];
+          return depositDate === searchQuery;
+        }
+        return deposit.item_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         deposit.buyer_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         (deposit.buyer_phone && deposit.buyer_phone.includes(searchQuery))
-      )
+      })
     : deposits;
 
   return (
