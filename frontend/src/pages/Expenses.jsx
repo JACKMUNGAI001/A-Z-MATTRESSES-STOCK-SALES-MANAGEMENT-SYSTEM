@@ -40,7 +40,7 @@ export default function Expenses() {
   const fetchShops = async () => {
     try {
       const response = await api.get("/shops");
-      setShops(response.data);
+      setShops([{ id: "all", name: "All Shops" }, ...response.data]);
     } catch (err) {
       console.error("Error fetching shops");
     }
@@ -62,7 +62,11 @@ export default function Expenses() {
       return;
     }
     try {
-      await api.post("/expenses", formData);
+      const payload = {
+        ...formData,
+        shop_id: formData.shop_id === "all" ? null : formData.shop_id
+      };
+      await api.post("/expenses", payload);
       alert("Expense recorded successfully!");
       setFormData({ title: "", amount: "", description: "", shop_id: "", recurring: false, frequency: "" });
       fetchExpenses();

@@ -92,7 +92,8 @@ def get_pnl_report(year, month=None, shop_id=None, period=None):
     if shop_id:
         sales_query = sales_query.filter(Sale.shop_id == shop_id)
         cogs_query = cogs_query.filter(Sale.shop_id == shop_id)
-        expenses_query = expenses_query.filter(Expense.shop_id == shop_id)
+        # Include both shop-specific and global expenses
+        expenses_query = expenses_query.filter((Expense.shop_id == shop_id) | (Expense.shop_id == None))
         # Note: Invoices are distributed per item to shops, but the invoice record itself doesn't have a shop_id.
         # We'll filter based on distributed items if a shop_id is provided.
         from models.supplier import SupplierInvoiceItem
