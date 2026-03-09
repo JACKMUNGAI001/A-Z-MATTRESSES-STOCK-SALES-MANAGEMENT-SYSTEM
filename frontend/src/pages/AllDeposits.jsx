@@ -1,14 +1,16 @@
 import React, { useState, useEffect, useContext } from "react";
 import api, { API_BASE } from "../api/api";
-import { History, Store, FileText, Wallet, Trash2, SearchX, Phone, X, History as HistoryIcon, Clock } from "lucide-react";
+import { History, Store, FileText, Wallet, Trash2, SearchX, Phone, X, History as HistoryIcon, Clock, Edit } from "lucide-react";
 import { formatDate } from "../utils/helpers";
 import { AuthContext } from "../context/AuthContext";
 import { SearchContext } from "../context/SearchContext";
+import EditDepositModal from "../components/EditDepositModal";
 
 export default function AllDeposits() {
   const [deposits, setDeposits] = useState([]);
   const [loading, setLoading] = useState(false);
   const [selectedDeposit, setSelectedDeposit] = useState(null);
+  const [editingDeposit, setEditingDeposit] = useState(null);
   const [showHistory, setShowHistory] = useState(false);
   const { user } = useContext(AuthContext);
   const { searchQuery, searchType } = useContext(SearchContext);
@@ -136,13 +138,22 @@ export default function AllDeposits() {
                             VIEW ALL
                           </button>
                           {user?.role === 'admin' && (
-                            <button
-                              onClick={() => handleDelete(deposit.id)}
-                              className="bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 p-2 rounded-lg hover:bg-red-600 hover:text-white transition-all"
-                              title="Delete Transaction"
-                            >
-                              <Trash2 size={16} />
-                            </button>
+                            <>
+                              <button
+                                onClick={() => setEditingDeposit(deposit)}
+                                className="bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 p-2 rounded-lg hover:bg-amber-600 hover:text-white transition-all"
+                                title="Edit Deposit"
+                              >
+                                <Edit size={16} />
+                              </button>
+                              <button
+                                onClick={() => handleDelete(deposit.id)}
+                                className="bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 p-2 rounded-lg hover:bg-red-600 hover:text-white transition-all"
+                                title="Delete Transaction"
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            </>
                           )}
                         </div>
                       </td>
@@ -153,6 +164,15 @@ export default function AllDeposits() {
             )}
           </div>
         </div>
+
+        {/* EDIT MODAL */}
+        {editingDeposit && (
+          <EditDepositModal
+            deposit={editingDeposit}
+            onClose={() => setEditingDeposit(null)}
+            onUpdate={fetchDeposits}
+          />
+        )}
 
         {/* HISTORY MODAL */}
         {showHistory && selectedDeposit && (

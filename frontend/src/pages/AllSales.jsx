@@ -1,13 +1,15 @@
 import React, { useState, useEffect, useContext } from "react";
 import api, { API_BASE } from "../api/api";
-import { History, ShoppingBag, Store, User, FileText, Trash2, SearchX } from "lucide-react";
+import { History, ShoppingBag, Store, User, FileText, Trash2, SearchX, Edit } from "lucide-react";
 import { formatDate, formatPaymentMethod } from "../utils/helpers";
 import { AuthContext } from "../context/AuthContext";
 import { SearchContext } from "../context/SearchContext";
+import EditSaleModal from "../components/EditSaleModal";
 
 export default function AllSales() {
   const [sales, setSales] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [editingSale, setEditingSale] = useState(null);
   const { user } = useContext(AuthContext);
   const { searchQuery, searchType } = useContext(SearchContext);
 
@@ -142,13 +144,22 @@ export default function AllSales() {
                             </a>
                           )}
                           {user?.role === 'admin' && (
-                            <button
-                              onClick={() => handleDelete(sale.id)}
-                              className="bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 p-2 rounded-lg hover:bg-red-600 hover:text-white transition-all"
-                              title="Delete Sale"
-                            >
-                              <Trash2 size={16} />
-                            </button>
+                            <>
+                              <button
+                                onClick={() => setEditingSale(sale)}
+                                className="bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 p-2 rounded-lg hover:bg-amber-600 hover:text-white transition-all"
+                                title="Edit Sale"
+                              >
+                                <Edit size={16} />
+                              </button>
+                              <button
+                                onClick={() => handleDelete(sale.id)}
+                                className="bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 p-2 rounded-lg hover:bg-red-600 hover:text-white transition-all"
+                                title="Delete Sale"
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            </>
                           )}
                         </div>
                       </td>
@@ -159,6 +170,14 @@ export default function AllSales() {
             )}
           </div>
         </div>
+
+        {editingSale && (
+          <EditSaleModal 
+            sale={editingSale} 
+            onClose={() => setEditingSale(null)} 
+            onUpdate={fetchSales} 
+          />
+        )}
     </>
   );
 }

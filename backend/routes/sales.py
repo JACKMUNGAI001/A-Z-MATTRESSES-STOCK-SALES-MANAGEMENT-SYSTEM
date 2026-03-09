@@ -3,7 +3,7 @@ from controllers.sale_controller import (
     create_sale_controller, get_shop_sales_controller, 
     todays_sales_controller, current_weeks_sales_controller, 
     current_months_sales_controller, current_years_sales_controller, 
-    get_all_sales_controller, delete_sale_controller
+    get_all_sales_controller, delete_sale_controller, update_sale_controller
 )
 from flask_jwt_extended import jwt_required
 
@@ -48,3 +48,8 @@ def get_shop_sales(shop_id):
 @jwt_required()
 def delete_sale(sale_id):
     return delete_sale_controller(sale_id)
+
+@bp.route("/<int:sale_id>", methods=["PUT"])
+@jwt_required()
+def update_sale(sale_id):
+    return update_sale_controller(sale_id)

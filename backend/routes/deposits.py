@@ -5,7 +5,7 @@ from controllers.deposit_controller import (
     deposit_customers_count_controller, deposit_customers_controller,
     todays_deposits_controller, weeks_deposits_controller,
     months_deposits_controller, years_deposits_controller,
-    delete_deposit_controller
+    delete_deposit_controller, update_deposit_controller
 )
 from flask_jwt_extended import jwt_required
 
@@ -20,6 +20,11 @@ def create_deposit():
 @jwt_required()
 def delete_deposit(deposit_id):
     return delete_deposit_controller(deposit_id)
+
+@bp.route("/<int:deposit_id>", methods=["PUT"])
+@jwt_required()
+def update_deposit(deposit_id):
+    return update_deposit_controller(deposit_id)
 
 @bp.route("/", methods=["GET"])
 @jwt_required()

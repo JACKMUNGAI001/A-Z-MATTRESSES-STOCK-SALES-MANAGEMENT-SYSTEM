@@ -198,6 +198,7 @@ def _serialize_deposit(dep):
         "uuid": dep.uuid,
         "buyer_name": dep.buyer_name,
         "buyer_phone": dep.buyer_phone,
+        "item_id": dep.item_id,
         "item_name": dep.item.name if dep.item else "N/A",
         "selling_price": float(dep.selling_price),
         "total_paid": total_paid,
@@ -277,3 +278,20 @@ def delete_deposit(deposit_id):
     db.session.delete(dep)
     db.session.commit()
     return True
+
+def update_deposit(deposit_id, buyer_name, buyer_phone, selling_price, item_id):
+    try:
+        dep = DepositSale.query.get(deposit_id)
+        if not dep:
+            raise ValueError("Deposit record not found")
+        
+        dep.buyer_name = buyer_name
+        dep.buyer_phone = buyer_phone
+        dep.selling_price = float(selling_price)
+        dep.item_id = item_id
+        
+        db.session.commit()
+        return dep
+    except Exception as e:
+        db.session.rollback()
+        raise e

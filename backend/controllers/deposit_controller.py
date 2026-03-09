@@ -4,7 +4,7 @@ from services.deposit_service import (
     get_deposit_customers, get_all_deposits, get_deposits_by_shop_id,
     get_todays_deposit_payments, get_weeks_deposit_payments,
     get_months_deposit_payments, get_years_deposit_payments,
-    delete_deposit
+    delete_deposit, update_deposit
 )
 from models.deposit import DepositSale
 from flask_jwt_extended import get_jwt_identity
@@ -79,3 +79,23 @@ def delete_deposit_controller(deposit_id):
         return jsonify({"msg": "Deposit record deleted successfully"}), 200
     except ValueError as e:
         return jsonify({"msg": str(e)}), 404
+
+def update_deposit_controller(deposit_id):
+    user_identity = get_jwt_identity()
+    if user_identity.get("role") != "admin":
+        return jsonify({"msg": "Admin privilege required"}), 403
+    
+    data = request.get_json() or {}
+    try:
+        dep = update_deposit(
+            deposit_id=deposit_id,
+            buyer_name=data.get("buyer_name"),
+            buyer_phone=data.get("buyer_phone"),
+            selling_price=data.get("selling_price"),
+            item_id=data.get("item_id")
+        )
+        return jsonify({"msg": "Deposit updated successfully", "deposit_id": dep.id}), 200
+    except ValueError as e:
+        return jsonify({"msg": str(e)}), 400
+    except Exception as e:
+        return jsonify({"msg": "Internal Server Error"}), 500

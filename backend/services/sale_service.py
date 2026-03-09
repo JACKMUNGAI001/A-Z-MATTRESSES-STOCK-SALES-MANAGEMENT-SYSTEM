@@ -258,3 +258,81 @@ def delete_sale(sale_id, user_id):
     except Exception as e:
         db.session.rollback()
         raise e
+
+def update_sale(sale_id, user_id, items, payment_type):
+    try:
+        sale = Sale.query.get(sale_id)
+        if not sale:
+            raise ValueError("Sale not found")
+
+        with db.session.begin_nested():
+            # 1. Revert old stock levels
+            for item in sale.items:
+                stock = ShopStock.query.filter_by(shop_id=sale.shop_id, item_id=item.item_id).first()
+                if stock:
+                    stock.quantity += item.qty
+                    stock.updated_at = datetime.utcnow()
+                    # Record adjustment movement for reversal
+                    mv_rev = StockMovement(
+                        shop_id=sale.shop_id, 
+                        item_id=item.item_id, 
+                        movement_type="adjustment", 
+                        qty=item.qty, 
+                        user_id=user_id, 
+                        reference=f"Sale {sale_id} updated (reversal)",
+                        created_at=datetime.utcnow()
+                    )
+                    db.session.add(mv_rev)
+
+            # 2. Delete old sale items
+            SaleItem.query.filter_by(sale_id=sale_id).delete()
+
+            # 3. Process new items
+            total = 0
+            new_sale_items = []
+            for it in items:
+                item_id = it.get("item_id")
+                qty = int(it.get("qty", 1))
+                unit_price = float(it.get("unit_price"))
+
+                stock = ShopStock.query.filter_by(shop_id=sale.shop_id, item_id=item_id).first()
+                if not stock or stock.quantity < qty:
+                    raise ValueError(f"Insufficient stock for item {item_id}")
+                
+                stock.quantity -= qty
+                stock.updated_at = datetime.utcnow()
+                
+                si = SaleItem(sale_id=sale.id, item_id=item_id, qty=qty, unit_price=unit_price, unit_cost=stock.buy_price)
+                new_sale_items.append(si)
+                
+                mv = StockMovement(
+                    shop_id=sale.shop_id, 
+                    item_id=item_id, 
+                    movement_type="sale", 
+                    qty=-qty, 
+                    user_id=user_id, 
+                    reference=f"Sale {sale_id} updated",
+                    created_at=datetime.utcnow()
+                )
+                db.session.add(mv)
+                
+                total += unit_price * qty
+
+            # 4. Update sale record
+            sale.total_amount = total
+            sale.payment_type = payment_type
+            db.session.add_all(new_sale_items)
+
+        # 5. Regenerate receipt
+        shop = Shop.query.get(sale.shop_id)
+        attendant = User.query.get(sale.user_id)
+        
+        receipt_html = _generate_sale_receipt_html(sale, shop, attendant, new_sale_items)
+        receipt = create_receipt(payload=receipt_html)
+        sale.receipt_uuid = receipt.uuid
+
+        db.session.commit()
+        return sale
+    except Exception as e:
+        db.session.rollback()
+        raise e
