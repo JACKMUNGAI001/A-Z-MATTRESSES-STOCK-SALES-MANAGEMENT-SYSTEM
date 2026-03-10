@@ -1,6 +1,6 @@
 from extensions import db
 from models.sale import Sale, SaleItem
-from models.stock import ShopStock, StockMovement
+from models.stock import ShopStock, StockMovement, StockBatch
 from models.shop import Shop
 from models.user import User
 from models.product import Item
@@ -76,7 +76,7 @@ def create_sale(shop_id, user_id, items, payment_type="mobile_money"):
 
             for it in items:
                 item_id = it.get("item_id")
-                qty = int(it.get("qty", 1))
+                qty_to_sell = int(it.get("qty", 1))
                 unit_price = it.get("unit_price")
 
                 if unit_price is None:
@@ -84,18 +84,45 @@ def create_sale(shop_id, user_id, items, payment_type="mobile_money"):
                 unit_price = float(unit_price)
 
                 stock = ShopStock.query.filter_by(shop_id=shop_id, item_id=item_id).first()
-                if not stock or stock.quantity < qty:
+                if not stock or stock.quantity < qty_to_sell:
                     raise ValueError(f"Insufficient stock for item {item_id}")
                 
-                stock.quantity -= qty
+                # Update total shop stock
+                stock.quantity -= qty_to_sell
                 
-                si = SaleItem(sale_id=sale.id, item_id=item_id, qty=qty, unit_price=unit_price, unit_cost=stock.buy_price)
-                sale_items.append(si)
+                # FIFO Logic: Consume from batches
+                remaining_to_pull = qty_to_sell
+                while remaining_to_pull > 0:
+                    # Find the oldest batch with remaining quantity
+                    batch = StockBatch.query.filter_by(shop_id=shop_id, item_id=item_id) \
+                        .filter(StockBatch.remaining_qty > 0) \
+                        .order_by(StockBatch.created_at.asc()).first()
+                    
+                    if not batch:
+                        # Fallback for old data or inconsistencies
+                        # Use current buy_price if no batches are found
+                        si = SaleItem(sale_id=sale.id, item_id=item_id, qty=remaining_to_pull, unit_price=unit_price, unit_cost=stock.buy_price)
+                        sale_items.append(si)
+                        remaining_to_pull = 0
+                    else:
+                        pull_qty = min(remaining_to_pull, batch.remaining_qty)
+                        batch.remaining_qty -= pull_qty
+                        remaining_to_pull -= pull_qty
+                        
+                        si = SaleItem(
+                            sale_id=sale.id, 
+                            item_id=item_id, 
+                            qty=pull_qty, 
+                            unit_price=unit_price, 
+                            unit_cost=batch.buy_price,
+                            batch_id=batch.id
+                        )
+                        sale_items.append(si)
                 
-                mv = StockMovement(shop_id=shop_id, item_id=item_id, movement_type="sale", qty=-qty, user_id=user_id, created_at=datetime.utcnow())
+                mv = StockMovement(shop_id=shop_id, item_id=item_id, movement_type="sale", qty=-qty_to_sell, user_id=user_id, created_at=datetime.utcnow())
                 db.session.add(mv)
                 
-                total += unit_price * qty
+                total += unit_price * qty_to_sell
 
                 # Check for low stock notification
                 if stock.quantity <= 2:
@@ -237,6 +264,12 @@ def delete_sale(sale_id, user_id):
                 if stock:
                     stock.quantity += item.qty
                     stock.updated_at = datetime.utcnow()
+                
+                # Restore to batch if linked
+                if item.batch_id:
+                    batch = StockBatch.query.get(item.batch_id)
+                    if batch:
+                        batch.remaining_qty += item.qty
                     
                     # Record adjustment movement
                     mv = StockMovement(
@@ -245,7 +278,7 @@ def delete_sale(sale_id, user_id):
                         movement_type="adjustment", 
                         qty=item.qty, 
                         user_id=user_id, 
-                        reference=f"Sale {sale_id} deleted",
+                        reference=f"Sale {sale_id} deleted (restored to batch {item.batch_id})",
                         created_at=datetime.utcnow()
                     )
                     db.session.add(mv)
@@ -274,51 +307,81 @@ def update_sale(sale_id, user_id, items, payment_type):
                 if stock:
                     stock.quantity += item.qty
                     stock.updated_at = datetime.utcnow()
-                    # Record adjustment movement for reversal
-                    mv_rev = StockMovement(
-                        shop_id=sale.shop_id, 
-                        item_id=item.item_id, 
-                        movement_type="adjustment", 
-                        qty=item.qty, 
-                        user_id=user_id, 
-                        reference=f"Sale {sale_id} updated (reversal)",
-                        created_at=datetime.utcnow()
-                    )
-                    db.session.add(mv_rev)
+                
+                # Restore to batch if linked
+                if item.batch_id:
+                    batch = StockBatch.query.get(item.batch_id)
+                    if batch:
+                        batch.remaining_qty += item.qty
+                
+                # Record adjustment movement for reversal
+                mv_rev = StockMovement(
+                    shop_id=sale.shop_id, 
+                    item_id=item.item_id, 
+                    movement_type="adjustment", 
+                    qty=item.qty, 
+                    user_id=user_id, 
+                    reference=f"Sale {sale_id} updated (reversal)",
+                    created_at=datetime.utcnow()
+                )
+                db.session.add(mv_rev)
 
             # 2. Delete old sale items
             SaleItem.query.filter_by(sale_id=sale_id).delete()
 
-            # 3. Process new items
+            # 3. Process new items with FIFO
             total = 0
             new_sale_items = []
             for it in items:
                 item_id = it.get("item_id")
-                qty = int(it.get("qty", 1))
+                qty_to_sell = int(it.get("qty", 1))
                 unit_price = float(it.get("unit_price"))
 
                 stock = ShopStock.query.filter_by(shop_id=sale.shop_id, item_id=item_id).first()
-                if not stock or stock.quantity < qty:
+                if not stock or stock.quantity < qty_to_sell:
                     raise ValueError(f"Insufficient stock for item {item_id}")
                 
-                stock.quantity -= qty
+                stock.quantity -= qty_to_sell
                 stock.updated_at = datetime.utcnow()
                 
-                si = SaleItem(sale_id=sale.id, item_id=item_id, qty=qty, unit_price=unit_price, unit_cost=stock.buy_price)
-                new_sale_items.append(si)
+                # FIFO Logic: Consume from batches
+                remaining_to_pull = qty_to_sell
+                while remaining_to_pull > 0:
+                    batch = StockBatch.query.filter_by(shop_id=sale.shop_id, item_id=item_id) \
+                        .filter(StockBatch.remaining_qty > 0) \
+                        .order_by(StockBatch.created_at.asc()).first()
+                    
+                    if not batch:
+                        si = SaleItem(sale_id=sale.id, item_id=item_id, qty=remaining_to_pull, unit_price=unit_price, unit_cost=stock.buy_price)
+                        new_sale_items.append(si)
+                        remaining_to_pull = 0
+                    else:
+                        pull_qty = min(remaining_to_pull, batch.remaining_qty)
+                        batch.remaining_qty -= pull_qty
+                        remaining_to_pull -= pull_qty
+                        
+                        si = SaleItem(
+                            sale_id=sale.id, 
+                            item_id=item_id, 
+                            qty=pull_qty, 
+                            unit_price=unit_price, 
+                            unit_cost=batch.buy_price,
+                            batch_id=batch.id
+                        )
+                        new_sale_items.append(si)
                 
                 mv = StockMovement(
                     shop_id=sale.shop_id, 
                     item_id=item_id, 
                     movement_type="sale", 
-                    qty=-qty, 
+                    qty=-qty_to_sell, 
                     user_id=user_id, 
                     reference=f"Sale {sale_id} updated",
                     created_at=datetime.utcnow()
                 )
                 db.session.add(mv)
                 
-                total += unit_price * qty
+                total += unit_price * qty_to_sell
 
             # 4. Update sale record
             sale.total_amount = total

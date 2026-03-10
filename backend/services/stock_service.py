@@ -1,5 +1,5 @@
 from extensions import db
-from models.stock import ShopStock, StockMovement
+from models.stock import ShopStock, StockMovement, StockBatch
 from models.product import Item
 from models.shop import Shop
 from models.notification import Notification
@@ -26,6 +26,31 @@ def adjust_stock(shop_id, item_id, qty, movement_type="adjustment", user_id=None
 
     if buy_price is not None: stock.buy_price = buy_price
     stock.updated_at = datetime.utcnow()
+    
+    # Handle Batches
+    if qty_change > 0:
+        # Adding stock -> New batch
+        new_batch = StockBatch(
+            shop_id=shop_id,
+            item_id=item_id,
+            initial_qty=qty_change,
+            remaining_qty=qty_change,
+            buy_price=buy_price if buy_price is not None else (stock.buy_price or 0),
+            source_type=movement_type,
+            created_at=datetime.utcnow()
+        )
+        db.session.add(new_batch)
+    elif qty_change < 0:
+        # Removing stock -> Consume from oldest batches (FIFO)
+        to_pull = abs(qty_change)
+        while to_pull > 0:
+            batch = StockBatch.query.filter_by(shop_id=shop_id, item_id=item_id) \
+                .filter(StockBatch.remaining_qty > 0) \
+                .order_by(StockBatch.created_at.asc()).first()
+            if not batch: break
+            pull = min(to_pull, batch.remaining_qty)
+            batch.remaining_qty -= pull
+            to_pull -= pull
     
     # Check for low stock notification (only if quantity decreased)
     if qty_change < 0 and stock.quantity <= 2:

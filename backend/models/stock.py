@@ -12,6 +12,18 @@ class ShopStock(db.Model):
 
     __table_args__ = (db.UniqueConstraint("shop_id", "item_id", name="uq_shop_item"),)
 
+class StockBatch(db.Model):
+    __tablename__ = "stock_batches"
+    id = db.Column(db.Integer, primary_key=True)
+    shop_id = db.Column(db.Integer, db.ForeignKey("shops.id"), nullable=False, index=True)
+    item_id = db.Column(db.Integer, db.ForeignKey("items.id"), nullable=False, index=True)
+    initial_qty = db.Column(db.Integer, nullable=False)
+    remaining_qty = db.Column(db.Integer, nullable=False, index=True)
+    buy_price = db.Column(db.Numeric(12,2), nullable=False)
+    source_type = db.Column(db.String(50))  # purchase, transfer, initial
+    source_id = db.Column(db.Integer)       # ID of SupplierInvoiceItem, Transfer, etc.
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+
 class StockMovement(db.Model):
     __tablename__ = "stock_movements"
     id = db.Column(db.Integer, primary_key=True)

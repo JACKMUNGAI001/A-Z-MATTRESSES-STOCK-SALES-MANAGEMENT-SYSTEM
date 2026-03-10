@@ -1,6 +1,6 @@
 from extensions import db
 from models.supplier import Supplier, SupplierInvoice, SupplierInvoiceItem, SupplierInvoicePayment
-from models.stock import ShopStock, StockMovement
+from models.stock import ShopStock, StockMovement, StockBatch
 from models.product import Item
 from datetime import datetime
 
@@ -95,6 +95,18 @@ def create_supplier_invoice(supplier_id, invoice_number, items_data, status="Pen
         else:
             stock = ShopStock(shop_id=item_shop_id, item_id=item_id, quantity=qty, buy_price=unit_cost)
             db.session.add(stock)
+
+        # Create Stock Batch for FIFO tracking
+        batch = StockBatch(
+            shop_id=item_shop_id,
+            item_id=item_id,
+            initial_qty=qty,
+            remaining_qty=qty,
+            buy_price=unit_cost,
+            source_type="purchase",
+            source_id=inv_item.id
+        )
+        db.session.add(batch)
 
         # Create Stock Movement record for specific shop
         movement = StockMovement(

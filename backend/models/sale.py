@@ -21,3 +21,4 @@ class SaleItem(db.Model):
     qty = db.Column(db.Integer)
     unit_price = db.Column(db.Numeric(10,2))  # selling
     unit_cost = db.Column(db.Numeric(10,2))   # buying
+    batch_id = db.Column(db.Integer, db.ForeignKey("stock_batches.id"), nullable=True)
