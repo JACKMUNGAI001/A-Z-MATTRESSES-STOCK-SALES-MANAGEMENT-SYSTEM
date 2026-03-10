@@ -15,24 +15,15 @@ def get_global_financial_overview():
         total_deposit_collections = db.session.query(func.sum(DepositPayment.amount)).scalar() or 0
         total_expenses = db.session.query(func.sum(Expense.amount)).scalar() or 0
         
-        total_profit = 0
-        sales = Sale.query.all()
-        for sale in sales:
-            for item in sale.items:
-                # Ensure unit_price and unit_cost are not None
-                up = float(item.unit_price or 0)
-                uc = float(item.unit_cost or 0)
-                qty = item.qty or 0
-                total_profit += (up - uc) * qty
+        # Optimized: Use SQL aggregation for total profit
+        total_profit = db.session.query(
+            func.sum((SaleItem.unit_price - SaleItem.unit_cost) * SaleItem.qty)
+        ).scalar() or 0
 
-        combined_stock_value = 0
-        from models.product import Item
-        stocks = ShopStock.query.join(Item).all()
-        for stock in stocks:
-            # Ensure buy_price and quantity are not None
-            bp = float(stock.buy_price or 0)
-            qty = stock.quantity or 0
-            combined_stock_value += bp * qty
+        # Optimized: Use SQL aggregation for combined stock value
+        combined_stock_value = db.session.query(
+            func.sum(ShopStock.buy_price * ShopStock.quantity)
+        ).scalar() or 0
 
         customers_with_balances = DepositSale.query.filter(DepositSale.status == 'active').count()
 

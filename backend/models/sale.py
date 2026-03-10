@@ -4,12 +4,12 @@ from extensions import db
 class Sale(db.Model):
     __tablename__ = "sales"
     id = db.Column(db.Integer, primary_key=True)
-    shop_id = db.Column(db.Integer)
+    shop_id = db.Column(db.Integer, index=True)
     user_id = db.Column(db.Integer)
     total_amount = db.Column(db.Numeric(12,2))
     payment_type = db.Column(db.String(50))  # mobile_money
     receipt_uuid = db.Column(db.String(64), db.ForeignKey("receipts.uuid"), nullable=True, index=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
 
     items = db.relationship("SaleItem", backref="sale", lazy=True)
 
