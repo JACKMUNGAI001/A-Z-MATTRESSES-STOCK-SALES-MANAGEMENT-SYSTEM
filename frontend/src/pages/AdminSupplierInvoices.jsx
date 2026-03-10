@@ -27,7 +27,7 @@ export default function AdminSupplierInvoices() {
     received_date: new Date().toISOString().split('T')[0],
     due_date: '',
     notes: '',
-    items: [{ item_id: '', quantity: 0, unit_cost: 0, shop_id: '' }]
+    items: [{ item_id: '', unit_cost: 0, distributions: [{ shop_id: '', quantity: 0 }] }]
   })
 
   useEffect(() => {
@@ -58,7 +58,7 @@ export default function AdminSupplierInvoices() {
       if (shopRes.data.length > 0) {
           setFormData(prev => ({
               ...prev,
-              items: [{ ...prev.items[0], shop_id: shopRes.data[0].id }]
+              items: [{ ...prev.items[0], distributions: [{ shop_id: shopRes.data[0].id, quantity: 0 }] }]
           }))
       }
     } catch (err) {
@@ -80,7 +80,7 @@ export default function AdminSupplierInvoices() {
   const handleAddItem = () => {
     setFormData({
       ...formData,
-      items: [...formData.items, { item_id: '', quantity: 0, unit_cost: 0, shop_id: shops[0]?.id || '' }]
+      items: [...formData.items, { item_id: '', unit_cost: 0, distributions: [{ shop_id: shops[0]?.id || '', quantity: 0 }] }]
     })
   }
 
@@ -95,18 +95,56 @@ export default function AdminSupplierInvoices() {
     setFormData({ ...formData, items: newItems })
   }
 
+  const handleDistributionChange = (itemIdx, distIdx, field, value) => {
+    const newItems = [...formData.items]
+    newItems[itemIdx].distributions[distIdx][field] = value
+    setFormData({ ...formData, items: newItems })
+  }
+
+  const handleAddDistribution = (itemIdx) => {
+    const newItems = [...formData.items]
+    newItems[itemIdx].distributions.push({ shop_id: shops[0]?.id || '', quantity: 0 })
+    setFormData({ ...formData, items: newItems })
+  }
+
+  const handleRemoveDistribution = (itemIdx, distIdx) => {
+    const newItems = [...formData.items]
+    newItems[itemIdx].distributions = newItems[itemIdx].distributions.filter((_, i) => i !== distIdx)
+    setFormData({ ...formData, items: newItems })
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
-    if (!formData.supplier_id || !formData.invoice_number || formData.items.some(it => !it.item_id || !it.shop_id)) {
+    if (!formData.supplier_id || !formData.invoice_number || formData.items.some(it => !it.item_id || it.distributions.some(d => !d.shop_id))) {
       alert("Please fill all required fields, including shop distribution for each item")
       return
     }
-    if (formData.items.some(it => parseInt(it.quantity) <= 0)) {
-      alert("Please enter a valid quantity for all items")
+
+    const flattenedItems = []
+    let hasInvalidQuantity = false
+    
+    formData.items.forEach(item => {
+      item.distributions.forEach(dist => {
+        const qty = parseFloat(dist.quantity)
+        if (isNaN(qty) || qty <= 0) {
+          hasInvalidQuantity = true
+        }
+        flattenedItems.push({
+          item_id: item.item_id,
+          unit_cost: parseFloat(item.unit_cost) || 0,
+          shop_id: dist.shop_id,
+          quantity: qty
+        })
+      })
+    })
+
+    if (hasInvalidQuantity) {
+      alert("Please enter a valid quantity for all distributions")
       return
     }
+
     try {
-      await createSupplierInvoice(formData)
+      await createSupplierInvoice({ ...formData, items: flattenedItems })
       setShowModal(false)
       setFormData({
         supplier_id: '',
@@ -114,7 +152,7 @@ export default function AdminSupplierInvoices() {
         received_date: new Date().toISOString().split('T')[0],
         due_date: '',
         notes: '',
-        items: [{ item_id: '', quantity: 0, unit_cost: 0, shop_id: shops[0]?.id || '' }]
+        items: [{ item_id: '', unit_cost: 0, distributions: [{ shop_id: shops[0]?.id || '', quantity: 0 }] }]
       })
       loadData()
     } catch (err) {
@@ -389,69 +427,95 @@ export default function AdminSupplierInvoices() {
                         onClick={handleAddItem}
                         className="text-sm bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 px-3 py-1.5 rounded-lg font-bold hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors flex items-center gap-1"
                     >
-                        <Plus size={16} /> Add Item
+                        <Plus size={16} /> Add Product
                     </button>
                 </div>
                 
-                <div className="space-y-4">
+                <div className="space-y-6">
                   {formData.items.map((item, idx) => (
-                    <div key={idx} className="flex flex-wrap lg:flex-nowrap gap-4 items-end bg-gray-50 dark:bg-gray-900/30 p-4 rounded-xl relative border border-gray-100 dark:border-gray-700 transition-colors">
-                      <div className="flex-1 min-w-[200px]">
-                        <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1 uppercase tracking-widest">Select Product</label>
-                        <SearchableSelect
-                          options={supplierProducts}
-                          value={item.item_id}
-                          onChange={e => handleItemChange(idx, 'item_id', e.target.value)}
-                          placeholder={formData.supplier_id ? "Select Item" : "Select Supplier First"}
-                          disabled={!formData.supplier_id}
-                        />
-                      </div>
-                      <div className="flex-1 min-w-[180px]">
-                        <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1 uppercase tracking-widest">Target Shop</label>
-                        <SearchableSelect
-                          options={shops}
-                          value={item.shop_id}
-                          onChange={e => handleItemChange(idx, 'shop_id', e.target.value)}
-                          placeholder="Target Shop..."
-                        />
-                      </div>
-                      <div className="w-24">
-                        <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1 uppercase tracking-widest">Qty</label>
-                        <input 
-                          required
-                          type="number" 
-                          min="0"
-                          className="w-full border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg p-2 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-                          value={item.quantity}
-                          onChange={e => handleItemChange(idx, 'quantity', e.target.value)}
-                        />
-                      </div>
-                      <div className="w-32">
-                        <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1 uppercase tracking-widest">Cost (KES)</label>
-                        <input 
-                          required
-                          type="number" 
-                          step="0.01"
-                          className="w-full border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg p-2 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-                          value={item.unit_cost}
-                          onChange={e => handleItemChange(idx, 'unit_cost', e.target.value)}
-                        />
-                      </div>
-                      <div className="w-32">
-                        <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1 uppercase tracking-widest">Subtotal</label>
-                        <div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg text-gray-600 dark:text-gray-300 font-bold border border-gray-200 dark:border-gray-700 transition-colors text-xs truncate">
-                          {(item.quantity * item.unit_cost).toLocaleString()}
+                    <div key={idx} className="bg-gray-50 dark:bg-gray-900/30 p-6 rounded-2xl relative border border-gray-100 dark:border-gray-700 transition-colors space-y-4">
+                      <div className="flex flex-wrap lg:flex-nowrap gap-4 items-end">
+                        <div className="flex-1 min-w-[300px]">
+                          <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1 uppercase tracking-widest">Select Product</label>
+                          <SearchableSelect
+                            options={supplierProducts}
+                            value={item.item_id}
+                            onChange={e => handleItemChange(idx, 'item_id', e.target.value)}
+                            placeholder={formData.supplier_id ? "Select Item" : "Select Supplier First"}
+                            disabled={!formData.supplier_id}
+                          />
+                        </div>
+                        <div className="w-48">
+                          <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1 uppercase tracking-widest">Unit Cost (KES)</label>
+                          <input 
+                            required
+                            type="number" 
+                            step="0.01"
+                            className="w-full border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg p-2 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                            value={item.unit_cost}
+                            onChange={e => handleItemChange(idx, 'unit_cost', e.target.value)}
+                          />
+                        </div>
+                        <div className="flex-none">
+                            <button 
+                              type="button" 
+                              onClick={() => handleRemoveItem(idx)}
+                              className="p-2.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors border border-transparent hover:border-red-100"
+                              title="Remove Product"
+                            >
+                              <Plus size={24} style={{ transform: 'rotate(45deg)' }} />
+                            </button>
                         </div>
                       </div>
-                      {formData.items.length > 1 && (
-                        <button 
-                          type="button" 
-                          onClick={() => handleRemoveItem(idx)}
-                          className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors"
-                        >
-                          <Plus size={20} style={{ transform: 'rotate(45deg)' }} />
-                        </button>
-                      )}
+
+                      {/* Distributions */}
+                      <div className="pl-6 border-l-2 border-blue-100 dark:border-blue-900/30 space-y-3">
+                        <div className="flex justify-between items-center mb-2">
+                            <label className="text-[10px] font-black text-blue-500 dark:text-blue-400 uppercase tracking-[0.2em]">Shop Distribution</label>
+                            <button 
+                                type="button"
+                                onClick={() => handleAddDistribution(idx)}
+                                className="text-[10px] bg-blue-500 text-white px-2 py-1 rounded-md font-bold hover:bg-blue-600 transition-colors flex items-center gap-1"
+                            >
+                                <Plus size={10} strokeWidth={4} /> Add Shop
+                            </button>
+                        </div>
+                        {item.distributions.map((dist, dIdx) => (
+                          <div key={dIdx} className="flex gap-4 items-end animate-in slide-in-from-left-2 duration-200">
+                            <div className="flex-1">
+                                <SearchableSelect
+                                    options={shops}
+                                    value={dist.shop_id}
+                                    onChange={e => handleDistributionChange(idx, dIdx, 'shop_id', e.target.value)}
+                                    placeholder="Target Shop..."
+                                />
+                            </div>
+                            <div className="w-24">
+                                <input 
+                                    required
+                                    type="number" 
+                                    min="0"
+                                    placeholder="Qty"
+                                    className="w-full border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg p-2 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                                    value={dist.quantity}
+                                    onChange={e => handleDistributionChange(idx, dIdx, 'quantity', e.target.value)}
+                                />
+                            </div>
+                            <div className="w-32 bg-white dark:bg-gray-800 px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 font-bold text-gray-700 dark:text-gray-300 text-sm">
+                                {(dist.quantity * item.unit_cost).toLocaleString()}
+                            </div>
+                            {item.distributions.length > 1 && (
+                                <button 
+                                    type="button" 
+                                    onClick={() => handleRemoveDistribution(idx, dIdx)}
+                                    className="p-2 text-gray-400 hover:text-red-500 transition-colors"
+                                >
+                                    <Plus size={16} style={{ transform: 'rotate(45deg)' }} />
+                                </button>
+                            )}
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -471,7 +535,9 @@ export default function AdminSupplierInvoices() {
                 <div className="text-right">
                     <p className="text-gray-500 dark:text-gray-400 text-sm mb-1 uppercase tracking-wider font-bold transition-colors">Total Supply Value</p>
                     <p className="text-4xl font-black text-blue-600 dark:text-blue-400 transition-colors">
-                        KES {formData.items.reduce((sum, it) => sum + (it.quantity * it.unit_cost), 0).toLocaleString()}
+                        KES {formData.items.reduce((sum, item) => 
+                          sum + item.distributions.reduce((dSum, dist) => 
+                            dSum + (dist.quantity * item.unit_cost), 0), 0).toLocaleString()}
                     </p>
                 </div>
               </div>
