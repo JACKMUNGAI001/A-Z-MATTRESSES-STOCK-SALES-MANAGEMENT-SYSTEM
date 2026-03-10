@@ -40,7 +40,7 @@ def delete_supplier(supplier_id):
     db.session.commit()
     return True
 
-def create_supplier_invoice(supplier_id, invoice_number, items_data, status="Pending", received_date=None, due_date=None, notes=None):
+def create_supplier_invoice(supplier_id, invoice_number, items_data, status="Pending", received_date=None, due_date=None, notes=None, user_id=None):
     total_amount = 0
     for it in items_data:
         total_amount += (float(it['unit_cost']) * int(it['quantity']))
@@ -103,6 +103,7 @@ def create_supplier_invoice(supplier_id, invoice_number, items_data, status="Pen
             movement_type="purchase_in",
             qty=qty,
             unit_buy_price=unit_cost,
+            user_id=user_id,
             reference=f"Supplier Invoice {invoice_number}"
         )
         db.session.add(movement)

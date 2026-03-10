@@ -38,6 +38,7 @@ import TodaysDeposits from './pages/TodaysDeposits'
 import WeeksDeposits from './pages/WeeksDeposits'
 import MonthsDeposits from './pages/MonthsDeposits'
 import YearsDeposits from './pages/YearsDeposits'
+import RestockHistory from './pages/RestockHistory'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
@@ -59,6 +60,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
             <Route path="/admin" element={<ProtectedRoute role="admin"><PageLayout><AdminDashboard/></PageLayout></ProtectedRoute>} />
             <Route path="/admin/shops" element={<ProtectedRoute role={['admin', 'manager']}><PageLayout><AdminShops/></PageLayout></ProtectedRoute>} />
             <Route path="/admin/items" element={<ProtectedRoute role={['admin', 'manager']}><PageLayout><AdminItems/></PageLayout></ProtectedRoute>} />
+            <Route path="/admin/restock-history" element={<ProtectedRoute role={['admin', 'manager']}><PageLayout><RestockHistory/></PageLayout></ProtectedRoute>} />
             <Route path="/admin/suppliers" element={<ProtectedRoute role="admin"><PageLayout role="admin" title="Suppliers Management"><AdminSuppliers/></PageLayout></ProtectedRoute>} />
             <Route path="/admin/supplier-invoices" element={<ProtectedRoute role="admin"><PageLayout role="admin" title="Supplier Invoices"><AdminSupplierInvoices/></PageLayout></ProtectedRoute>} />
             <Route path="/admin/shops/:shopId" element={<ProtectedRoute role={['admin', 'manager']}><PageLayout><ShopDetails/></PageLayout></ProtectedRoute>} />

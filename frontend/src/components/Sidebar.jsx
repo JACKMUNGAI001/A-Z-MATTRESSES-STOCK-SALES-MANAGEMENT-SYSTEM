@@ -52,6 +52,7 @@ export default function Sidebar({ role: propRole, onClose }){
             <NavLink to="/admin" icon={LayoutDashboard}>Dashboard</NavLink>
             <NavLink to="/admin/shops" icon={Store}>Shops</NavLink>
             <NavLink to="/admin/items" icon={Package}>Products</NavLink>
+            <NavLink to="/admin/restock-history" icon={Truck}>Restock History</NavLink>
             <NavLink to="/admin/suppliers" icon={Truck}>Suppliers</NavLink>
             <NavLink to="/admin/pnl" icon={TrendingUp}>Profit & Loss</NavLink>
             <NavLink to="/admin/expenses" icon={Receipt}>Expenses</NavLink>
@@ -64,6 +65,7 @@ export default function Sidebar({ role: propRole, onClose }){
             <NavLink to="/deposits" icon={Store}>New Deposit</NavLink>
             <NavLink to="/attendant/deposits" icon={Users}>Active Deposits</NavLink>
             <NavLink to="/admin/shops" icon={Store}>Shops</NavLink>
+            <NavLink to="/admin/restock-history" icon={Truck}>Restock History</NavLink>
             <NavLink to="/transfers" icon={ArrowLeftRight}>Transfers</NavLink>
             <NavLink to="/admin/expenses" icon={Receipt}>Expenses</NavLink>
           </>

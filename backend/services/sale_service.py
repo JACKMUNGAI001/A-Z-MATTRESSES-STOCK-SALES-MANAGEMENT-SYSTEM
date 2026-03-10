@@ -20,11 +20,12 @@ def _generate_sale_receipt_html(sale, shop, attendant, sale_items):
     <!DOCTYPE html>
     <html>
     <head>
-        <title>Receipt</title>
+        <title>A-Z MATTRESSES - Receipt</title>
         <style>
             body {{ font-family: sans-serif; }}
             .receipt-container {{ width: 300px; margin: auto; border: 1px solid #ccc; padding: 10px; }}
-            .header {{ text-align: center; }}
+            .header {{ text-align: center; margin-bottom: 20px; }}
+            .header h1 {{ margin: 0; font-size: 24px; text-transform: uppercase; }}
             .items-table {{ width: 100%; border-collapse: collapse; }}
             .items-table th, .items-table td {{ border: 1px solid #ccc; padding: 5px; }}
         </style>
@@ -32,8 +33,9 @@ def _generate_sale_receipt_html(sale, shop, attendant, sale_items):
     <body>
         <div class="receipt-container">
             <div class="header">
-                <h2>{shop.name}</h2>
-                <p>Receipt</p>
+                <h1 style="color: #1a56db; font-size: 28px; font-weight: 900; margin-bottom: 2px;">A-Z MATTRESSES</h1>
+                <p style="margin: 0; font-weight: bold; font-size: 16px;">{shop.name}</p>
+                <p style="margin-top: 5px; font-size: 12px; font-weight: 800; border-top: 1px solid #000; padding-top: 5px; display: inline-block;">OFFICIAL SALE RECEIPT</p>
             </div>
             <p><strong>Attendant:</strong> {attendant.name}</p>
             <p><strong>Date:</strong> {sale.created_at.strftime('%Y-%m-%d %H:%M:%S')}</p>

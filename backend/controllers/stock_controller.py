@@ -1,5 +1,5 @@
 from flask import request, jsonify
-from services.stock_service import adjust_stock, check_low_stock, get_low_stock_count, get_low_stock_items, delete_stock
+from services.stock_service import adjust_stock, check_low_stock, get_low_stock_count, get_low_stock_items, delete_stock, get_restock_history
 from models.stock import ShopStock
 from extensions import db
 from flask_jwt_extended import get_jwt_identity
@@ -84,3 +84,14 @@ def delete_stock_controller(shop_id, item_id):
         return jsonify({"msg": "Stock record deleted successfully"}), 200
     except ValueError as e:
         return jsonify({"msg": str(e)}), 400
+
+def get_restock_history_controller():
+    shop_id = request.args.get("shop_id")
+    if shop_id:
+        try:
+            shop_id = int(shop_id)
+        except ValueError:
+            return jsonify({"msg": "Invalid shop_id"}), 400
+    
+    history = get_restock_history(shop_id)
+    return jsonify(history), 200

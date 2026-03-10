@@ -123,3 +123,27 @@ def delete_stock(shop_id, item_id, user_id):
     db.session.add(mv)
     db.session.commit()
     return True
+
+def get_restock_history(shop_id=None):
+    query = StockMovement.query.filter(StockMovement.movement_type.in_(['purchase_in', 'adjustment', 'transfer_in']))
+    if shop_id:
+        query = query.filter_by(shop_id=shop_id)
+    
+    movements = query.order_by(StockMovement.created_at.desc()).all()
+    out = []
+    for m in movements:
+        item = Item.query.get(m.item_id)
+        shop = Shop.query.get(m.shop_id)
+        user = User.query.get(m.user_id)
+        out.append({
+            "id": m.id,
+            "shop_name": shop.name if shop else "N/A",
+            "item_name": item.name if item else "N/A",
+            "qty": m.qty,
+            "movement_type": m.movement_type,
+            "buy_price": float(m.unit_buy_price or 0),
+            "user_name": user.name if user else "N/A",
+            "created_at": m.created_at.isoformat(),
+            "reference": m.reference
+        })
+    return out

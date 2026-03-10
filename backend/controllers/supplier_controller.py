@@ -6,6 +6,7 @@ from services.supplier_service import (
 )
 from extensions import db
 from models.supplier import Supplier, SupplierInvoice
+from flask_jwt_extended import get_jwt_identity
 
 def list_suppliers_controller():
     suppliers = list_suppliers()
@@ -75,6 +76,8 @@ def create_invoice_controller():
     supplier_id = data.get("supplier_id")
     invoice_number = data.get("invoice_number")
     items_data = data.get("items") # list of {item_id, quantity, unit_cost, shop_id}
+    user_identity = get_jwt_identity()
+    user_id = user_identity.get("id")
     
     if not all([supplier_id, invoice_number, items_data]):
         return jsonify({"msg": "supplier_id, invoice_number, and items are required"}), 400
@@ -87,7 +90,8 @@ def create_invoice_controller():
             status=data.get("status", "Pending"),
             received_date=data.get("received_date"),
             due_date=data.get("due_date"),
-            notes=data.get("notes")
+            notes=data.get("notes"),
+            user_id=user_id
         )
         return jsonify({"id": inv.id, "invoice_number": inv.invoice_number}), 201
     except Exception as e:

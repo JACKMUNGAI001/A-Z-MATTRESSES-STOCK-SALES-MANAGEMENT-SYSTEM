@@ -3,7 +3,7 @@ import Card from '../components/Card'
 import api from '../api/api'
 import { AuthContext } from '../context/AuthContext'
 import { useNavigate, Link } from 'react-router-dom'
-import { UserCheck, UserX, MapPin, Mail, ShieldCheck, UserCircle, Store } from 'lucide-react'
+import { UserCheck, UserX, MapPin, Mail, ShieldCheck, UserCircle, Store, ChevronDown, ChevronUp } from 'lucide-react'
 import TransferHistory from '../components/TransferHistory'
 
 export default function AdminDashboard(){
@@ -15,6 +15,7 @@ export default function AdminDashboard(){
   const [depositsSummary, setDepositsSummary] = useState(null)
   const [financialOverview, setFinancialOverview] = useState(null)
   const [stockSummary, setStockSummary] = useState(null)
+  const [isStockSummaryOpen, setIsStockSummaryOpen] = useState(true)
   const navigate = useNavigate()
 
   useEffect(()=> {
@@ -115,25 +116,38 @@ export default function AdminDashboard(){
 
         {/* STOCK SUMMARY BY CATEGORY */}
         <div className="mb-10">
-          <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4 tracking-tight border-l-4 border-l-green-600 pl-3 transition-colors text-sm uppercase tracking-widest text-gray-400 dark:text-gray-500">Stock Summary by Category</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {stockSummary && Object.entries(stockSummary).map(([shopName, categories]) => (
-              <div key={shopName} className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-green-100 dark:border-gray-700 bg-gradient-to-br from-white to-green-50/30 dark:from-gray-800 dark:to-green-900/10 transition-all">
-                <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                  <Store size={18} className="text-green-600 dark:text-green-400" />
-                  {shopName}
-                </h4>
-                <div className="space-y-3">
-                  {Object.entries(categories).map(([category, quantity]) => (
-                    <div key={category} className="flex justify-between items-center p-3 bg-white/50 dark:bg-gray-900/50 rounded-xl border border-gray-50 dark:border-gray-700">
-                      <span className="text-gray-600 dark:text-gray-400 font-medium">{category}</span>
-                      <span className="text-lg font-bold text-gray-900 dark:text-white bg-green-100 dark:bg-green-900/50 px-3 py-1 rounded-lg text-green-700 dark:text-green-400">{quantity}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
+          <div 
+            className="flex items-center justify-between mb-4 cursor-pointer"
+            onClick={() => setIsStockSummaryOpen(!isStockSummaryOpen)}
+          >
+            <h3 className="text-xl font-bold text-gray-800 dark:text-white tracking-tight border-l-4 border-l-green-600 pl-3 transition-colors text-sm uppercase tracking-widest text-gray-400 dark:text-gray-500">
+              Stock Summary by Category
+            </h3>
+            <button className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
+              {isStockSummaryOpen ? <ChevronUp size={20} className="text-gray-500" /> : <ChevronDown size={20} className="text-gray-500" />}
+            </button>
           </div>
+          
+          {isStockSummaryOpen && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-in fade-in duration-300">
+              {stockSummary && Object.entries(stockSummary).map(([shopName, categories]) => (
+                <div key={shopName} className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-green-100 dark:border-gray-700 bg-gradient-to-br from-white to-green-50/30 dark:from-gray-800 dark:to-green-900/10 transition-all">
+                  <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                    <Store size={18} className="text-green-600 dark:text-green-400" />
+                    {shopName}
+                  </h4>
+                  <div className="space-y-3">
+                    {Object.entries(categories).map(([category, quantity]) => (
+                      <div key={category} className="flex justify-between items-center p-3 bg-white/50 dark:bg-gray-900/50 rounded-xl border border-gray-50 dark:border-gray-700">
+                        <span className="text-gray-600 dark:text-gray-400 font-medium">{category}</span>
+                        <span className="text-lg font-bold text-gray-900 dark:text-white bg-green-100 dark:bg-green-900/50 px-3 py-1 rounded-lg text-green-700 dark:text-green-400">{quantity}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* TRANSFER HISTORY */}

@@ -15,18 +15,20 @@ def _generate_deposit_receipt_html(deposit, shop, attendant, payment, total_paid
     <!DOCTYPE html>
     <html>
     <head>
-        <title>Deposit Receipt</title>
+        <title>A-Z MATTRESSES - Deposit Receipt</title>
         <style>
             body {{ font-family: sans-serif; }}
             .receipt-container {{ width: 300px; margin: auto; border: 1px solid #ccc; padding: 10px; }}
-            .header {{ text-align: center; }}
+            .header {{ text-align: center; margin-bottom: 20px; }}
+            .header h1 {{ margin: 0; font-size: 24px; text-transform: uppercase; }}
         </style>
     </head>
     <body>
         <div class="receipt-container">
             <div class="header">
-                <h2>{shop.name}</h2>
-                <p>Deposit Receipt</p>
+                <h1 style="color: #1a56db; font-size: 28px; font-weight: 900; margin-bottom: 2px;">A-Z MATTRESSES</h1>
+                <p style="margin: 0; font-weight: bold; font-size: 16px;">{shop.name}</p>
+                <p style="margin-top: 5px; font-size: 12px; font-weight: 800; border-top: 1px solid #000; padding-top: 5px; display: inline-block;">DEPOSIT PAYMENT RECEIPT</p>
             </div>
             <p><strong>Customer:</strong> {deposit.buyer_name}</p>
             <p><strong>Item:</strong> {deposit.item.name if deposit.item else 'N/A'}</p>
