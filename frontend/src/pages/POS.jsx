@@ -110,11 +110,11 @@ export default function POS() {
 
   return (
     <>
-        <div className="flex flex-col lg:flex-row gap-8">
+        <div className="flex flex-col lg:flex-row gap-6 md:gap-8">
           {/* SELECT ITEMS */}
           <div className="flex-1 space-y-6">
             {(user?.role === 'manager' || user?.role === 'admin') && (
-              <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 transition-colors">
+              <div className="bg-white dark:bg-gray-800 p-5 sm:p-8 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 transition-colors">
                 <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-6 flex items-center gap-2">
                   <Store size={24} className="text-purple-600 dark:text-purple-400" />
                   Select Shop
@@ -130,12 +130,12 @@ export default function POS() {
                 </div>
               </div>
             )}
-            <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 transition-colors">
+            <div className="bg-white dark:bg-gray-800 p-5 sm:p-8 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 transition-colors">
               <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-6 flex items-center gap-2">
                 <Plus size={24} className="text-blue-600 dark:text-blue-400" />
                 Add Items to Cart
               </h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-6">
                 <div>
                   <label className="block text-sm font-bold text-gray-700 dark:text-gray-400 uppercase tracking-wider mb-2">Select Item</label>
                   <SearchableSelect
@@ -168,7 +168,7 @@ export default function POS() {
               </div>
               <button
                 onClick={handleAddItem}
-                className="mt-6 bg-blue-600 text-white py-3 px-8 rounded-xl font-bold shadow-lg shadow-blue-100 dark:shadow-none hover:bg-blue-700 transition-all flex items-center gap-2"
+                className="mt-6 w-full sm:w-auto bg-blue-600 text-white py-3 px-8 rounded-xl font-bold shadow-lg shadow-blue-100 dark:shadow-none hover:bg-blue-700 transition-all flex items-center justify-center gap-2"
               >
                 <Plus size={20} /> Add to Cart
               </button>
@@ -176,41 +176,42 @@ export default function POS() {
 
             {/* CART DISPLAY */}
             <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden transition-colors">
-              <div className="bg-gray-50 dark:bg-gray-900/50 px-8 py-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center transition-colors">
+              <div className="bg-gray-50 dark:bg-gray-900/50 px-4 sm:px-8 py-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center transition-colors">
                 <h2 className="text-lg font-bold text-gray-800 dark:text-white flex items-center gap-2">
                   <ShoppingCart size={20} className="text-blue-600 dark:text-blue-400" />
-                  Current Cart
+                  <span className="hidden sm:inline">Current Cart</span>
+                  <span className="sm:hidden">Cart</span>
                 </h2>
                 <span className="bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-400 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
                   {cartItems.length} Items
                 </span>
               </div>
-              <div className="p-0 overflow-y-auto max-h-80 custom-scrollbar">
+              <div className="p-0 overflow-x-auto max-h-80 custom-scrollbar">
                 {cartItems.length === 0 ? (
                   <div className="p-10 text-center text-gray-400 dark:text-gray-500 italic">Your cart is empty</div>
                 ) : (
-                  <table className="w-full relative border-collapse">
+                  <table className="w-full relative border-collapse min-w-[500px]">
                     <thead className="bg-gray-50/90 dark:bg-gray-900/90 sticky top-0 z-10 backdrop-blur-sm transition-colors">
                       <tr>
-                        <th className="px-8 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase border-b border-gray-100 dark:border-gray-700">Item</th>
-                        <th className="px-8 py-4 text-center text-xs font-bold text-gray-500 dark:text-gray-400 uppercase border-b border-gray-100 dark:border-gray-700">Qty</th>
-                        <th className="px-8 py-4 text-right text-xs font-bold text-gray-500 dark:text-gray-400 uppercase border-b border-gray-100 dark:border-gray-700">Unit Price</th>
-                        <th className="px-8 py-4 text-right text-xs font-bold text-gray-500 dark:text-gray-400 uppercase border-b border-gray-100 dark:border-gray-700">Total</th>
-                        <th className="px-8 py-4 text-center text-xs font-bold text-gray-500 dark:text-gray-400 uppercase border-b border-gray-100 dark:border-gray-700">Action</th>
+                        <th className="px-4 sm:px-8 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase border-b border-gray-100 dark:border-gray-700">Item</th>
+                        <th className="px-4 sm:px-8 py-4 text-center text-xs font-bold text-gray-500 dark:text-gray-400 uppercase border-b border-gray-100 dark:border-gray-700">Qty</th>
+                        <th className="px-4 sm:px-8 py-4 text-right text-xs font-bold text-gray-500 dark:text-gray-400 uppercase border-b border-gray-100 dark:border-gray-700">Unit Price</th>
+                        <th className="px-4 sm:px-8 py-4 text-right text-xs font-bold text-gray-500 dark:text-gray-400 uppercase border-b border-gray-100 dark:border-gray-700">Total</th>
+                        <th className="px-4 sm:px-8 py-4 text-center text-xs font-bold text-gray-500 dark:text-gray-400 uppercase border-b border-gray-100 dark:border-gray-700">Action</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-50 dark:divide-gray-700">
                       {cartItems.map((item, index) => (
                         <tr key={index} className="hover:bg-gray-50/50 dark:hover:bg-gray-900/50 transition-colors">
-                          <td className="px-8 py-4 font-bold text-gray-900 dark:text-white">{item.name}</td>
-                          <td className="px-8 py-4 text-center text-gray-600 dark:text-gray-400 font-medium">{item.qty}</td>
-                          <td className="px-8 py-4 text-right font-medium text-gray-600 dark:text-gray-400">
+                          <td className="px-4 sm:px-8 py-4 font-bold text-gray-900 dark:text-white text-sm sm:text-base">{item.name}</td>
+                          <td className="px-4 sm:px-8 py-4 text-center text-gray-600 dark:text-gray-400 font-medium">{item.qty}</td>
+                          <td className="px-4 sm:px-8 py-4 text-right font-medium text-gray-600 dark:text-gray-400 text-sm sm:text-base">
                             KES {item.unit_price.toLocaleString()}
                           </td>
-                          <td className="px-8 py-4 text-right font-bold text-blue-600 dark:text-blue-400">
+                          <td className="px-4 sm:px-8 py-4 text-right font-bold text-blue-600 dark:text-blue-400 text-sm sm:text-base">
                             KES {(item.qty * item.unit_price).toLocaleString()}
                           </td>
-                          <td className="px-8 py-4 text-center">
+                          <td className="px-4 sm:px-8 py-4 text-center">
                             <button onClick={() => handleRemoveFromCart(index)} className="text-red-400 hover:text-red-600 transition-colors">
                               <Trash2 size={18} />
                             </button>
@@ -226,7 +227,7 @@ export default function POS() {
 
           {/* CHECKOUT SIDEBAR */}
           <div className="w-full lg:w-80">
-            <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-md border border-gray-100 dark:border-gray-700 sticky top-24 transition-colors">
+            <div className="bg-white dark:bg-gray-800 p-5 sm:p-8 rounded-2xl shadow-md border border-gray-100 dark:border-gray-700 sticky top-24 transition-colors">
               <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-6 flex items-center gap-2">
                 <CreditCard size={24} className="text-blue-600 dark:text-blue-400" />
                 Checkout
@@ -234,15 +235,15 @@ export default function POS() {
               <div className="space-y-6">
                 <div>
                   <label className="block text-sm font-bold text-gray-700 dark:text-gray-400 uppercase tracking-wider mb-2">Payment Method</label>
-                  <div className="w-full p-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 font-bold flex items-center gap-2">
+                  <div className="w-full p-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 font-bold flex items-center gap-2 text-sm sm:text-base">
                     <span>📱 Mobile Money (M-PESA)</span>
                   </div>
                 </div>
                 
                 <div className="pt-6 border-t border-gray-100 dark:border-gray-700">
-                  <div className="flex justify-between items-center mb-2 text-gray-500 dark:text-gray-400 font-medium uppercase text-xs tracking-widest">Subtotal</div>
+                  <div className="flex justify-between items-center mb-2 text-gray-500 dark:text-gray-400 font-medium uppercase text-[10px] tracking-widest">Subtotal</div>
                   <div className="flex justify-between items-center">
-                    <span className="text-3xl font-black text-gray-900 dark:text-white">
+                    <span className="text-2xl sm:text-3xl font-black text-gray-900 dark:text-white">
                       KES {cartItems.reduce((sum, item) => sum + (item.qty * item.unit_price), 0).toLocaleString()}
                     </span>
                   </div>

@@ -45,10 +45,10 @@ export default function TransferHistory() {
           }`}
         >
           <div className="flex items-center gap-3">
-            <ArrowLeftRight size={24} className="text-blue-600 dark:text-blue-400" />
+            <ArrowLeftRight size={20} className="sm:w-6 sm:h-6 text-blue-600 dark:text-blue-400" />
             <div className="text-left">
-              <h2 className="text-xl font-bold text-gray-800 dark:text-white tracking-tight">Stock Transfer History</h2>
-              <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">Record of all inventory relocations</p>
+              <h2 className="text-lg sm:text-xl font-bold text-gray-800 dark:text-white tracking-tight">Stock Transfer History</h2>
+              <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 font-medium">Record of all inventory relocations</p>
             </div>
           </div>
           <div className="flex items-center gap-4">
@@ -85,7 +85,7 @@ export default function TransferHistory() {
               </div>
             ) : (
               <div className="overflow-x-auto max-h-96 overflow-y-auto custom-scrollbar">
-                <table className="min-w-full relative border-collapse">
+                <table className="min-w-[800px] md:min-w-full relative border-collapse">
                   <thead className="bg-gray-50/90 dark:bg-gray-900/90 sticky top-0 z-10 backdrop-blur-sm transition-colors">
                     <tr className="transition-colors">
                       <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest border-b border-gray-100 dark:border-gray-700">Movement</th>

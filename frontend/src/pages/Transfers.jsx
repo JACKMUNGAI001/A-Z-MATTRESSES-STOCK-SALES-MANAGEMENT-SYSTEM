@@ -60,23 +60,23 @@ export default function Transfers() {
   return (
     <>
         <div className="mb-8 flex items-center gap-3 transition-colors">
-          <div className="bg-blue-600 p-3 rounded-2xl text-white shadow-lg shadow-blue-200 dark:shadow-none transition-colors">
-            <ArrowLeftRight size={32} />
+          <div className="bg-blue-600 p-2 sm:p-3 rounded-2xl text-white shadow-lg shadow-blue-200 dark:shadow-none transition-colors">
+            <ArrowLeftRight size={24} className="sm:w-8 sm:h-8" />
           </div>
           <div>
-            <h1 className="text-3xl font-black text-gray-900 dark:text-white tracking-tight transition-colors">Inter-Shop Transfers</h1>
-            <p className="text-gray-500 dark:text-gray-400 font-medium transition-colors">Relocate inventory between branch locations securely</p>
+            <h1 className="text-2xl sm:text-3xl font-black text-gray-900 dark:text-white tracking-tight transition-colors">Inter-Shop Transfers</h1>
+            <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400 font-medium transition-colors">Relocate inventory between branch locations securely</p>
           </div>
         </div>
 
         <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden max-w-4xl transition-colors">
-          <div className="bg-gray-50 dark:bg-gray-900/50 px-8 py-6 border-b border-gray-100 dark:border-gray-700 flex items-center gap-3 transition-colors">
+          <div className="bg-gray-50 dark:bg-gray-900/50 px-5 sm:px-8 py-4 sm:py-6 border-b border-gray-100 dark:border-gray-700 flex items-center gap-3 transition-colors">
             <Send size={24} className="text-blue-600 dark:text-blue-400" />
-            <h2 className="text-xl font-bold text-gray-800 dark:text-white tracking-tight transition-colors">Create New Transfer</h2>
+            <h2 className="text-lg sm:text-xl font-bold text-gray-800 dark:text-white tracking-tight transition-colors">Create New Transfer</h2>
           </div>
           
-          <div className="p-8 space-y-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="p-5 sm:p-8 space-y-6 sm:space-y-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-8">
               {/* FROM */}
               <div className="space-y-2">
                 <label className="flex items-center gap-2 text-xs font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest px-1 transition-colors">
@@ -125,7 +125,7 @@ export default function Transfers() {
                   Quantity
                 </label>
                 <input
-                  className="w-full p-4 border border-gray-200 dark:border-gray-700 rounded-2xl bg-gray-50 dark:bg-gray-900 focus:ring-2 focus:ring-blue-500 outline-none font-black text-blue-600 dark:text-blue-400 text-lg transition-all"
+                  className="w-full p-3 sm:p-4 border border-gray-200 dark:border-gray-700 rounded-2xl bg-gray-50 dark:bg-gray-900 focus:ring-2 focus:ring-blue-500 outline-none font-black text-blue-600 dark:text-blue-400 text-base sm:text-lg transition-all"
                   type="number"
                   value={quantity}
                   min="0"
@@ -141,7 +141,7 @@ export default function Transfers() {
                 Transfer Notes / Reason
               </label>
               <textarea
-                className="w-full p-4 border border-gray-200 dark:border-gray-700 rounded-2xl bg-gray-50 dark:bg-gray-900 focus:ring-2 focus:ring-blue-500 outline-none font-medium text-gray-700 dark:text-gray-300 h-24 transition-all"
+                className="w-full p-3 sm:p-4 border border-gray-200 dark:border-gray-700 rounded-2xl bg-gray-50 dark:bg-gray-900 focus:ring-2 focus:ring-blue-500 outline-none font-medium text-gray-700 dark:text-gray-300 h-24 transition-all"
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="Briefly explain why this stock is being moved..."
@@ -150,9 +150,9 @@ export default function Transfers() {
 
             <button
               onClick={handleTransfer}
-              className="w-full bg-blue-600 text-white py-5 rounded-2xl font-black text-lg shadow-xl shadow-blue-100 dark:shadow-none hover:bg-blue-700 hover:-translate-y-0.5 transition-all flex items-center justify-center gap-3 mt-4"
+              className="w-full bg-blue-600 text-white py-4 sm:py-5 rounded-2xl font-black text-base sm:text-lg shadow-xl shadow-blue-100 dark:shadow-none hover:bg-blue-700 hover:-translate-y-0.5 transition-all flex items-center justify-center gap-3 mt-4"
             >
-              <ArrowLeftRight size={24} /> Execute Transfer
+              <ArrowLeftRight size={20} className="sm:w-6 sm:h-6" /> Execute Transfer
             </button>
           </div>
         </div>

@@ -93,24 +93,24 @@ export default function AttendantDashboard(){
         {/* SALES SUMMARY */}
         <div className="mb-10">
           <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4 tracking-tight border-l-4 border-l-blue-600 pl-3 text-sm uppercase tracking-widest text-gray-400 dark:text-gray-500 transition-colors">Sales Summary</h3>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6">
             <Link to="/attendant/sales" className="no-underline group">
-                <Card title="Today's Sales" interactive={true}>
+                <Card title="Today's Sales" interactive={true} className="!p-4 sm:!p-6 text-xl">
                   {salesSummary ? formatCurrency(salesSummary.today) : '...'}
                 </Card>
             </Link>
             <Link to="/attendant/sales/week" className="no-underline group">
-                <Card title="This Week's" interactive={true}>
+                <Card title="This Week's" interactive={true} className="!p-4 sm:!p-6 text-xl">
                   {salesSummary ? formatCurrency(salesSummary.week) : '...'}
                 </Card>
             </Link>
             <Link to="/attendant/sales/month" className="no-underline group">
-                <Card title="This Month's" interactive={true}>
+                <Card title="This Month's" interactive={true} className="!p-4 sm:!p-6 text-xl">
                   {salesSummary ? formatCurrency(salesSummary.month) : '...'}
                 </Card>
             </Link>
             <Link to="/attendant/sales/year" className="no-underline group">
-                <Card title="This Year's" interactive={true}>
+                <Card title="This Year's" interactive={true} className="!p-4 sm:!p-6 text-xl">
                   {salesSummary ? formatCurrency(salesSummary.year) : '...'}
                 </Card>
             </Link>
@@ -120,44 +120,45 @@ export default function AttendantDashboard(){
         {/* DEPOSITS SUMMARY */}
         <div className="mb-10">
           <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4 tracking-tight border-l-4 border-l-indigo-600 pl-3 text-sm uppercase tracking-widest text-gray-400 dark:text-gray-500 transition-colors">Deposit Collections</h3>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6">
             <Link to="/attendant/deposits/today" className="no-underline group">
-                <Card title="Today's" interactive={true}>
+                <Card title="Today's" interactive={true} className="!p-4 sm:!p-6 text-xl">
                   {depositsSummary ? formatCurrency(depositsSummary.today) : '...'}
                 </Card>
             </Link>
             <Link to="/attendant/deposits/week" className="no-underline group">
-                <Card title="This Week's" interactive={true}>
+                <Card title="This Week's" interactive={true} className="!p-4 sm:!p-6 text-xl">
                   {depositsSummary ? formatCurrency(depositsSummary.week) : '...'}
                 </Card>
             </Link>
             <Link to="/attendant/deposits/month" className="no-underline group">
-                <Card title="This Month's" interactive={true}>
+                <Card title="This Month's" interactive={true} className="!p-4 sm:!p-6 text-xl">
                   {depositsSummary ? formatCurrency(depositsSummary.month) : '...'}
                 </Card>
             </Link>
             <Link to="/attendant/deposits/year" className="no-underline group">
-                <Card title="This Year's" interactive={true}>
+                <Card title="This Year's" interactive={true} className="!p-4 sm:!p-6 text-xl">
                   {depositsSummary ? formatCurrency(depositsSummary.year) : '...'}
                 </Card>
             </Link>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6 mb-10">
           <Link to="/attendant/low-stock" className="no-underline group">
-              <Card title="Low Stock Items" interactive={true} className="border-l-4 border-l-orange-500 flex justify-between items-center">
-                <span>{lowStockCount}</span>
-                <Package className="text-orange-200 dark:text-orange-900/30 group-hover:text-orange-400 dark:group-hover:text-orange-500 transition-colors" size={40} />
+              <Card title="Low Stock Items" interactive={true} className="border-l-4 border-l-orange-500 flex justify-between items-center !p-5 sm:!p-6">
+                <span className="text-2xl sm:text-3xl">{lowStockCount}</span>
+                <Package className="text-orange-200 dark:text-orange-900/30 group-hover:text-orange-400 dark:group-hover:text-orange-500 transition-colors" size={32} />
               </Card>
           </Link>
           <Link to="/attendant/deposits" className="no-underline group">
-              <Card title="Manage Active Deposits" interactive={true} className="border-l-4 border-l-indigo-500 flex justify-between items-center">
-                <span>{depositCustomersCount} Accounts</span>
-                <Users className="text-indigo-200 dark:text-indigo-900/30 group-hover:text-indigo-400 dark:group-hover:text-indigo-500 transition-colors" size={40} />
+              <Card title="Manage Active Deposits" interactive={true} className="border-l-4 border-l-indigo-500 flex justify-between items-center !p-5 sm:!p-6">
+                <span className="text-2xl sm:text-3xl">{depositCustomersCount} <span className="text-sm font-bold uppercase">Accounts</span></span>
+                <Users className="text-indigo-200 dark:text-indigo-900/30 group-hover:text-indigo-400 dark:group-hover:text-indigo-500 transition-colors" size={32} />
               </Card>
           </Link>
         </div>
+
 
         {/* STOCK SUMMARY BY CATEGORY */}
         <div className="mb-10">
