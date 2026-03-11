@@ -13,6 +13,7 @@ export default function AdminItems() {
     buy_price: "",
   });
   const [editingId, setEditingId] = useState(null);
+  const [newCategoryName, setNewCategoryName] = useState("");
   const { searchQuery, searchType } = useContext(SearchContext);
 
   useEffect(() => {
@@ -95,17 +96,40 @@ export default function AdminItems() {
     setEditingId(null);
   };
 
+  const handleCreateCategory = async () => {
+    if (!newCategoryName.trim()) return;
+    try {
+      await api.post("/items/categories", { name: newCategoryName });
+      alert("Category created!");
+      setNewCategoryName("");
+      fetchCategories();
+    } catch (err) {
+      alert(`Error creating category: ${err.response?.data?.msg || err.message}`);
+    }
+  };
+
+  const handleDeleteCategory = async (id) => {
+    if (!window.confirm("Delete this category? This will fail if products are linked to it.")) return;
+    try {
+      await api.delete(`/items/categories/${id}`);
+      alert("Category deleted!");
+      fetchCategories();
+    } catch (err) {
+      alert(`Error deleting category: ${err.response?.data?.msg || err.message}`);
+    }
+  };
+
   return (
     <>
-        <div className="grid grid-cols-1 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* ITEM FORM */}
-          <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 transition-colors">
+          <div className="lg:col-span-2 bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 transition-colors">
             <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-8 flex items-center gap-2 transition-colors">
               {editingId ? <Edit className="text-blue-600 dark:text-blue-400" /> : <Plus className="text-blue-600 dark:text-blue-400" />}
               {editingId ? "Edit Product Details" : "Register New Product"}
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-1">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="md:col-span-2">
                 <label className="block text-sm font-bold text-gray-700 dark:text-gray-400 uppercase mb-1 px-1 transition-colors">Product Name</label>
                 <input name="name" className="w-full p-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none font-bold transition-all" value={formData.name} onChange={handleInputChange} placeholder="e.g. Super Soft Mattress" />
               </div>
@@ -138,8 +162,46 @@ export default function AdminItems() {
             </div>
           </div>
 
+          {/* CATEGORY MANAGEMENT */}
+          <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 transition-colors">
+            <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-6 flex items-center gap-2">
+              <Package className="text-blue-600 dark:text-blue-400" />
+              Categories
+            </h2>
+            <div className="space-y-4">
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="New Category..."
+                  className="flex-1 p-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500"
+                  value={newCategoryName}
+                  onChange={(e) => setNewCategoryName(e.target.value)}
+                />
+                <button
+                  onClick={handleCreateCategory}
+                  className="bg-blue-600 text-white p-2 rounded-lg hover:bg-blue-700 transition-all"
+                >
+                  <Plus size={20} />
+                </button>
+              </div>
+              <div className="max-h-[300px] overflow-y-auto custom-scrollbar divide-y divide-gray-100 dark:divide-gray-700">
+                {categories.map((cat) => (
+                  <div key={cat.id} className="flex justify-between items-center py-3">
+                    <span className="text-gray-700 dark:text-gray-300 font-medium">{cat.name}</span>
+                    <button
+                      onClick={() => handleDeleteCategory(cat.id)}
+                      className="text-red-500 hover:text-red-700 p-1"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
           {/* ITEMS LIST */}
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden transition-colors">
+          <div className="lg:col-span-3 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden transition-colors">
             <div className="bg-gray-50 dark:bg-gray-900/50 px-8 py-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center transition-colors">
               <h2 className="text-lg font-bold text-gray-800 dark:text-white flex items-center gap-2 transition-colors">
                 <Package size={20} className="text-blue-600 dark:text-blue-400" />

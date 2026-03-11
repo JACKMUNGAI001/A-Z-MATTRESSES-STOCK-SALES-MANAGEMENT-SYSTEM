@@ -39,6 +39,35 @@ def list_categories_controller():
     out = [{"id":c.id,"name":c.name} for c in categories]
     return jsonify(out), 200
 
+def create_category_controller():
+    data = request.get_json() or {}
+    name = data.get("name")
+    if not name:
+        return jsonify({"msg": "Category name is required"}), 400
+    
+    existing = Category.query.filter_by(name=name).first()
+    if existing:
+        return jsonify({"msg": "Category already exists"}), 400
+        
+    category = Category(name=name)
+    db.session.add(category)
+    db.session.commit()
+    return jsonify({"id": category.id, "name": category.name}), 201
+
+def delete_category_controller(category_id):
+    category = Category.query.get(category_id)
+    if not category:
+        return jsonify({"msg": "Category not found"}), 404
+    
+    # Check if category is in use by any items
+    items_count = Item.query.filter_by(category_id=category_id).count()
+    if items_count > 0:
+        return jsonify({"msg": f"Cannot delete category: it is being used by {items_count} products"}), 400
+        
+    db.session.delete(category)
+    db.session.commit()
+    return jsonify({"msg": "Category deleted successfully"}), 200
+
 def update_item_controller(item_id):
     item = Item.query.get(item_id)
     if not item:
