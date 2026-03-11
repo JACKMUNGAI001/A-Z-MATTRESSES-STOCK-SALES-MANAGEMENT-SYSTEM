@@ -46,7 +46,7 @@ class SupplierInvoiceItem(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     item = db.relationship("Item", backref=db.backref("supplied_items", lazy=True))
-    shop = db.relationship("Shop", backref=db.backref("supplied_items", lazy=True))
+    shop = db.relationship("Shop", backref=db.backref("supplied_items", lazy=True, cascade="all, delete-orphan"))
 
 class SupplierInvoicePayment(db.Model):
     __tablename__ = "supplier_invoice_payments"

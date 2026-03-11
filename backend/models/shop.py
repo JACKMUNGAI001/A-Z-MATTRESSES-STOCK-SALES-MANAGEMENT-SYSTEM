@@ -9,4 +9,5 @@ class Shop(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     attendants = db.relationship("User", backref="shop", lazy=True)
-    stocks = db.relationship("ShopStock", backref="shop", lazy=True)
+    stocks = db.relationship("ShopStock", backref="shop", lazy=True, cascade="all, delete-orphan")
+    batches = db.relationship("StockBatch", backref="shop", lazy=True, cascade="all, delete-orphan")
