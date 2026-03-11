@@ -129,6 +129,49 @@ def list_supplier_invoices():
 def get_supplier_invoice(invoice_id):
     return SupplierInvoice.query.get(invoice_id)
 
+def delete_supplier_invoice(invoice_id):
+    inv = SupplierInvoice.query.get(invoice_id)
+    if not inv:
+        return False
+    
+    # Reverse stock changes for each item in the invoice
+    for item in inv.items:
+        # Check current stock
+        stock = ShopStock.query.filter_by(shop_id=item.shop_id, item_id=item.item_id).first()
+        if stock:
+            # Check if we have enough stock to reverse
+            if stock.quantity < item.quantity:
+                # We can either prevent deletion or allow it to go negative. 
+                # Preventing is safer to avoid data inconsistency.
+                raise ValueError(f"Cannot delete invoice: Stock for {item.item.name} in {item.shop.name} is insufficient to reverse the purchase.")
+            
+            stock.quantity -= item.quantity
+        
+        # Remove the StockBatch associated with this invoice item
+        # source_type="purchase" and source_id=item.id
+        batch = StockBatch.query.filter_by(source_type="purchase", source_id=item.id).first()
+        if batch:
+            # If the batch has been partially or fully sold, reversing it might be complex.
+            # But for simplicity, we delete it.
+            db.session.delete(batch)
+
+        # Remove the StockMovement associated with this invoice
+        # It was created with reference="Supplier Invoice {invoice_number}"
+        movement = StockMovement.query.filter_by(
+            shop_id=item.shop_id, 
+            item_id=item.item_id, 
+            movement_type="purchase_in",
+            reference=f"Supplier Invoice {inv.invoice_number}"
+        ).first()
+        if movement:
+            db.session.delete(movement)
+
+    # Payments and Items should be handled by cascade or manual deletion
+    # Based on models/supplier.py, we might need manual deletion if cascades aren't set
+    db.session.delete(inv)
+    db.session.commit()
+    return True
+
 def update_invoice_status(invoice_id, status):
     inv = SupplierInvoice.query.get(invoice_id)
     if not inv:

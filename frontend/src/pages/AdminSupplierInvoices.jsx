@@ -2,7 +2,7 @@ import React, { useState, useEffect, useContext } from 'react'
 import { fetchSupplierInvoices, fetchSuppliers, createSupplierInvoice, fetchSupplierInvoiceDetails, updateSupplierInvoiceStatus, recordSupplierInvoicePayment } from '../api/api'
 import api from '../api/api'
 import Card from '../components/Card'
-import { Plus, Eye, FileText, Calendar, DollarSign, Truck, Package, Search, CheckCircle, SearchX, Wallet, History, Store, X } from 'lucide-react'
+import { Plus, Eye, FileText, Calendar, DollarSign, Truck, Package, Search, CheckCircle, SearchX, Wallet, History, Store, X, Trash2 } from 'lucide-react'
 import { SearchContext } from '../context/SearchContext'
 import { formatDate } from '../utils/helpers'
 import SearchableSelect from '../components/SearchableSelect'
@@ -189,6 +189,16 @@ export default function AdminSupplierInvoices() {
     }
   }
 
+  const handleDelete = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this invoice? Stock will be reversed for all items.')) return;
+    try {
+      await api.delete(`/suppliers/invoices/${id}`);
+      loadData();
+    } catch (err) {
+      alert(err.response?.data?.msg || "Error deleting invoice");
+    }
+  }
+
   const filteredInvoices = invoices.filter(inv => {
     const statusMatch = inv.status === activeTab || (activeTab === 'Pending' && inv.status === 'Partial');
     const searchMatch = searchQuery ? (
@@ -302,6 +312,13 @@ export default function AdminSupplierInvoices() {
                                 <Wallet size={18} />
                               </button>
                             )}
+                            <button 
+                              onClick={() => handleDelete(inv.id)}
+                              className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 p-2 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-full transition-colors flex items-center gap-1 text-sm font-medium"
+                              title="Delete Invoice"
+                            >
+                              <Trash2 size={18} />
+                            </button>
                           </div>
                         </td>
                       </tr>

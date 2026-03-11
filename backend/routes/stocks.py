@@ -1,6 +1,10 @@
 from flask import Blueprint, request
-from controllers.stock_controller import get_shop_stock, adjust_stock_controller, low_stock_alerts_controller, low_stock_count_controller, low_stock_items_controller, delete_stock_controller, get_restock_history_controller
-from flask_jwt_extended import jwt_required, get_jwt_identity
+from controllers.stock_controller import (
+    get_shop_stock, adjust_stock_controller, 
+    low_stock_alerts_controller, low_stock_count_controller, 
+    low_stock_items_controller, delete_stock_controller, 
+    get_restock_history_controller, delete_restock_controller
+)
 
 bp = Blueprint("stocks", __name__)
 
@@ -8,6 +12,11 @@ bp = Blueprint("stocks", __name__)
 @jwt_required()
 def restock_history():
     return get_restock_history_controller()
+
+@bp.route("/history/<int:movement_id>", methods=["DELETE"])
+@jwt_required()
+def delete_restock(movement_id):
+    return delete_restock_controller(movement_id)
 
 @bp.route("/<int:shop_id>", methods=["GET"])
 @jwt_required()

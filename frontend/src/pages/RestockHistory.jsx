@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useContext } from 'react';
 import api from '../api/api';
-import { Truck, Store, Calendar, Package, User, SearchX, ChevronDown, ChevronUp } from 'lucide-react';
+import { Truck, Store, Calendar, Package, User, SearchX, ChevronDown, ChevronUp, Trash2 } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
 import { formatDate } from '../utils/helpers';
 
 export default function RestockHistory() {
+  const { user } = useContext(AuthContext);
   const [history, setHistory] = useState([]);
   const [shops, setShops] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -38,6 +39,16 @@ export default function RestockHistory() {
     } catch (err) {
       console.error('Error fetching restock history');
       setLoading(false);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this restock record? Stock will be reversed.')) return;
+    try {
+      await api.delete(`/stocks/history/${id}`);
+      fetchHistory();
+    } catch (err) {
+      alert(err.response?.data?.msg || 'Error deleting restock record');
     }
   };
 
@@ -106,6 +117,7 @@ export default function RestockHistory() {
                         <th className="px-6 py-4 text-left border-b border-gray-100 dark:border-gray-700">Restocked By</th>
                         <th className="px-6 py-4 text-left border-b border-gray-100 dark:border-gray-700">Date & Time</th>
                         <th className="px-6 py-4 text-left border-b border-gray-100 dark:border-gray-700">Type</th>
+                        {user?.role === 'admin' && <th className="px-6 py-4 text-right border-b border-gray-100 dark:border-gray-700">Action</th>}
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-50 dark:divide-gray-700 transition-colors">
@@ -146,6 +158,17 @@ export default function RestockHistory() {
                               {m.movement_type.replace('_', ' ')}
                             </span>
                           </td>
+                          {user?.role === 'admin' && (
+                            <td className="px-6 py-4 text-right">
+                              <button 
+                                onClick={() => handleDelete(m.id)}
+                                className="text-red-500 hover:text-red-700 transition-colors p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20"
+                                title="Delete Restock"
+                              >
+                                <Trash2 size={18} />
+                              </button>
+                            </td>
+                          )}
                         </tr>
                       ))}
                     </tbody>

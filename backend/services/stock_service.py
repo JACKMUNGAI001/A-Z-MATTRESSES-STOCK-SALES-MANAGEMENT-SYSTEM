@@ -172,3 +172,40 @@ def get_restock_history(shop_id=None):
             "reference": m.reference
         })
     return out
+
+def delete_restock_movement(movement_id):
+    mv = StockMovement.query.get(movement_id)
+    if not mv:
+        return False
+    
+    if mv.movement_type not in ['purchase_in', 'adjustment', 'transfer_in']:
+        raise ValueError("Only restock movements can be deleted here.")
+    
+    # If it's a purchase_in with a supplier invoice reference, we should probably delete the invoice instead
+    if mv.movement_type == 'purchase_in' and mv.reference and "Supplier Invoice" in mv.reference:
+        raise ValueError("This restock is linked to a supplier invoice. Please delete the invoice instead.")
+
+    # Reverse stock change
+    stock = ShopStock.query.filter_by(shop_id=mv.shop_id, item_id=mv.item_id).first()
+    if stock:
+        if stock.quantity < mv.qty:
+             raise ValueError(f"Insufficient stock to reverse this movement.")
+        stock.quantity -= mv.qty
+    
+    # Delete associated Batch (if it was an addition)
+    if mv.qty > 0:
+        # We need a way to find the exact batch. 
+        # For adjustments/transfers, source_type matches movement_type and source_id is often the movement id if we set it.
+        # Let's check how they are created in adjust_stock
+        batch = StockBatch.query.filter_by(
+            shop_id=mv.shop_id, 
+            item_id=mv.item_id, 
+            initial_qty=mv.qty,
+            source_type=mv.movement_type
+        ).order_by(StockBatch.created_at.desc()).first()
+        if batch:
+            db.session.delete(batch)
+
+    db.session.delete(mv)
+    db.session.commit()
+    return True

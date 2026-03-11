@@ -1,5 +1,5 @@
 from flask import request, jsonify
-from services.stock_service import adjust_stock, check_low_stock, get_low_stock_count, get_low_stock_items, delete_stock, get_restock_history
+from services.stock_service import adjust_stock, check_low_stock, get_low_stock_count, get_low_stock_items, delete_stock, get_restock_history, delete_restock_movement
 from models.stock import ShopStock
 from extensions import db
 from flask_jwt_extended import get_jwt_identity
@@ -95,3 +95,14 @@ def get_restock_history_controller():
     
     history = get_restock_history(shop_id)
     return jsonify(history), 200
+
+def delete_restock_controller(movement_id):
+    try:
+        success = delete_restock_movement(movement_id)
+        if not success:
+            return jsonify({"msg": "Movement not found"}), 404
+        return jsonify({"msg": "Restock movement deleted successfully"}), 200
+    except ValueError as e:
+        return jsonify({"msg": str(e)}), 400
+    except Exception as e:
+        return jsonify({"msg": "Internal Server Error"}), 500

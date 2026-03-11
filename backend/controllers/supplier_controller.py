@@ -2,6 +2,7 @@ from flask import request, jsonify
 from services.supplier_service import (
     create_supplier, list_suppliers, update_supplier, delete_supplier,
     create_supplier_invoice, list_supplier_invoices, get_supplier_invoice,
+    delete_supplier_invoice,
     update_invoice_status, record_invoice_payment, get_supplier_products
 )
 from extensions import db
@@ -139,6 +140,17 @@ def get_invoice_controller(invoice_id):
         "items": items_out,
         "payments": payments_out
     }), 200
+
+def delete_invoice_controller(invoice_id):
+    try:
+        success = delete_supplier_invoice(invoice_id)
+        if not success:
+            return jsonify({"msg": "Invoice not found"}), 404
+        return jsonify({"msg": "Invoice deleted successfully"}), 200
+    except ValueError as e:
+        return jsonify({"msg": str(e)}), 400
+    except Exception as e:
+        return jsonify({"msg": "Internal Server Error"}), 500
 
 def update_invoice_status_controller(invoice_id):
     data = request.get_json() or {}

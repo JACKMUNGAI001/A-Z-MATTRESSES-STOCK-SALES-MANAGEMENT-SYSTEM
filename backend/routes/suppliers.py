@@ -1,10 +1,11 @@
 from flask import Blueprint
 from controllers.supplier_controller import (
     list_suppliers_controller, create_supplier_controller, update_supplier_controller, delete_supplier_controller,
-    list_invoices_controller, create_invoice_controller, get_invoice_controller, update_invoice_status_controller,
+    list_invoices_controller, create_invoice_controller, get_invoice_controller, 
+    delete_invoice_controller,
+    update_invoice_status_controller,
     record_invoice_payment_controller, list_supplier_products_controller
 )
-from flask_jwt_extended import jwt_required
 
 suppliers_bp = Blueprint("suppliers", __name__)
 
@@ -42,6 +43,11 @@ def create_invoice():
 @jwt_required()
 def get_invoice(invoice_id):
     return get_invoice_controller(invoice_id)
+
+@suppliers_bp.route("/invoices/<int:invoice_id>", methods=["DELETE"])
+@jwt_required()
+def delete_invoice(invoice_id):
+    return delete_invoice_controller(invoice_id)
 
 @suppliers_bp.route("/invoices/<int:invoice_id>/status", methods=["PUT"])
 @jwt_required()
