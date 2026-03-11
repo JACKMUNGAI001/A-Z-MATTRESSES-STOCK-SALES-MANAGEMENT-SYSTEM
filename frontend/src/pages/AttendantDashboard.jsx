@@ -17,7 +17,7 @@ export default function AttendantDashboard(){
   const [lowStockCount, setLowStockCount] = useState(0);
   const [depositCustomersCount, setDepositCustomersCount] = useState(0);
   const [stockSummary, setStockSummary] = useState(null);
-  const [isStockSummaryOpen, setIsStockSummaryOpen] = useState(true);
+  const [isStockSummaryOpen, setIsStockSummaryOpen] = useState(false);
 
   useEffect(() => {
     if (user?.shop_id) {

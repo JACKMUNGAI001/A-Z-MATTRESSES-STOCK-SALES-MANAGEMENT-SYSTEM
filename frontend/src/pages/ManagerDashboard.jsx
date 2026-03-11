@@ -18,7 +18,7 @@ export default function ManagerDashboard(){
   const [shops, setShops] = useState([]);
   const [stockSummary, setStockSummary] = useState(null);
   const [isInventoryExpanded, setIsInventoryExpanded] = useState(false);
-  const [isStockSummaryOpen, setIsStockSummaryOpen] = useState(true);
+  const [isStockSummaryOpen, setIsStockSummaryOpen] = useState(false);
 
   useEffect(() => {
     fetchGlobalStock();
