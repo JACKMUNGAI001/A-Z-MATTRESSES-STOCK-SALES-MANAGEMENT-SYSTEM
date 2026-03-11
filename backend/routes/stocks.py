@@ -5,6 +5,7 @@ from controllers.stock_controller import (
     low_stock_items_controller, delete_stock_controller, 
     get_restock_history_controller, delete_restock_controller
 )
+from flask_jwt_extended import jwt_required, get_jwt_identity
 
 bp = Blueprint("stocks", __name__)
 

@@ -6,6 +6,7 @@ from controllers.supplier_controller import (
     update_invoice_status_controller,
     record_invoice_payment_controller, list_supplier_products_controller
 )
+from flask_jwt_extended import jwt_required
 
 suppliers_bp = Blueprint("suppliers", __name__)
 
