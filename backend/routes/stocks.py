@@ -1,6 +1,6 @@
 from flask import Blueprint, request
 from controllers.stock_controller import (
-    get_shop_stock, adjust_stock_controller, 
+    get_shop_stock, adjust_stock_controller, adjust_stock_bulk_controller,
     low_stock_alerts_controller, low_stock_count_controller, 
     low_stock_items_controller, delete_stock_controller, 
     get_restock_history_controller, delete_restock_controller
@@ -29,6 +29,12 @@ def get_stocks(shop_id):
 def adjust():
     identity = get_jwt_identity()
     return adjust_stock_controller(identity)
+
+@bp.route("/adjust-bulk", methods=["POST"])
+@jwt_required()
+def adjust_bulk():
+    identity = get_jwt_identity()
+    return adjust_stock_bulk_controller(identity)
 
 @bp.route("/low", methods=["GET"])
 @jwt_required()

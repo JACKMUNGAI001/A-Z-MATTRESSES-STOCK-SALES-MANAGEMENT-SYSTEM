@@ -85,6 +85,98 @@ def adjust_stock(shop_id, item_id, qty, movement_type="adjustment", user_id=None
     db.session.commit()
     return stock
 
+def adjust_stock_bulk(shop_id, items, user_id=None):
+    """
+    items: list of dicts with {item_id, qty, movement_type, buy_price, sell_price, override}
+    """
+    for item_data in items:
+        try:
+            item_id = int(item_data.get("item_id"))
+            qty = int(item_data.get("qty", 0))
+        except (TypeError, ValueError):
+            continue # Skip invalid items
+
+        movement_type = item_data.get("movement_type", "adjustment")
+        buy_price = item_data.get("buy_price")
+        if buy_price is not None:
+            try:
+                buy_price = float(buy_price)
+            except (TypeError, ValueError):
+                buy_price = None
+
+        sell_price = item_data.get("sell_price")
+        if sell_price is not None:
+            try:
+                sell_price = float(sell_price)
+            except (TypeError, ValueError):
+                sell_price = None
+
+        override = item_data.get("override", False)
+
+        # Try to find existing stock record
+        stock = ShopStock.query.filter_by(shop_id=shop_id, item_id=item_id).first()
+        if not stock:
+            stock = ShopStock(shop_id=shop_id, item_id=item_id, quantity=0, buy_price=buy_price)
+            db.session.add(stock)
+        
+        if override:
+            old_qty = stock.quantity
+            stock.quantity = qty
+            qty_change = qty - old_qty
+        else:
+            stock.quantity += qty
+            qty_change = qty
+
+        if buy_price is not None: stock.buy_price = buy_price
+        stock.updated_at = datetime.utcnow()
+        
+        # Handle Batches
+        if qty_change > 0:
+            new_batch = StockBatch(
+                shop_id=shop_id,
+                item_id=item_id,
+                initial_qty=qty_change,
+                remaining_qty=qty_change,
+                buy_price=buy_price if buy_price is not None else (stock.buy_price or 0),
+                source_type=movement_type,
+                created_at=datetime.utcnow()
+            )
+            db.session.add(new_batch)
+        elif qty_change < 0:
+            to_pull = abs(qty_change)
+            while to_pull > 0:
+                batch = StockBatch.query.filter_by(shop_id=shop_id, item_id=item_id) \
+                    .filter(StockBatch.remaining_qty > 0) \
+                    .order_by(StockBatch.created_at.asc()).first()
+                if not batch: break
+                pull = min(to_pull, batch.remaining_qty)
+                batch.remaining_qty -= pull
+                to_pull -= pull
+        
+        # Check for low stock notification
+        if qty_change < 0 and stock.quantity <= 2:
+            product = Item.query.get(item_id)
+            shop_obj = Shop.query.get(shop_id)
+            admins = User.query.filter_by(role='admin').all()
+            for admin in admins:
+                n_admin = Notification(user_id=admin.id, user_role='admin', type='low_stock',
+                    message=f'Low Stock Alert: {product.name} is down to {stock.quantity} in {shop_obj.name}.')
+                db.session.add(n_admin)
+            
+            attendants = User.query.filter_by(shop_id=shop_id, role='attendant').all()
+            for attendant in attendants:
+                n_att = Notification(user_id=attendant.id, user_role='attendant', type='low_stock',
+                    message=f'Low Stock Alert: {product.name} is down to {stock.quantity} in {shop_obj.name}.')
+                db.session.add(n_att)
+
+        mv = StockMovement(shop_id=shop_id, item_id=item_id, movement_type=movement_type, qty=qty_change, 
+                           unit_buy_price=buy_price, unit_sell_price=sell_price, user_id=user_id, 
+                           reference=None, created_at=datetime.utcnow())
+        db.session.add(mv)
+
+    db.session.commit()
+    return True
+
 def check_low_stock(threshold=2, shop_id=None):
     # Group by to handle duplicates
     query = db.session.query(

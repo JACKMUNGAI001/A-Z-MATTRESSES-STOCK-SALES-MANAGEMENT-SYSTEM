@@ -1,5 +1,5 @@
 from flask import request, jsonify
-from services.stock_service import adjust_stock, check_low_stock, get_low_stock_count, get_low_stock_items, delete_stock, get_restock_history, delete_restock_movement
+from services.stock_service import adjust_stock, adjust_stock_bulk, check_low_stock, get_low_stock_count, get_low_stock_items, delete_stock, get_restock_history, delete_restock_movement
 from models.stock import ShopStock
 from extensions import db
 from flask_jwt_extended import get_jwt_identity
@@ -48,6 +48,22 @@ def adjust_stock_controller(identity):
     # but we won't store it in ShopStock anymore.
     stock = adjust_stock(shop_id, item_id, qty, movement_type=movement_type, user_id=user_id, buy_price=data.get("buy_price"), sell_price=data.get("sell_price"), override=override)
     return jsonify({"msg":"adjusted","qty":stock.quantity}), 200
+
+def adjust_stock_bulk_controller(identity):
+    data = request.get_json() or {}
+    try:
+        shop_id = int(data.get("shop_id"))
+    except (TypeError, ValueError):
+        return jsonify({"msg": "Valid Shop ID is required"}), 400
+        
+    items = data.get("items", [])
+    user_id = identity.get("id")
+    
+    if not items:
+        return jsonify({"msg": "No items provided"}), 400
+        
+    adjust_stock_bulk(shop_id, items, user_id=user_id)
+    return jsonify({"msg": "Bulk stock adjustment successful"}), 200
 
 def low_stock_alerts_controller(threshold=2):
     shop_id = get_shop_id_for_attendant()

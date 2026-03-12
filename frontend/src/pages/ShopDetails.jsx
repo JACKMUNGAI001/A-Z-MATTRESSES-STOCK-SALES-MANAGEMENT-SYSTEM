@@ -18,8 +18,9 @@ export default function ShopDetails() {
   const [shopStock, setShopStock] = useState([]);
   const [availableItems, setAvailableItems] = useState([]);
   const [stockFormData, setStockFormData] = useState({
-    itemId: "", quantity: 0, buyPrice: "",
+    itemId: "", quantity: "", buyPrice: "",
   });
+  const [itemsToRestock, setItemsToRestock] = useState([]);
   const [editingStock, setEditingStock] = useState(null);
   const [editFormData, setEditFormData] = useState({ qty: 0, buy_price: 0 });
   const [selectedDeposit, setSelectedDeposit] = useState(null);
@@ -86,22 +87,51 @@ export default function ShopDetails() {
     setStockFormData({ ...stockFormData, [name]: value });
   };
 
-  const handleAddStock = async () => {
+  const addItemToRestockList = () => {
+    if (!stockFormData.itemId) {
+      alert("Please select a product.");
+      return;
+    }
+    if (parseInt(stockFormData.quantity) <= 0 || !stockFormData.quantity) {
+      alert("Please enter a valid quantity.");
+      return;
+    }
+    
+    const selectedItem = availableItems.find(i => i.id === parseInt(stockFormData.itemId));
+    const newItem = {
+      itemId: stockFormData.itemId,
+      itemName: selectedItem?.name,
+      quantity: parseInt(stockFormData.quantity),
+      buyPrice: stockFormData.buyPrice ? parseFloat(stockFormData.buyPrice) : null,
+    };
+
+    setItemsToRestock([...itemsToRestock, newItem]);
+    setStockFormData({ itemId: "", quantity: "", buyPrice: "" });
+  };
+
+  const removeItemFromRestockList = (index) => {
+    setItemsToRestock(itemsToRestock.filter((_, i) => i !== index));
+  };
+
+  const handleConfirmRestock = async () => {
+    if (itemsToRestock.length === 0) {
+      alert("Please add at least one item to restock.");
+      return;
+    }
+
     try {
-      if (parseInt(stockFormData.quantity) <= 0) {
-        alert("Please enter a valid quantity.");
-        return;
-      }
-      await api.post("/stocks/adjust", {
+      await api.post("/stocks/adjust-bulk", {
         shop_id: shopId,
-        item_id: stockFormData.itemId,
-        qty: parseInt(stockFormData.quantity),
-        movement_type: "purchase_in",
-        buy_price: stockFormData.buyPrice ? parseFloat(stockFormData.buyPrice) : null,
+        items: itemsToRestock.map(item => ({
+          item_id: item.itemId,
+          qty: item.quantity,
+          buy_price: item.buyPrice,
+          movement_type: "purchase_in",
+        })),
       });
-      alert("Stock added successfully!");
+      alert("Stock replenished successfully!");
       fetchShopStock();
-      setStockFormData({ itemId: "", quantity: 0, buyPrice: "" });
+      setItemsToRestock([]);
     } catch (err) {
       alert(`Error adding stock: ${err.response?.data?.msg || err.message}`);
     }
@@ -215,18 +245,46 @@ export default function ShopDetails() {
             </div>
             <div>
               <label className="block text-sm font-bold text-gray-700 dark:text-gray-400 uppercase mb-1 px-1 transition-colors">Quantity</label>
-              <input name="quantity" type="number" className="w-full p-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-blue-600 dark:text-blue-400 focus:ring-2 focus:ring-blue-500 outline-none font-bold transition-all" value={stockFormData.quantity} onChange={handleStockInputChange} min="0" />
+              <input name="quantity" type="number" className="w-full p-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-blue-600 dark:text-blue-400 focus:ring-2 focus:ring-blue-500 outline-none font-bold transition-all" value={stockFormData.quantity} onChange={handleStockInputChange} min="0" placeholder="0" />
             </div>
             {user?.role === 'admin' && (
               <div>
-                <label className="block text-sm font-bold text-gray-700 dark:text-gray-400 uppercase mb-1 px-1 transition-colors">Buy Price</label>
-                <input name="buyPrice" type="number" className="w-full p-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all" value={stockFormData.buyPrice} onChange={handleStockInputChange} />
+                <label className="block text-sm font-bold text-gray-700 dark:text-gray-400 uppercase mb-1 px-1 transition-colors">Buy Price (Optional)</label>
+                <input name="buyPrice" type="number" className="w-full p-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all" value={stockFormData.buyPrice} onChange={handleStockInputChange} placeholder="Current buy price" />
               </div>
             )}
           </div>
-          <button onClick={handleAddStock} className="mt-6 bg-blue-600 text-white py-3 px-10 rounded-xl font-bold shadow-lg shadow-blue-100 dark:shadow-none hover:bg-blue-700 transition-all">
-            Confirm Restock
+          
+          <button onClick={addItemToRestockList} className="mt-6 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white py-3 px-10 rounded-xl font-bold hover:bg-gray-200 dark:hover:bg-gray-600 transition-all flex items-center gap-2">
+            <Plus size={18} /> Add Product to List
           </button>
+
+          {itemsToRestock.length > 0 && (
+            <div className="mt-8 border-t border-gray-100 dark:border-gray-700 pt-8">
+              <h3 className="text-sm font-black text-gray-400 uppercase tracking-widest mb-4">Items to be Restocked</h3>
+              <div className="space-y-3">
+                {itemsToRestock.map((item, idx) => (
+                  <div key={idx} className="flex items-center justify-between bg-gray-50 dark:bg-gray-900/50 p-4 rounded-xl border border-gray-100 dark:border-gray-700">
+                    <div className="flex items-center gap-4">
+                      <div className="bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 w-10 h-10 rounded-lg flex items-center justify-center font-bold">
+                        {idx + 1}
+                      </div>
+                      <div>
+                        <p className="font-bold text-gray-900 dark:text-white">{item.itemName}</p>
+                        <p className="text-xs text-gray-500 font-medium">Qty: <span className="text-blue-600 dark:text-blue-400 font-bold">{item.quantity}</span> {item.buyPrice && `| Buy Price: ${formatCurrency(item.buyPrice)}`}</p>
+                      </div>
+                    </div>
+                    <button onClick={() => removeItemFromRestockList(idx)} className="text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 p-2 rounded-lg transition-all">
+                      <X size={20} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+              <button onClick={handleConfirmRestock} className="mt-6 bg-blue-600 text-white py-4 px-12 rounded-xl font-black shadow-lg shadow-blue-100 dark:shadow-none hover:bg-blue-700 transition-all w-full md:w-auto uppercase tracking-widest">
+                Confirm All & Restock
+              </button>
+            </div>
+          )}
         </div>
 
         {/* COLLAPSIBLE SECTIONS */}
