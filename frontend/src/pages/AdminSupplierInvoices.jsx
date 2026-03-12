@@ -382,8 +382,8 @@ export default function AdminSupplierInvoices() {
       {/* CREATE MODAL */}
       {showModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in duration-200 transition-colors">
-            <div className="bg-blue-600 p-6 text-white sticky top-0 z-10">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-y-auto overflow-x-auto animate-in fade-in zoom-in duration-200 transition-colors custom-scrollbar">
+            <div className="bg-blue-600 p-6 text-white sticky top-0 z-10 min-w-full w-fit">
               <h3 className="text-xl font-bold">Record New Supply</h3>
               <p className="text-blue-100 text-sm mt-1">Add items received and distribute to shops</p>
             </div>
@@ -582,8 +582,8 @@ export default function AdminSupplierInvoices() {
       {/* DETAILS MODAL */}
       {showDetails && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in duration-200 transition-colors">
-            <div className="bg-blue-600 p-6 text-white flex justify-between items-center sticky top-0 z-10">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto overflow-x-auto animate-in fade-in zoom-in duration-200 transition-colors custom-scrollbar">
+            <div className="bg-blue-600 p-6 text-white flex justify-between items-center sticky top-0 z-10 min-w-full w-fit">
               <div>
                 <h3 className="text-xl font-bold">Invoice Details</h3>
                 <p className="text-blue-100"># {showDetails.invoice_number}</p>
