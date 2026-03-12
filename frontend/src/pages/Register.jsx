@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import api from '../api/api'
 import { useNavigate, Link } from 'react-router-dom'
-import { UserPlus, Mail, Lock, Store, User, ArrowLeft, Zap, Eye, EyeOff } from 'lucide-react'
+import { UserPlus, Mail, Lock, Store, User, ArrowLeft, Zap, Eye, EyeOff, Loader2 } from 'lucide-react'
 import SearchableSelect from '../components/SearchableSelect'
 
 export default function Register(){
@@ -11,6 +11,7 @@ export default function Register(){
   const [showPassword, setShowPassword] = useState(false)
   const [shopId, setShopId] = useState('')
   const [shops, setShops] = useState([])
+  const [loading, setLoading] = useState(false)
   const [msg, setMsg] = useState('')
   const navigate = useNavigate()
 
@@ -32,12 +33,16 @@ export default function Register(){
       setMsg('Please select an assigned shop')
       return
     }
+    setLoading(true)
+    setMsg('')
     try{
       await api.post('/auth/register', { name, email, password, shop_id: shopId })
       alert('Registration successful. Your account is pending admin verification.')
       navigate('/login')
     }catch(err){
       setMsg(err.response?.data?.msg || 'Registration failed')
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -133,8 +138,20 @@ export default function Register(){
               </div>
             </div>
 
-            <button className="md:col-span-2 bg-blue-600 text-white py-5 rounded-2xl font-black text-lg shadow-xl shadow-blue-100 dark:shadow-none hover:bg-blue-700 hover:-translate-y-0.5 transition-all flex items-center justify-center gap-3 mt-4">
-              <Zap size={24} fill="currentColor" /> CREATE ACCOUNT
+            <button 
+              disabled={loading}
+              className={`md:col-span-2 ${loading ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 hover:-translate-y-0.5'} text-white py-5 rounded-2xl font-black text-lg shadow-xl shadow-blue-100 dark:shadow-none transition-all flex items-center justify-center gap-3 mt-4`}
+            >
+              {loading ? (
+                <>
+                  <Loader2 size={24} className="animate-spin" />
+                  CREATING ACCOUNT...
+                </>
+              ) : (
+                <>
+                  <Zap size={24} fill="currentColor" /> CREATE ACCOUNT
+                </>
+              )}
             </button>
           </form>
 
