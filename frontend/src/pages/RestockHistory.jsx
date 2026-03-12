@@ -107,8 +107,8 @@ export default function RestockHistory() {
               </button>
               
               {expandedShops[shopName] && (
-                <div className="overflow-x-auto">
-                  <table className="w-full border-collapse">
+                <div className="overflow-x-auto custom-scrollbar">
+                  <table className="w-full border-collapse min-w-[800px]">
                     <thead className="bg-gray-50/50 dark:bg-gray-900/50 text-xs font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest transition-colors">
                       <tr>
                         <th className="px-6 py-4 text-left border-b border-gray-100 dark:border-gray-700">Product</th>

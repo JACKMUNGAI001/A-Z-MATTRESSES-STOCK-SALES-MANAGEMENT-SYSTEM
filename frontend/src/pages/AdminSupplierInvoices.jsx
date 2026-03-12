@@ -451,8 +451,8 @@ export default function AdminSupplierInvoices() {
                 <div className="space-y-6">
                   {formData.items.map((item, idx) => (
                     <div key={idx} className="bg-gray-50 dark:bg-gray-900/30 p-6 rounded-2xl relative border border-gray-100 dark:border-gray-700 transition-colors space-y-4">
-                      <div className="flex flex-wrap lg:flex-nowrap gap-4 items-end">
-                        <div className="flex-1 min-w-[300px]">
+                      <div className="flex flex-nowrap overflow-x-auto pb-4 gap-4 items-end custom-scrollbar">
+                        <div className="flex-none w-[300px]">
                           <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1 uppercase tracking-widest">Select Product</label>
                           <SearchableSelect
                             options={supplierProducts}
@@ -462,7 +462,7 @@ export default function AdminSupplierInvoices() {
                             disabled={!formData.supplier_id}
                           />
                         </div>
-                        <div className="w-48">
+                        <div className="flex-none w-48">
                           <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1 uppercase tracking-widest">Unit Cost (KES)</label>
                           <input 
                             required
@@ -486,8 +486,8 @@ export default function AdminSupplierInvoices() {
                       </div>
 
                       {/* Distributions */}
-                      <div className="pl-6 border-l-2 border-blue-100 dark:border-blue-900/30 space-y-3">
-                        <div className="flex justify-between items-center mb-2">
+                      <div className="pl-6 border-l-2 border-blue-100 dark:border-blue-900/30 space-y-3 overflow-x-auto pb-2 custom-scrollbar">
+                        <div className="flex justify-between items-center mb-2 min-w-[500px]">
                             <label className="text-[10px] font-black text-blue-500 dark:text-blue-400 uppercase tracking-[0.2em]">Shop Distribution</label>
                             <button 
                                 type="button"
@@ -498,8 +498,8 @@ export default function AdminSupplierInvoices() {
                             </button>
                         </div>
                         {item.distributions.map((dist, dIdx) => (
-                          <div key={dIdx} className="flex gap-4 items-end animate-in slide-in-from-left-2 duration-200">
-                            <div className="flex-1">
+                          <div key={dIdx} className="flex gap-4 items-end animate-in slide-in-from-left-2 duration-200 min-w-[500px]">
+                            <div className="flex-1 min-w-[200px]">
                                 <SearchableSelect
                                     options={shops}
                                     value={dist.shop_id}
@@ -507,7 +507,7 @@ export default function AdminSupplierInvoices() {
                                     placeholder="Target Shop..."
                                 />
                             </div>
-                            <div className="w-24">
+                            <div className="flex-none w-24">
                                 <input 
                                     required
                                     type="number" 
@@ -518,14 +518,14 @@ export default function AdminSupplierInvoices() {
                                     onChange={e => handleDistributionChange(idx, dIdx, 'quantity', e.target.value)}
                                 />
                             </div>
-                            <div className="w-32 bg-white dark:bg-gray-800 px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 font-bold text-gray-700 dark:text-gray-300 text-sm">
+                            <div className="flex-none w-32 bg-white dark:bg-gray-800 px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 font-bold text-gray-700 dark:text-gray-300 text-sm">
                                 {(dist.quantity * item.unit_cost).toLocaleString()}
                             </div>
                             {item.distributions.length > 1 && (
                                 <button 
                                     type="button" 
                                     onClick={() => handleRemoveDistribution(idx, dIdx)}
-                                    className="p-2 text-gray-400 hover:text-red-500 transition-colors"
+                                    className="flex-none p-2 text-gray-400 hover:text-red-500 transition-colors"
                                 >
                                     <Plus size={16} style={{ transform: 'rotate(45deg)' }} />
                                 </button>
@@ -538,8 +538,8 @@ export default function AdminSupplierInvoices() {
                 </div>
               </div>
 
-              <div className="flex justify-between items-start pt-6 border-t dark:border-gray-700 transition-colors">
-                <div className="w-1/2">
+              <div className="flex flex-col sm:flex-row justify-between items-start gap-6 pt-6 border-t dark:border-gray-700 transition-colors">
+                <div className="w-full sm:w-1/2">
                     <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2 transition-colors">Notes</label>
                     <textarea 
                         className="w-full border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg p-3 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
@@ -549,9 +549,9 @@ export default function AdminSupplierInvoices() {
                         placeholder="Additional details about this supply..."
                     ></textarea>
                 </div>
-                <div className="text-right">
+                <div className="w-full sm:text-right">
                     <p className="text-gray-500 dark:text-gray-400 text-sm mb-1 uppercase tracking-wider font-bold transition-colors">Total Supply Value</p>
-                    <p className="text-4xl font-black text-blue-600 dark:text-blue-400 transition-colors">
+                    <p className="text-3xl sm:text-4xl font-black text-blue-600 dark:text-blue-400 transition-colors">
                         KES {formData.items.reduce((sum, item) => 
                           sum + item.distributions.reduce((dSum, dist) => 
                             dSum + (dist.quantity * item.unit_cost), 0), 0).toLocaleString()}
@@ -559,17 +559,17 @@ export default function AdminSupplierInvoices() {
                 </div>
               </div>
 
-              <div className="flex gap-4 pt-4">
+              <div className="flex flex-col sm:flex-row gap-4 pt-4">
                 <button 
                   type="button" 
                   onClick={() => setShowModal(false)}
-                  className="flex-1 px-6 py-3 border-2 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 rounded-xl font-bold hover:bg-gray-50 dark:hover:bg-gray-700 transition-all"
+                  className="w-full sm:flex-1 px-6 py-3 border-2 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 rounded-xl font-bold hover:bg-gray-50 dark:hover:bg-gray-700 transition-all"
                 >
                   Cancel
                 </button>
                 <button 
                   type="submit" 
-                  className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-all shadow-xl shadow-blue-200 dark:shadow-none"
+                  className="w-full sm:flex-1 px-6 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-all shadow-xl shadow-blue-200 dark:shadow-none"
                 >
                   Confirm & Save Supply
                 </button>
@@ -619,8 +619,8 @@ export default function AdminSupplierInvoices() {
                     <p className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-4 transition-colors flex items-center gap-2">
                         <Package size={16} /> Items Supplied & Distribution
                     </p>
-                    <div className="bg-gray-50 dark:bg-gray-900 rounded-xl overflow-hidden border border-gray-100 dark:border-gray-700 transition-colors">
-                        <table className="w-full text-left">
+                    <div className="bg-gray-50 dark:bg-gray-900 rounded-xl overflow-x-auto border border-gray-100 dark:border-gray-700 transition-colors custom-scrollbar">
+                        <table className="w-full text-left min-w-[600px]">
                             <thead className="bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 text-xs font-bold uppercase transition-colors">
                                 <tr>
                                     <th className="px-4 py-3">Item</th>
@@ -661,8 +661,8 @@ export default function AdminSupplierInvoices() {
                         <History size={16} /> Payment History
                     </p>
                     {showDetails.payments && showDetails.payments.length > 0 ? (
-                        <div className="bg-gray-50 dark:bg-gray-900 rounded-xl overflow-hidden border border-gray-100 dark:border-gray-700 transition-colors">
-                            <table className="w-full text-left">
+                        <div className="bg-gray-50 dark:bg-gray-900 rounded-xl overflow-x-auto border border-gray-100 dark:border-gray-700 transition-colors custom-scrollbar">
+                            <table className="w-full text-left min-w-[400px]">
                                 <thead className="bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 text-xs font-bold uppercase transition-colors">
                                     <tr>
                                         <th className="px-4 py-3">Date</th>

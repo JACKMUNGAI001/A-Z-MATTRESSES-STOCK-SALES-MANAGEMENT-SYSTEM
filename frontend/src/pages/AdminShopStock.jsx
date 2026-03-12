@@ -130,7 +130,7 @@ export default function AdminShopStock() {
                 {searchQuery && <p className="text-xs text-gray-400 mt-2 transition-colors">Try another {searchType === 'date' ? 'date' : 'search term'} or clear search</p>}
               </div>
             ) : (
-              <table className="w-full relative border-collapse">
+              <table className="w-full relative border-collapse min-w-[600px]">
                 <thead className="bg-gray-50/90 dark:bg-gray-900/90 transition-colors sticky top-0 z-10 backdrop-blur-sm">
                   <tr>
                     <th className="px-8 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest border-b border-gray-100 dark:border-gray-700">Product Name</th>
