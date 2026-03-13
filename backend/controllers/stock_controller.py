@@ -1,5 +1,9 @@
 from flask import request, jsonify
-from services.stock_service import adjust_stock, adjust_stock_bulk, check_low_stock, get_low_stock_count, get_low_stock_items, delete_stock, get_restock_history, delete_restock_movement
+from services.stock_service import (
+    adjust_stock, adjust_stock_bulk, check_low_stock, get_low_stock_count, 
+    get_low_stock_items, delete_stock, get_restock_history, 
+    delete_restock_movement, update_restock_movement
+)
 from models.stock import ShopStock
 from extensions import db
 from flask_jwt_extended import get_jwt_identity
@@ -118,6 +122,24 @@ def delete_restock_controller(movement_id):
         if not success:
             return jsonify({"msg": "Movement not found"}), 404
         return jsonify({"msg": "Restock movement deleted successfully"}), 200
+    except ValueError as e:
+        return jsonify({"msg": str(e)}), 400
+    except Exception as e:
+        return jsonify({"msg": "Internal Server Error"}), 500
+
+def update_restock_controller(movement_id):
+    data = request.get_json() or {}
+    new_qty = data.get("qty")
+    new_buy_price = data.get("buy_price")
+    
+    if new_qty is None:
+        return jsonify({"msg": "Quantity is required"}), 400
+        
+    try:
+        success = update_restock_movement(movement_id, int(new_qty), float(new_buy_price) if new_buy_price is not None else None)
+        if not success:
+            return jsonify({"msg": "Movement not found"}), 404
+        return jsonify({"msg": "Restock movement updated successfully"}), 200
     except ValueError as e:
         return jsonify({"msg": str(e)}), 400
     except Exception as e:

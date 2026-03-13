@@ -286,18 +286,75 @@ def delete_restock_movement(movement_id):
     
     # Delete associated Batch (if it was an addition)
     if mv.qty > 0:
-        # We need a way to find the exact batch. 
-        # For adjustments/transfers, source_type matches movement_type and source_id is often the movement id if we set it.
-        # Let's check how they are created in adjust_stock
         batch = StockBatch.query.filter_by(
             shop_id=mv.shop_id, 
             item_id=mv.item_id, 
             initial_qty=mv.qty,
             source_type=mv.movement_type
         ).order_by(StockBatch.created_at.desc()).first()
+        
         if batch:
+            # Check if it was partially consumed
+            if batch.remaining_qty < batch.initial_qty:
+                raise ValueError("Cannot delete this restock because some of it has already been sold.")
             db.session.delete(batch)
 
     db.session.delete(mv)
+    db.session.commit()
+    return True
+
+def update_restock_movement(movement_id, new_qty, new_buy_price=None):
+    mv = StockMovement.query.get(movement_id)
+    if not mv:
+        return False
+    
+    if mv.movement_type not in ['purchase_in', 'adjustment', 'transfer_in']:
+        raise ValueError("Only restock movements can be edited here.")
+
+    if mv.movement_type == 'purchase_in' and mv.reference and "Supplier Invoice" in mv.reference:
+        raise ValueError("This restock is linked to a supplier invoice. Please edit the invoice instead.")
+
+    # Difference in quantity
+    qty_diff = new_qty - mv.qty
+    
+    # Reverse or update stock
+    stock = ShopStock.query.filter_by(shop_id=mv.shop_id, item_id=mv.item_id).first()
+    if stock:
+        # If we're reducing the qty (qty_diff < 0), check if there's enough stock
+        if qty_diff < 0 and stock.quantity < abs(qty_diff):
+             raise ValueError(f"Insufficient stock to reduce this movement by {abs(qty_diff)}.")
+        stock.quantity += qty_diff
+        if new_buy_price is not None:
+             stock.buy_price = new_buy_price
+    
+    # Update associated Batch
+    batch = StockBatch.query.filter_by(
+        shop_id=mv.shop_id, 
+        item_id=mv.item_id, 
+        initial_qty=mv.qty,
+        source_type=mv.movement_type
+    ).order_by(StockBatch.created_at.desc()).first()
+    
+    if batch:
+        # Check if it was partially consumed
+        if batch.remaining_qty < batch.initial_qty:
+            # If reducing, we can only reduce by what's remaining
+            if qty_diff < 0 and batch.remaining_qty < abs(qty_diff):
+                 raise ValueError("Cannot reduce this restock by this amount because some of it has already been sold.")
+            batch.initial_qty = new_qty
+            batch.remaining_qty += qty_diff
+        else:
+            # Not consumed at all, just update
+            batch.initial_qty = new_qty
+            batch.remaining_qty = new_qty
+            
+        if new_buy_price is not None:
+            batch.buy_price = new_buy_price
+
+    # Update movement record
+    mv.qty = new_qty
+    if new_buy_price is not None:
+        mv.unit_buy_price = new_buy_price
+    
     db.session.commit()
     return True

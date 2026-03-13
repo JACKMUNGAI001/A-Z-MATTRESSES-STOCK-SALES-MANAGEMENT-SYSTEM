@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import api from '../api/api';
-import { Truck, Store, Calendar, Package, User, SearchX, ChevronDown, ChevronUp, Trash2 } from 'lucide-react';
+import { Truck, Store, Calendar, Package, User, SearchX, ChevronDown, ChevronUp, Trash2, Edit, X } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
 import { formatDate } from '../utils/helpers';
 
@@ -10,6 +10,8 @@ export default function RestockHistory() {
   const [shops, setShops] = useState([]);
   const [loading, setLoading] = useState(true);
   const [expandedShops, setExpandedShops] = useState({});
+  const [editingMovement, setEditingMovement] = useState(null);
+  const [editForm, setEditForm] = useState({ qty: '', buy_price: '' });
 
   useEffect(() => {
     fetchShops();
@@ -49,6 +51,25 @@ export default function RestockHistory() {
       fetchHistory();
     } catch (err) {
       alert(err.response?.data?.msg || 'Error deleting restock record');
+    }
+  };
+
+  const handleEdit = (movement) => {
+    setEditingMovement(movement);
+    setEditForm({
+      qty: movement.qty,
+      buy_price: movement.buy_price
+    });
+  };
+
+  const handleUpdate = async (e) => {
+    e.preventDefault();
+    try {
+      await api.put(`/stocks/history/${editingMovement.id}`, editForm);
+      setEditingMovement(null);
+      fetchHistory();
+    } catch (err) {
+      alert(err.response?.data?.msg || 'Error updating restock record');
     }
   };
 
@@ -160,13 +181,22 @@ export default function RestockHistory() {
                           </td>
                           {user?.role === 'admin' && (
                             <td className="px-6 py-4 text-right">
-                              <button 
-                                onClick={() => handleDelete(m.id)}
-                                className="text-red-500 hover:text-red-700 transition-colors p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20"
-                                title="Delete Restock"
-                              >
-                                <Trash2 size={18} />
-                              </button>
+                              <div className="flex justify-end gap-2">
+                                <button 
+                                  onClick={() => handleEdit(m)}
+                                  className="text-blue-500 hover:text-blue-700 transition-colors p-2 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                                  title="Edit Restock"
+                                >
+                                  <Edit size={18} />
+                                </button>
+                                <button 
+                                  onClick={() => handleDelete(m.id)}
+                                  className="text-red-500 hover:text-red-700 transition-colors p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20"
+                                  title="Delete Restock"
+                                >
+                                  <Trash2 size={18} />
+                                </button>
+                              </div>
                             </td>
                           )}
                         </tr>
@@ -177,6 +207,71 @@ export default function RestockHistory() {
               )}
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Edit Modal */}
+      {editingMovement && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200">
+            <div className="p-6 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center bg-orange-50/50 dark:bg-orange-900/10">
+              <h3 className="text-xl font-black text-gray-900 dark:text-white flex items-center gap-2">
+                <Edit className="text-orange-600" />
+                Edit Restock
+              </h3>
+              <button onClick={() => setEditingMovement(null)} className="text-gray-400 hover:text-gray-600 dark:hover:text-white transition-colors">
+                <X size={24} />
+              </button>
+            </div>
+            <form onSubmit={handleUpdate} className="p-6 space-y-4">
+              <div>
+                <label className="block text-xs font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1">Product</label>
+                <input 
+                  type="text" 
+                  value={editingMovement.item_name} 
+                  disabled 
+                  className="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-gray-500 dark:text-gray-400 font-bold"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1">Quantity</label>
+                  <input 
+                    type="number" 
+                    value={editForm.qty} 
+                    onChange={(e) => setEditForm({ ...editForm, qty: e.target.value })}
+                    required
+                    className="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-gray-900 dark:text-white font-bold focus:ring-2 focus:ring-orange-500 transition-all"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1">Buy Price</label>
+                  <input 
+                    type="number" 
+                    value={editForm.buy_price} 
+                    onChange={(e) => setEditForm({ ...editForm, buy_price: e.target.value })}
+                    required
+                    className="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-gray-900 dark:text-white font-bold focus:ring-2 focus:ring-orange-500 transition-all"
+                  />
+                </div>
+              </div>
+              <div className="pt-4 flex gap-3">
+                <button 
+                  type="button" 
+                  onClick={() => setEditingMovement(null)}
+                  className="flex-1 px-6 py-3 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 font-bold hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit"
+                  className="flex-1 bg-orange-600 hover:bg-orange-700 text-white font-bold px-6 py-3 rounded-xl shadow-lg shadow-orange-200 dark:shadow-none transition-all active:scale-95"
+                >
+                  Save Changes
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
     </div>
