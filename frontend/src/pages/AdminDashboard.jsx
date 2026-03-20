@@ -79,6 +79,37 @@ export default function AdminDashboard(){
 
   return (
     <>
+        {/* QUICK ACTIONS SECTION */}
+        <div className="mb-10">
+          <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4 tracking-tight border-l-4 border-l-blue-600 pl-3 transition-colors text-sm uppercase tracking-widest text-gray-400 dark:text-gray-500">Quick Actions</h3>
+          <div className="flex flex-wrap gap-4">
+            <button
+              onClick={() => navigate('/pos')}
+              className="flex-1 bg-blue-600 text-white p-6 rounded-2xl shadow-lg shadow-blue-100 dark:shadow-none hover:bg-blue-700 hover:-translate-y-1 transition-all flex flex-col items-center justify-center gap-3 text-center group"
+            >
+              <div className="bg-white/20 p-3 rounded-xl group-hover:scale-110 transition-transform">
+                <Store size={28} />
+              </div>
+              <div>
+                <span className="block text-lg font-black uppercase tracking-tight">Record Sale</span>
+                <span className="text-blue-100 text-xs font-medium">Process new checkout</span>
+              </div>
+            </button>
+            <button
+              onClick={() => navigate('/deposits')}
+              className="flex-1 bg-indigo-600 text-white p-6 rounded-2xl shadow-lg shadow-indigo-100 dark:shadow-none hover:bg-indigo-700 hover:-translate-y-1 transition-all flex flex-col items-center justify-center gap-3 text-center group"
+            >
+              <div className="bg-white/20 p-3 rounded-xl group-hover:scale-110 transition-transform">
+                <UserCircle size={28} />
+              </div>
+              <div>
+                <span className="block text-lg font-black uppercase tracking-tight">New Deposit</span>
+                <span className="text-indigo-100 text-xs font-medium">Open lay-by account</span>
+              </div>
+            </button>
+          </div>
+        </div>
+
         {/* OVERVIEW SECTION */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6 mb-10">
           <Card title="Total Sales" interactive={true} onClick={() => navigate('/admin/all-sales')}>

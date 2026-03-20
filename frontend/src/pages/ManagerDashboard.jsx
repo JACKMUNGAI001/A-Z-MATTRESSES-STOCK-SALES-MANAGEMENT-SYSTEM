@@ -92,6 +92,37 @@ export default function ManagerDashboard(){
           <span className="font-bold">Manager View: All Locations</span>
         </div>
 
+        {/* QUICK ACTIONS SECTION */}
+        <div className="mb-10">
+          <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4 tracking-tight border-l-4 border-l-blue-600 pl-3 transition-colors text-sm uppercase tracking-widest text-gray-400 dark:text-gray-500">Quick Actions</h3>
+          <div className="flex flex-wrap gap-4">
+            <Link
+              to="/pos"
+              className="flex-1 bg-blue-600 text-white p-6 rounded-2xl shadow-lg shadow-blue-100 dark:shadow-none hover:bg-blue-700 hover:-translate-y-1 transition-all flex flex-col items-center justify-center gap-3 text-center group no-underline"
+            >
+              <div className="bg-white/20 p-3 rounded-xl group-hover:scale-110 transition-transform">
+                <Store size={28} />
+              </div>
+              <div>
+                <span className="block text-lg font-black uppercase tracking-tight">Record Sale</span>
+                <span className="text-blue-100 text-xs font-medium">Process new checkout</span>
+              </div>
+            </Link>
+            <Link
+              to="/deposits"
+              className="flex-1 bg-indigo-600 text-white p-6 rounded-2xl shadow-lg shadow-indigo-100 dark:shadow-none hover:bg-indigo-700 hover:-translate-y-1 transition-all flex flex-col items-center justify-center gap-3 text-center group no-underline"
+            >
+              <div className="bg-white/20 p-3 rounded-xl group-hover:scale-110 transition-transform">
+                <Users size={28} />
+              </div>
+              <div>
+                <span className="block text-lg font-black uppercase tracking-tight">New Deposit</span>
+                <span className="text-indigo-100 text-xs font-medium">Open lay-by account</span>
+              </div>
+            </Link>
+          </div>
+        </div>
+
         {/* SALES SUMMARY */}
         <div className="mb-10">
           <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4 tracking-tight border-l-4 border-l-blue-600 pl-3 text-sm uppercase tracking-widest text-gray-400 dark:text-gray-500 transition-colors">Global Sales Summary</h3>
