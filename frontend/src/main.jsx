@@ -74,9 +74,9 @@ ReactDOM.createRoot(document.getElementById('root')).render(
 
             {/* Attendant Protected */}
             <Route path="/attendant" element={<ProtectedRoute role="attendant"><PageLayout role="attendant"><AttendantDashboard/></PageLayout></ProtectedRoute>} />
-            <Route path="/pos" element={<ProtectedRoute role={['attendant', 'manager']}><PageLayout><POS/></PageLayout></ProtectedRoute>} />
-            <Route path="/deposits" element={<ProtectedRoute role={['attendant', 'manager']}><PageLayout><Deposits/></PageLayout></ProtectedRoute>} />
-            <Route path="/attendant/low-stock" element={<ProtectedRoute role={['attendant', 'manager']}><PageLayout><LowStockItems /></PageLayout></ProtectedRoute>} />
+            <Route path="/pos" element={<ProtectedRoute role={['attendant', 'manager', 'admin']}><PageLayout><POS/></PageLayout></ProtectedRoute>} />
+            <Route path="/deposits" element={<ProtectedRoute role={['attendant', 'manager', 'admin']}><PageLayout><Deposits/></PageLayout></ProtectedRoute>} />
+            <Route path="/attendant/low-stock" element={<ProtectedRoute role={['attendant', 'manager', 'admin']}><PageLayout><LowStockItems /></PageLayout></ProtectedRoute>} />
             
             {/* Manager Protected */}
             <Route path="/manager" element={<ProtectedRoute role="manager"><PageLayout role="manager"><ManagerDashboard/></PageLayout></ProtectedRoute>} />
