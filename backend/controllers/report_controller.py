@@ -22,17 +22,26 @@ def pnl_report_controller():
     return jsonify(report), 200
 
 def daily_sales_report_controller():
-    shop_id = get_shop_id_for_attendant()
+    shop_id = request.args.get('shop_id', type=int)
+    user_identity = get_jwt_identity()
+    if user_identity.get("role") == "attendant":
+        shop_id = get_shop_id_for_attendant()
     daily_sales = get_daily_sales(shop_id)
     return jsonify(daily_sales), 200
 
 def sales_summary_controller():
-    shop_id = get_shop_id_for_attendant()
+    shop_id = request.args.get('shop_id', type=int)
+    user_identity = get_jwt_identity()
+    if user_identity.get("role") == "attendant":
+        shop_id = get_shop_id_for_attendant()
     summary = get_sales_summary(shop_id)
     return jsonify(summary), 200
 
 def deposits_summary_controller():
-    shop_id = get_shop_id_for_attendant()
+    shop_id = request.args.get('shop_id', type=int)
+    user_identity = get_jwt_identity()
+    if user_identity.get("role") == "attendant":
+        shop_id = get_shop_id_for_attendant()
     summary = get_deposits_summary(shop_id)
     return jsonify(summary), 200
 

@@ -27,6 +27,13 @@ export default function ShopDetails() {
   const [showHistory, setShowHistory] = useState(false);
 
   const [expandedSection, setExpandedSection] = useState(null);
+  const [salesSummary, setSalesSummary] = useState(null);
+  const [pnlSummary, setPnlSummary] = useState({
+    today: null,
+    week: null,
+    month: null,
+    year: null,
+  });
   const lowStockItems = shopStock.filter(s => s.qty <= 2);
 
   useEffect(() => {
@@ -35,7 +42,33 @@ export default function ShopDetails() {
     fetchShopDeposits();
     fetchShopStock();
     fetchAvailableItems();
+    fetchShopSummaries();
   }, [shopId]);
+
+  const fetchShopSummaries = async () => {
+    try {
+      // Fetch sales summary for the shop
+      const salesRes = await api.get(`/reports/sales-summary?shop_id=${shopId}`);
+      setSalesSummary(salesRes.data);
+
+      // Fetch PNL for different periods
+      const [todayPnl, weekPnl, monthPnl, yearPnl] = await Promise.all([
+        api.get(`/reports/pnl?shop_id=${shopId}&period=today`),
+        api.get(`/reports/pnl?shop_id=${shopId}&period=this_week`),
+        api.get(`/reports/pnl?shop_id=${shopId}&month=${new Date().getMonth() + 1}`),
+        api.get(`/reports/pnl?shop_id=${shopId}&year=${new Date().getFullYear()}`),
+      ]);
+
+      setPnlSummary({
+        today: todayPnl.data,
+        week: weekPnl.data,
+        month: monthPnl.data,
+        year: yearPnl.data,
+      });
+    } catch (err) {
+      console.error('Error fetching shop summaries:', err);
+    }
+  };
 
   const fetchShopDetails = async () => {
     try {
@@ -285,6 +318,60 @@ export default function ShopDetails() {
               </button>
             </div>
           )}
+        </div>
+
+        {/* SHOP SUMMARIES */}
+        <div className="mb-10">
+          <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-6 tracking-tight border-l-4 border-l-blue-600 pl-3 text-sm uppercase tracking-widest text-gray-400 dark:text-gray-500 transition-colors">Performance Overview</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {/* Today */}
+            <div className="space-y-4">
+              <Card title="Today's Sales" className="border-l-4 border-l-blue-500 !p-5">
+                <span className="text-xl font-black">{salesSummary ? formatCurrency(salesSummary.today) : '...'}</span>
+              </Card>
+              <Card title="Today's P&L" className={`border-l-4 !p-5 ${pnlSummary.today?.net_profit >= 0 ? 'border-l-green-500' : 'border-l-red-500'}`}>
+                <span className={`text-xl font-black ${pnlSummary.today?.net_profit >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                  {pnlSummary.today ? formatCurrency(pnlSummary.today.net_profit) : '...'}
+                </span>
+              </Card>
+            </div>
+
+            {/* Week */}
+            <div className="space-y-4">
+              <Card title="This Week's Sales" className="border-l-4 border-l-blue-500 !p-5">
+                <span className="text-xl font-black">{salesSummary ? formatCurrency(salesSummary.week) : '...'}</span>
+              </Card>
+              <Card title="This Week's P&L" className={`border-l-4 !p-5 ${pnlSummary.week?.net_profit >= 0 ? 'border-l-green-500' : 'border-l-red-500'}`}>
+                <span className={`text-xl font-black ${pnlSummary.week?.net_profit >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                  {pnlSummary.week ? formatCurrency(pnlSummary.week.net_profit) : '...'}
+                </span>
+              </Card>
+            </div>
+
+            {/* Month */}
+            <div className="space-y-4">
+              <Card title="This Month's Sales" className="border-l-4 border-l-blue-500 !p-5">
+                <span className="text-xl font-black">{salesSummary ? formatCurrency(salesSummary.month) : '...'}</span>
+              </Card>
+              <Card title="This Month's P&L" className={`border-l-4 !p-5 ${pnlSummary.month?.net_profit >= 0 ? 'border-l-green-500' : 'border-l-red-500'}`}>
+                <span className={`text-xl font-black ${pnlSummary.month?.net_profit >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                  {pnlSummary.month ? formatCurrency(pnlSummary.month.net_profit) : '...'}
+                </span>
+              </Card>
+            </div>
+
+            {/* Year */}
+            <div className="space-y-4">
+              <Card title="This Year's Sales" className="border-l-4 border-l-blue-500 !p-5">
+                <span className="text-xl font-black">{salesSummary ? formatCurrency(salesSummary.year) : '...'}</span>
+              </Card>
+              <Card title="This Year's P&L" className={`border-l-4 !p-5 ${pnlSummary.year?.net_profit >= 0 ? 'border-l-green-500' : 'border-l-red-500'}`}>
+                <span className={`text-xl font-black ${pnlSummary.year?.net_profit >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                  {pnlSummary.year ? formatCurrency(pnlSummary.year.net_profit) : '...'}
+                </span>
+              </Card>
+            </div>
+          </div>
         </div>
 
         {/* COLLAPSIBLE SECTIONS */}
