@@ -348,10 +348,17 @@ export default function ShopDetails() {
               <Card title="Today's Sales" className="border-l-4 border-l-blue-500 !p-5">
                 <span className="text-xl font-black">{salesSummary ? formatCurrency(salesSummary.today) : '...'}</span>
               </Card>
-              <Card title="Today's P&L" className={`border-l-4 !p-5 ${pnlSummary.today?.net_profit >= 0 ? 'border-l-green-500' : 'border-l-red-500'}`}>
-                <span className={`text-xl font-black ${pnlSummary.today?.net_profit >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                  {pnlSummary.today ? formatCurrency(pnlSummary.today.net_profit) : '...'}
-                </span>
+              <Card title="Today's Gross Profit" className={`border-l-4 !p-5 border-l-green-500`}>
+                <div className="flex flex-col">
+                  <span className="text-xl font-black text-green-600 dark:text-green-400">
+                    {pnlSummary.today ? formatCurrency(pnlSummary.today.gross_profit) : '...'}
+                  </span>
+                  {pnlSummary.today && pnlSummary.today.total_sales > 0 && (
+                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">
+                      Margin: {((pnlSummary.today.gross_profit / pnlSummary.today.total_sales) * 100).toFixed(1)}%
+                    </span>
+                  )}
+                </div>
               </Card>
             </div>
 
@@ -360,10 +367,17 @@ export default function ShopDetails() {
               <Card title="This Week's Sales" className="border-l-4 border-l-blue-500 !p-5">
                 <span className="text-xl font-black">{salesSummary ? formatCurrency(salesSummary.week) : '...'}</span>
               </Card>
-              <Card title="This Week's P&L" className={`border-l-4 !p-5 ${pnlSummary.week?.net_profit >= 0 ? 'border-l-green-500' : 'border-l-red-500'}`}>
-                <span className={`text-xl font-black ${pnlSummary.week?.net_profit >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                  {pnlSummary.week ? formatCurrency(pnlSummary.week.net_profit) : '...'}
-                </span>
+              <Card title="This Week's Gross Profit" className={`border-l-4 !p-5 border-l-green-500`}>
+                <div className="flex flex-col">
+                  <span className="text-xl font-black text-green-600 dark:text-green-400">
+                    {pnlSummary.week ? formatCurrency(pnlSummary.week.gross_profit) : '...'}
+                  </span>
+                  {pnlSummary.week && pnlSummary.week.total_sales > 0 && (
+                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">
+                      Margin: {((pnlSummary.week.gross_profit / pnlSummary.week.total_sales) * 100).toFixed(1)}%
+                    </span>
+                  )}
+                </div>
               </Card>
             </div>
 
@@ -372,10 +386,17 @@ export default function ShopDetails() {
               <Card title="This Month's Sales" className="border-l-4 border-l-blue-500 !p-5">
                 <span className="text-xl font-black">{salesSummary ? formatCurrency(salesSummary.month) : '...'}</span>
               </Card>
-              <Card title="This Month's P&L" className={`border-l-4 !p-5 ${pnlSummary.month?.net_profit >= 0 ? 'border-l-green-500' : 'border-l-red-500'}`}>
-                <span className={`text-xl font-black ${pnlSummary.month?.net_profit >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                  {pnlSummary.month ? formatCurrency(pnlSummary.month.net_profit) : '...'}
-                </span>
+              <Card title="This Month's Gross Profit" className={`border-l-4 !p-5 border-l-green-500`}>
+                <div className="flex flex-col">
+                  <span className="text-xl font-black text-green-600 dark:text-green-400">
+                    {pnlSummary.month ? formatCurrency(pnlSummary.month.gross_profit) : '...'}
+                  </span>
+                  {pnlSummary.month && pnlSummary.month.total_sales > 0 && (
+                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">
+                      Margin: {((pnlSummary.month.gross_profit / pnlSummary.month.total_sales) * 100).toFixed(1)}%
+                    </span>
+                  )}
+                </div>
               </Card>
             </div>
 
@@ -384,10 +405,17 @@ export default function ShopDetails() {
               <Card title="This Year's Sales" className="border-l-4 border-l-blue-500 !p-5">
                 <span className="text-xl font-black">{salesSummary ? formatCurrency(salesSummary.year) : '...'}</span>
               </Card>
-              <Card title="This Year's P&L" className={`border-l-4 !p-5 ${pnlSummary.year?.net_profit >= 0 ? 'border-l-green-500' : 'border-l-red-500'}`}>
-                <span className={`text-xl font-black ${pnlSummary.year?.net_profit >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                  {pnlSummary.year ? formatCurrency(pnlSummary.year.net_profit) : '...'}
-                </span>
+              <Card title="This Year's Gross Profit" className={`border-l-4 !p-5 border-l-green-500`}>
+                <div className="flex flex-col">
+                  <span className="text-xl font-black text-green-600 dark:text-green-400">
+                    {pnlSummary.year ? formatCurrency(pnlSummary.year.gross_profit) : '...'}
+                  </span>
+                  {pnlSummary.year && pnlSummary.year.total_sales > 0 && (
+                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">
+                      Margin: {((pnlSummary.year.gross_profit / pnlSummary.year.total_sales) * 100).toFixed(1)}%
+                    </span>
+                  )}
+                </div>
               </Card>
             </div>
           </div>

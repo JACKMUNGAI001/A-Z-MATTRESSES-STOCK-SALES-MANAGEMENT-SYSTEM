@@ -15,8 +15,8 @@ def get_global_financial_overview():
         total_deposit_collections = db.session.query(func.sum(DepositPayment.amount)).scalar() or 0
         total_expenses = db.session.query(func.sum(Expense.amount)).scalar() or 0
         
-        # Optimized: Use SQL aggregation for total profit
-        total_profit = db.session.query(
+        # Optimized: Use SQL aggregation for gross profit
+        gross_profit = db.session.query(
             func.sum((SaleItem.unit_price - SaleItem.unit_cost) * SaleItem.qty)
         ).scalar() or 0
 
@@ -29,7 +29,7 @@ def get_global_financial_overview():
 
         return {
             "total_sales": float(total_sales),
-            "total_profit": float(total_profit),
+            "gross_profit": float(gross_profit),
             "total_deposit_collections": float(total_deposit_collections),
             "total_expenses": float(total_expenses),
             "combined_stock_value": float(combined_stock_value),
