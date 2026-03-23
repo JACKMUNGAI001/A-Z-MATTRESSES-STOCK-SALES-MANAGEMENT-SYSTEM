@@ -3,7 +3,7 @@ from models.shop import Shop
 from extensions import db
 
 def list_shops():
-    shops = Shop.query.all()
+    shops = Shop.query.order_by(Shop.name.asc()).all()
     out = [{"id":s.id,"name":s.name,"address":s.address} for s in shops]
     return jsonify(out), 200
 

@@ -35,7 +35,7 @@ def create_item_controller():
     return jsonify({"id":it.id,"name":it.name}), 201
 
 def list_categories_controller():
-    categories = Category.query.all()
+    categories = Category.query.order_by(Category.name.asc()).all()
     out = [{"id":c.id,"name":c.name} for c in categories]
     return jsonify(out), 200
 

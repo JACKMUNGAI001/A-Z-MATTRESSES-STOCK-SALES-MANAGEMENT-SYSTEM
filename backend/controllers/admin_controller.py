@@ -6,7 +6,7 @@ from extensions import db
 def pending_attendants(identity):
     if identity.get("role") != "admin":
         return jsonify({"msg":"admin only"}), 403
-    users = User.query.filter_by(role="attendant", is_verified=False).all()
+    users = User.query.filter_by(role="attendant", is_verified=False).order_by(User.name.asc()).all()
     out = [{"id":u.id,"name":u.name,"email":u.email,"created_at":u.created_at.isoformat()} for u in users]
     return jsonify(out), 200
 
@@ -22,7 +22,7 @@ def verify_attendant(user_id, data):
 def list_all_attendants_controller(identity):
     if identity.get("role") != "admin":
         return jsonify({"msg":"admin only"}), 403
-    attendants = User.query.filter_by(role="attendant").all()
+    attendants = User.query.filter_by(role="attendant").order_by(User.name.asc()).all()
     out = []
     for att in attendants:
         shop_name = None

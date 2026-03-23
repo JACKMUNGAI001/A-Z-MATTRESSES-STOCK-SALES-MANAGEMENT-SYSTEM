@@ -8,4 +8,4 @@ def create_item(name, category_id, sku=None, brand=None, buy_price=None, descrip
     return it
 
 def list_items():
-    return Item.query.all()
+    return Item.query.order_by(Item.name.asc()).all()

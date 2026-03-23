@@ -20,7 +20,7 @@ def get_shop_stock(shop_id):
         ShopStock.item_id,
         func.sum(ShopStock.quantity).label('total_qty'),
         func.max(ShopStock.buy_price).label('buy_price')
-    ).join(Item).filter(ShopStock.shop_id == shop_id).group_by(ShopStock.item_id).all()
+    ).join(Item).filter(ShopStock.shop_id == shop_id).group_by(ShopStock.item_id).order_by(Item.name.asc()).all()
     
     out = []
     user_identity = get_jwt_identity()

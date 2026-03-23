@@ -213,7 +213,7 @@ def get_low_stock_items(threshold=2, shop_id=None):
     if shop_id:
         query = query.filter(ShopStock.shop_id == shop_id)
     
-    low_stock = query.all()
+    low_stock = query.order_by(Item.name.asc()).all()
     out = []
     for s in low_stock:
         item = Item.query.get(s.item_id)

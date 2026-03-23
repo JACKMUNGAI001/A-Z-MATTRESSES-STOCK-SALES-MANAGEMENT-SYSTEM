@@ -211,7 +211,7 @@ def get_stock_summary_by_category(shop_id=None):
     if shop_id:
         query = query.filter(Shop.id == shop_id)
 
-    results = query.group_by(Shop.name, Category.name).all()
+    results = query.group_by(Shop.name, Category.name).order_by(Shop.name.asc(), Category.name.asc()).all()
 
     summary = {}
     for shop_name, category_name, total_quantity in results:

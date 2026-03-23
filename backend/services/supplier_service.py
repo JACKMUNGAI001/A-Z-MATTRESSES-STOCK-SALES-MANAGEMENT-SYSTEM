@@ -14,7 +14,7 @@ def create_supplier(name, contact_person=None, phone=None, email=None, address=N
     return s
 
 def list_suppliers():
-    return Supplier.query.all()
+    return Supplier.query.order_by(Supplier.name.asc()).all()
 
 def update_supplier(supplier_id, **kwargs):
     s = Supplier.query.get(supplier_id)
@@ -220,4 +220,5 @@ def get_supplier_products(supplier_id):
     s = Supplier.query.get(supplier_id)
     if not s:
         return []
-    return s.supplied_products
+    # Sort supplied products by name
+    return sorted(s.supplied_products, key=lambda x: x.name)
