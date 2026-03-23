@@ -19,9 +19,9 @@ def run():
         db.session.add(m)
 
     shops_data = [
-        {"name": "Umoja", "address": "Umoja Estate, Nairobi"},
-        {"name": "Mutindwa", "address": "Mutindwa Market, Nairobi"},
-        {"name": "Kabati", "address": "Kabati Town, Muranga"}
+        {"name": "UMOJA", "address": "Nairobi"},
+        {"name": "MUTINDWA", "address": "Nairobi"},
+        {"name": "KABATI", "address": "Muranga"}
     ]
     for s_data in shops_data:
         if not Shop.query.filter_by(name=s_data["name"]).first():
