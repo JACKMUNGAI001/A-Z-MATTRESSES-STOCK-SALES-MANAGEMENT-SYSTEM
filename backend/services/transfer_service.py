@@ -75,7 +75,7 @@ def transfer_stock(from_shop_id, to_shop_id, items, created_by, notes=None):
                 mv_in = StockMovement(shop_id=to_shop_id, item_id=item_id, movement_type="transfer_in", qty=qty_to_transfer, user_id=created_by, created_at=datetime.utcnow())
                 db.session.add_all([mv_out, mv_in])
 
-                ti = TransferItem(transfer_id=t.id, item_id=item_id, qty=qty)
+                ti = TransferItem(transfer_id=t.id, item_id=item_id, qty=qty_to_transfer)
                 db.session.add(ti)
 
                 item = Item.query.get(item_id)
@@ -87,7 +87,7 @@ def transfer_stock(from_shop_id, to_shop_id, items, created_by, notes=None):
                         user_id=attendant.id,
                         user_role='attendant',
                         type='stock_transfer_out',
-                        message=f'{qty} x {item.name} transferred from your shop ({from_shop.name}) to {to_shop.name}.'
+                        message=f'{qty_to_transfer} x {item.name} transferred from your shop ({from_shop.name}) to {to_shop.name}.'
                     )
                     db.session.add(notification_out)
 
@@ -98,7 +98,7 @@ def transfer_stock(from_shop_id, to_shop_id, items, created_by, notes=None):
                         user_id=attendant.id,
                         user_role='attendant',
                         type='stock_transfer_in',
-                        message=f'{qty} x {item.name} received in your shop ({to_shop.name}) from {from_shop.name}.'
+                        message=f'{qty_to_transfer} x {item.name} received in your shop ({to_shop.name}) from {from_shop.name}.'
                     )
                     db.session.add(notification_in)
 
