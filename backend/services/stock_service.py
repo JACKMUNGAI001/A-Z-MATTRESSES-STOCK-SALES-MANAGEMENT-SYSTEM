@@ -118,6 +118,7 @@ def adjust_stock_bulk(shop_id, items, user_id=None):
         if not stock:
             stock = ShopStock(shop_id=shop_id, item_id=item_id, quantity=0, buy_price=buy_price)
             db.session.add(stock)
+            db.session.flush() # Ensure it's found in subsequent iterations of the same item_id in this bulk request
         
         if override:
             old_qty = stock.quantity

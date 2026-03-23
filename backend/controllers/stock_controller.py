@@ -15,31 +15,28 @@ def get_shop_stock(shop_id):
     # Use group_by to aggregate potential duplicates
     from models.product import Item
     from sqlalchemy import func
-    
+
     q = db.session.query(
         ShopStock.item_id,
+        Item.name.label('item_name'),
         func.sum(ShopStock.quantity).label('total_qty'),
         func.max(ShopStock.buy_price).label('buy_price')
-    ).join(Item).filter(ShopStock.shop_id == shop_id).group_by(ShopStock.item_id).order_by(Item.name.asc()).all()
-    
+    ).join(Item, ShopStock.item_id == Item.id).filter(ShopStock.shop_id == shop_id).group_by(ShopStock.item_id, Item.name).order_by(Item.name.asc()).all()
+
     out = []
     user_identity = get_jwt_identity()
     user_role = user_identity.get("role")
 
     for s in q:
-        item = Item.query.get(s.item_id)
-        # item will not be None because of the inner join above
-
         stock_data = {
-            "item_id":s.item_id,
-            "item_name": item.name,
-            "qty":int(s.total_qty)
+            "item_id": s.item_id,
+            "item_name": s.item_name,
+            "qty": int(s.total_qty)
         }
         if user_role == "admin":
             stock_data["buy_price"] = float(s.buy_price or 0)
         out.append(stock_data)
     return jsonify(out), 200
-
 def adjust_stock_controller(identity):
     data = request.get_json() or {}
     shop_id = data.get("shop_id")

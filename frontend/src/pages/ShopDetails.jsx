@@ -131,14 +131,31 @@ export default function ShopDetails() {
     }
     
     const selectedItem = availableItems.find(i => i.id === parseInt(stockFormData.itemId));
-    const newItem = {
-      itemId: stockFormData.itemId,
-      itemName: selectedItem?.name,
-      quantity: parseInt(stockFormData.quantity),
-      buyPrice: stockFormData.buyPrice ? parseFloat(stockFormData.buyPrice) : null,
-    };
+    const quantity = parseInt(stockFormData.quantity);
+    const buyPrice = stockFormData.buyPrice ? parseFloat(stockFormData.buyPrice) : null;
 
-    setItemsToRestock([...itemsToRestock, newItem]);
+    // Check if item already exists in the restock list
+    const existingIndex = itemsToRestock.findIndex(item => item.itemId === stockFormData.itemId);
+    
+    if (existingIndex !== -1) {
+      const updatedList = [...itemsToRestock];
+      updatedList[existingIndex] = {
+        ...updatedList[existingIndex],
+        quantity: updatedList[existingIndex].quantity + quantity,
+        // Update buy price if provided
+        buyPrice: buyPrice !== null ? buyPrice : updatedList[existingIndex].buyPrice
+      };
+      setItemsToRestock(updatedList);
+    } else {
+      const newItem = {
+        itemId: stockFormData.itemId,
+        itemName: selectedItem?.name,
+        quantity: quantity,
+        buyPrice: buyPrice,
+      };
+      setItemsToRestock([...itemsToRestock, newItem]);
+    }
+    
     setStockFormData({ itemId: "", quantity: "", buyPrice: "" });
   };
 
@@ -163,8 +180,10 @@ export default function ShopDetails() {
         })),
       });
       alert("Stock replenished successfully!");
-      fetchShopStock();
+      await fetchShopStock();
       setItemsToRestock([]);
+      // Expand the inventory list section so user can see the updated stock
+      setExpandedSection('stock');
     } catch (err) {
       alert(`Error adding stock: ${err.response?.data?.msg || err.message}`);
     }
