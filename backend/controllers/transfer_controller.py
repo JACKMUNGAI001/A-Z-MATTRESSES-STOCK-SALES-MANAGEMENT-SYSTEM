@@ -1,5 +1,5 @@
 from flask import request, jsonify
-from services.transfer_service import transfer_stock, get_transfers
+from services.transfer_service import transfer_stock, get_transfers, update_transfer, delete_transfer
 from flask_jwt_extended import get_jwt_identity
 from utils.auth_utils import get_shop_id_for_attendant
 
