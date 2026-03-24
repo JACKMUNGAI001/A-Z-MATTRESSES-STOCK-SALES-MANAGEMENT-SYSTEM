@@ -85,15 +85,15 @@ def delete_item_controller(item_id):
         return jsonify({"msg": "Item not found"}), 404
     
     # Cleanup related records to prevent "N/A" orphans and foreign key violations
-    from models.stock import ShopStock, StockMovement
+    from models.stock import ShopStock, StockMovement, StockBatch
     from models.deposit import DepositSale, DepositPayment
     from models.supplier import SupplierInvoiceItem, supplier_items
     from models.sale import SaleItem
     from models.transfer import TransferItem
-    
+
     # 1. Handle shop stock
     ShopStock.query.filter_by(item_id=item_id).delete()
-    
+
     # 2. Handle deposits: Delete payments first then the sales
     deposits = DepositSale.query.filter_by(item_id=item_id).all()
     for d in deposits:
@@ -107,7 +107,13 @@ def delete_item_controller(item_id):
     SupplierInvoiceItem.query.filter_by(item_id=item_id).delete()
 
     # 4. Handle other orphan records (loose associations)
+    # Important: Delete SaleItem by batch reference too just in case
+    batch_ids = [b.id for b in StockBatch.query.filter_by(item_id=item_id).all()]
+    if batch_ids:
+        SaleItem.query.filter(SaleItem.batch_id.in_(batch_ids)).delete(synchronize_session=False)
+
     SaleItem.query.filter_by(item_id=item_id).delete()
+    StockBatch.query.filter_by(item_id=item_id).delete()
     StockMovement.query.filter_by(item_id=item_id).delete()
     TransferItem.query.filter_by(item_id=item_id).delete()
 
