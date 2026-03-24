@@ -24,3 +24,32 @@ def list_transfers_controller():
         
     transfers = get_transfers(shop_id=shop_id)
     return jsonify(transfers), 200
+
+def update_transfer_controller(transfer_id):
+    data = request.get_json() or {}
+    user = get_jwt_identity()
+    from_shop_id = data.get("from_shop_id")
+    to_shop_id = data.get("to_shop_id")
+    items = data.get("items", [])
+    notes = data.get("notes")
+    
+    try:
+        t = update_transfer(
+            transfer_id=transfer_id,
+            user_id=user.get("id"),
+            from_shop_id=from_shop_id,
+            to_shop_id=to_shop_id,
+            items=items,
+            notes=notes
+        )
+        return jsonify({"msg": "transfer updated", "transfer_id": t.id}), 200
+    except Exception as e:
+        return jsonify({"msg": str(e)}), 400
+
+def delete_transfer_controller(transfer_id):
+    user = get_jwt_identity()
+    try:
+        delete_transfer(transfer_id=transfer_id, user_id=user.get("id"))
+        return jsonify({"msg": "transfer deleted"}), 200
+    except Exception as e:
+        return jsonify({"msg": str(e)}), 400

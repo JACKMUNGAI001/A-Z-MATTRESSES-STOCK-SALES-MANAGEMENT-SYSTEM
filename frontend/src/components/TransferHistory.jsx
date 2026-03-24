@@ -1,30 +1,44 @@
 import React, { useState, useEffect, useContext } from 'react';
 import api from '../api/api';
-import { ArrowLeftRight, Clock, Box, Store, SearchX, User, ChevronDown, ChevronUp } from 'lucide-react';
+import { ArrowLeftRight, Clock, Box, Store, SearchX, User, ChevronDown, ChevronUp, Edit2, Trash2 } from 'lucide-react';
 import { formatDate } from '../utils/helpers';
 import { SearchContext } from '../context/SearchContext';
+import EditTransferModal from './EditTransferModal';
 
 export default function TransferHistory() {
   const [transfers, setTransfers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [editingTransfer, setEditingTransfer] = useState(null);
   const { searchQuery } = useContext(SearchContext);
 
+  const fetchTransfers = async () => {
+    try {
+      const response = await api.get('/transfers');
+      setTransfers(response.data);
+    } catch (err) {
+      console.error('Error fetching transfers:', err);
+      setError("Failed to load transfer history");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchTransfers = async () => {
-      try {
-        const response = await api.get('/transfers');
-        setTransfers(response.data);
-      } catch (err) {
-        console.error('Error fetching transfers:', err);
-        setError("Failed to load transfer history");
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchTransfers();
   }, [searchQuery]);
+
+  const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this transfer? This will revert all stock movements.")) return;
+    try {
+      await api.delete(`/transfers/${id}`);
+      alert("Transfer deleted successfully");
+      fetchTransfers();
+    } catch (err) {
+      alert(`Error deleting transfer: ${err.response?.data?.msg || err.message}`);
+    }
+  };
 
   const filteredTransfers = searchQuery
     ? transfers.filter(t => 
@@ -92,6 +106,7 @@ export default function TransferHistory() {
                       <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest border-b border-gray-100 dark:border-gray-700">Items</th>
                       <th className="px-6 py-4 text-center text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest border-b border-gray-100 dark:border-gray-700">Status/Date</th>
                       <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest border-b border-gray-100 dark:border-gray-700">Notes</th>
+                      <th className="px-6 py-4 text-center text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest border-b border-gray-100 dark:border-gray-700">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-50 dark:divide-gray-700 bg-white dark:bg-gray-800 transition-colors text-sm">
@@ -136,6 +151,24 @@ export default function TransferHistory() {
                               <User size={10} /> {t.created_by_name}
                           </div>
                         </td>
+                        <td className="px-6 py-4 text-center">
+                          <div className="flex justify-center items-center gap-2">
+                            <button
+                              onClick={() => setEditingTransfer(t)}
+                              className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors"
+                              title="Edit Transfer"
+                            >
+                              <Edit2 size={16} />
+                            </button>
+                            <button
+                              onClick={() => handleDelete(t.id)}
+                              className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors"
+                              title="Delete Transfer"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -145,6 +178,14 @@ export default function TransferHistory() {
           </div>
         )}
       </div>
+
+      {editingTransfer && (
+        <EditTransferModal
+          transfer={editingTransfer}
+          onClose={() => setEditingTransfer(null)}
+          onUpdate={fetchTransfers}
+        />
+      )}
     </div>
   );
 }
