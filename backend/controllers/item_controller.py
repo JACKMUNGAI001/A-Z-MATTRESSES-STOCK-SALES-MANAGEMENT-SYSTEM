@@ -19,8 +19,6 @@ def list_items_controller():
             "category_id":it.category_id,
             "description": it.description,
         }
-        if user_role == "admin":
-            item_data["buy_price"] = float(it.buy_price or 0)
             
         out.append(item_data)
     return jsonify(out), 200
@@ -31,7 +29,7 @@ def create_item_controller():
     category_id = data.get("category_id")
     if not all([name, category_id]):
         return jsonify({"msg":"name and category_id required"}), 400
-    it = create_item(name, category_id, sku=data.get("sku"), brand=data.get("brand"), buy_price=data.get("buy_price"), description=data.get("description"))
+    it = create_item(name, category_id, sku=data.get("sku"), brand=data.get("brand"), description=data.get("description"))
     return jsonify({"id":it.id,"name":it.name}), 201
 
 def list_categories_controller():
@@ -77,7 +75,6 @@ def update_item_controller(item_id):
     item.name = data.get("name", item.name)
     item.category_id = data.get("category_id", item.category_id)
     item.brand = data.get("brand", item.brand)
-    item.buy_price = data.get("buy_price", item.buy_price)
     item.description = data.get("description", item.description)
     db.session.commit()
     return jsonify({"msg": "Item updated", "id": item.id}), 200

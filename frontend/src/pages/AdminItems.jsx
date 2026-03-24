@@ -10,7 +10,6 @@ export default function AdminItems() {
   const [formData, setFormData] = useState({
     name: "",
     category_id: "",
-    buy_price: "",
   });
   const [editingId, setEditingId] = useState(null);
   const [newCategoryName, setNewCategoryName] = useState("");
@@ -75,7 +74,6 @@ export default function AdminItems() {
     setFormData({
       name: item.name,
       category_id: item.category_id,
-      buy_price: item.buy_price,
     });
     setEditingId(item.id);
   };
@@ -92,7 +90,7 @@ export default function AdminItems() {
   };
 
   const resetForm = () => {
-    setFormData({ name: "", category_id: "", buy_price: "" });
+    setFormData({ name: "", category_id: "" });
     setEditingId(null);
   };
 
@@ -133,7 +131,7 @@ export default function AdminItems() {
                 <label className="block text-sm font-bold text-gray-700 dark:text-gray-400 uppercase mb-1 px-1 transition-colors">Product Name</label>
                 <input name="name" className="w-full p-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none font-bold transition-all" value={formData.name} onChange={handleInputChange} placeholder="e.g. Super Soft Mattress" />
               </div>
-              <div>
+              <div className="md:col-span-2">
                 <label className="block text-sm font-bold text-gray-700 dark:text-gray-400 uppercase mb-1 px-1 transition-colors">Category</label>
                 <SearchableSelect
                   options={categories}
@@ -141,13 +139,6 @@ export default function AdminItems() {
                   onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}
                   placeholder="Select Category..."
                 />
-              </div>
-              <div>
-                <label className="block text-sm font-bold text-gray-700 dark:text-gray-400 uppercase mb-1 px-1 transition-colors">Buy Price</label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 font-bold transition-colors">KES</span>
-                  <input name="buy_price" type="number" className="w-full pl-12 pr-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none font-black transition-all" value={formData.buy_price} onChange={handleInputChange} />
-                </div>
               </div>
             </div>
             <div className="flex flex-col sm:flex-row gap-4 mt-8">
@@ -225,7 +216,6 @@ export default function AdminItems() {
                     <thead className="bg-gray-50/90 dark:bg-gray-900/90 transition-colors sticky top-0 z-10 backdrop-blur-sm">
                     <tr>
                         <th className="px-4 sm:px-8 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest border-b border-gray-100 dark:border-gray-700">Product Info</th>
-                        <th className="px-4 sm:px-8 py-4 text-right text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest border-b border-gray-100 dark:border-gray-700">Buy Price</th>
                         <th className="px-4 sm:px-8 py-4 text-center text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest border-b border-gray-100 dark:border-gray-700">Actions</th>
                     </tr>
                     </thead>
@@ -237,9 +227,6 @@ export default function AdminItems() {
                             <div className="flex items-center gap-2 text-[10px] sm:text-xs mt-1 transition-colors">
                             <span className="bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-0.5 rounded font-bold uppercase transition-colors">{categories.find(c => c.id === item.category_id)?.name}</span>
                             </div>
-                        </td>
-                        <td className="px-4 sm:px-8 py-4 text-right font-black text-gray-600 dark:text-gray-400 text-sm sm:text-base whitespace-nowrap">
-                            KES {parseFloat(item.buy_price || 0).toLocaleString()}
                         </td>
                         <td className="px-4 sm:px-8 py-4">
                             <div className="flex items-center justify-center gap-2">

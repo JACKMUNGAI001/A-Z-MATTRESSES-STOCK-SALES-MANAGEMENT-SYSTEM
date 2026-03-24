@@ -14,7 +14,6 @@ class ItemSchema(Schema):
     sku = fields.Str()
     name = fields.Str()
     brand = fields.Str()
-    buy_price = fields.Float()
     description = fields.Str()
 
 class ShopStockSchema(Schema):

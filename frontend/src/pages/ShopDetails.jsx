@@ -26,7 +26,7 @@ export default function ShopDetails() {
   const [selectedDeposit, setSelectedDeposit] = useState(null);
   const [showHistory, setShowHistory] = useState(false);
 
-  const [expandedSection, setExpandedSection] = useState(null);
+  const [expandedSection, setExpandedSection] = useState('stock');
   const [salesSummary, setSalesSummary] = useState(null);
   const [pnlSummary, setPnlSummary] = useState({
     today: null,
@@ -285,11 +285,9 @@ export default function ShopDetails() {
                 value={stockFormData.itemId}
                 onChange={(e) => {
                   const id = e.target.value;
-                  const item = availableItems.find(i => i.id === parseInt(id));
                   setStockFormData({
                     ...stockFormData,
                     itemId: id,
-                    buyPrice: item ? item.buy_price : "",
                   });
                 }}
                 placeholder="Choose Product..."
