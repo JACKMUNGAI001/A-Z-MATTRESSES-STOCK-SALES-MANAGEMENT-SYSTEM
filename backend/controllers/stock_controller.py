@@ -14,6 +14,7 @@ def get_shop_stock(shop_id):
     # Use join(Item) to ensure we only see stock for existing products
     # Use group_by to aggregate potential duplicates
     from models.product import Item
+    from models.stock import StockBatch
     from sqlalchemy import func
 
     q = db.session.query(
@@ -28,10 +29,27 @@ def get_shop_stock(shop_id):
     user_role = user_identity.get("role")
 
     for s in q:
+        # Fetch batches for this item in this shop
+        batches = StockBatch.query.filter_by(shop_id=shop_id, item_id=s.item_id)\
+            .filter(StockBatch.remaining_qty > 0)\
+            .order_by(StockBatch.created_at.asc()).all()
+        
+        batch_list = []
+        for b in batches:
+            b_data = {
+                "id": b.id,
+                "qty": int(b.remaining_qty),
+                "created_at": b.created_at.isoformat()
+            }
+            if user_role == "admin":
+                b_data["buy_price"] = float(b.buy_price or 0)
+            batch_list.append(b_data)
+
         stock_data = {
             "item_id": s.item_id,
             "item_name": s.item_name,
-            "qty": int(s.total_qty)
+            "qty": int(s.total_qty),
+            "batches": batch_list
         }
         if user_role == "admin":
             stock_data["buy_price"] = float(s.buy_price or 0)

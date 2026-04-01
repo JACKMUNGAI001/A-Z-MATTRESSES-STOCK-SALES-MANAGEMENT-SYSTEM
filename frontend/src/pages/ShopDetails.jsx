@@ -27,7 +27,14 @@ export default function ShopDetails() {
   const [showHistory, setShowHistory] = useState(false);
 
   const [expandedSection, setExpandedSection] = useState('stock');
+  const [expandedStockItems, setExpandedStockItems] = useState([]);
   const [salesSummary, setSalesSummary] = useState(null);
+
+  const toggleStockItemExpansion = (itemId) => {
+    setExpandedStockItems(prev => 
+      prev.includes(itemId) ? prev.filter(id => id !== itemId) : [...prev, itemId]
+    );
+  };
   const [pnlSummary, setPnlSummary] = useState({
     today: null,
     week: null,
@@ -548,23 +555,78 @@ export default function ShopDetails() {
                 {filteredStock.map(s => {
                   const item = availableItems.find(i => i.id === s.item_id);
                   const isMatch = searchQuery && item?.name.toLowerCase().includes(searchQuery.toLowerCase());
+                  const isExpanded = expandedStockItems.includes(s.item_id);
                   return (
-                    <tr key={s.item_id} className="hover:bg-gray-50/50 dark:hover:bg-gray-900/50 transition-colors">
-                      <td className={`px-6 py-4 font-bold transition-colors ${isMatch ? 'text-blue-600 dark:text-blue-400 font-black' : 'text-gray-900 dark:text-white'}`}>{item?.name}</td>
-                      <td className="px-6 py-4 text-center"><span className={`px-2 py-1 rounded-full text-xs font-black transition-colors ${s.qty <= 2 ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400' : 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'}`}>{s.qty}</span></td>
-                      {user?.role === 'admin' && <td className="px-6 py-4 text-right font-mono text-xs text-gray-400 dark:text-gray-500 transition-colors">{formatCurrency(s.buy_price)}</td>}
-                      {(user?.role === 'admin' || user?.role === 'manager') && (
-                        <td className="px-6 py-4 text-center">
-                            <button 
-                                onClick={() => handleEditStock(s)} 
-                                className="text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 p-2 rounded-lg transition-all"
-                                title="Edit Stock"
-                            >
-                                <Edit size={16} />
-                            </button>
+                    <React.Fragment key={s.item_id}>
+                      <tr 
+                        className={`hover:bg-gray-50/50 dark:hover:bg-gray-900/50 transition-colors cursor-pointer ${isExpanded ? 'bg-blue-50/30 dark:bg-blue-900/10' : ''}`}
+                        onClick={() => toggleStockItemExpansion(s.item_id)}
+                      >
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-2">
+                            {isExpanded ? <ChevronUp size={14} className="text-blue-500" /> : <ChevronDown size={14} className="text-gray-400" />}
+                            <span className={`font-bold transition-colors ${isMatch ? 'text-blue-600 dark:text-blue-400 font-black' : 'text-gray-900 dark:text-white'}`}>
+                              {item?.name}
+                            </span>
+                          </div>
                         </td>
+                        <td className="px-6 py-4 text-center">
+                          <span className={`px-2 py-1 rounded-full text-xs font-black transition-colors ${s.qty <= 2 ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400' : 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'}`}>
+                            {s.qty}
+                          </span>
+                        </td>
+                        {user?.role === 'admin' && <td className="px-6 py-4 text-right font-mono text-xs text-gray-400 dark:text-gray-500 transition-colors">{formatCurrency(s.buy_price)}</td>}
+                        {(user?.role === 'admin' || user?.role === 'manager') && (
+                          <td className="px-6 py-4 text-center">
+                              <button 
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleEditStock(s);
+                                  }} 
+                                  className="text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 p-2 rounded-lg transition-all"
+                                  title="Edit Stock"
+                              >
+                                  <Edit size={16} />
+                              </button>
+                          </td>
+                        )}
+                      </tr>
+                      {isExpanded && (
+                        <tr className="bg-gray-50/30 dark:bg-gray-900/20">
+                          <td colSpan={user?.role === 'admin' ? 4 : 3} className="px-12 py-4">
+                            <div className="border-l-2 border-blue-200 dark:border-blue-900 pl-4 py-2">
+                              <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                                <Clock size={12} /> Stock Batches (FIFO Order)
+                              </h4>
+                              {s.batches && s.batches.length > 0 ? (
+                                <table className="w-full text-xs">
+                                  <thead>
+                                    <tr className="text-gray-400 font-bold">
+                                      <th className="text-left pb-2">Batch ID</th>
+                                      <th className="text-center pb-2">Remaining Qty</th>
+                                      {user?.role === 'admin' && <th className="text-right pb-2">Buy Price</th>}
+                                      <th className="text-right pb-2">Received Date</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+                                    {s.batches.map(batch => (
+                                      <tr key={batch.id}>
+                                        <td className="py-2 text-gray-500 font-mono">#{batch.id}</td>
+                                        <td className="py-2 text-center font-black text-blue-600 dark:text-blue-400">{batch.qty}</td>
+                                        {user?.role === 'admin' && <td className="py-2 text-right font-medium">{formatCurrency(batch.buy_price)}</td>}
+                                        <td className="py-2 text-right text-gray-400">{formatDate(batch.created_at)}</td>
+                                      </tr>
+                                    ))}
+                                  </tbody>
+                                </table>
+                              ) : (
+                                <p className="text-gray-400 italic text-xs">No active batches found for this item.</p>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
                       )}
-                    </tr>
+                    </React.Fragment>
                   );
                 })}
               </tbody>
