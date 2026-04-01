@@ -213,7 +213,7 @@ export default function PNLReport() {
                   {/* NET PROFIT */}
                   <div className={`flex flex-col md:flex-row justify-between items-center py-10 px-10 rounded-[2rem] mt-12 transition-all shadow-xl ${report.net_profit >= 0 ? 'bg-green-600 text-white shadow-green-100 dark:shadow-none' : 'bg-red-600 text-white shadow-red-100 dark:shadow-none'}`}>
                     <div className="text-center md:text-left mb-6 md:mb-0">
-                      <span className="block text-white/70 font-black uppercase tracking-[0.2em] text-xs transition-colors mb-2">Final Net Position</span>
+                      <span className="block text-white/70 font-black uppercase tracking-[0.2em] text-xs transition-colors mb-2">Net Profit</span>
                       <div className="flex items-center gap-3">
                         {report.net_profit >= 0 ? <TrendingUp size={40} /> : <TrendingDown size={40} />}
                         <span className="text-5xl font-black transition-colors tracking-tighter">
@@ -222,7 +222,7 @@ export default function PNLReport() {
                       </div>
                     </div>
                     <div className="text-center md:text-right">
-                        <span className="block text-white/70 font-bold text-sm mb-1 uppercase">Total {report.net_profit >= 0 ? "Surplus" : "Deficit"}</span>
+                        <span className="block text-white/70 font-bold text-sm mb-1 uppercase">Net {report.net_profit >= 0 ? "Profit" : "Loss"}</span>
                         <span className="text-5xl font-black transition-colors tabular-nums">
                         {formatCurrency(report.net_profit)}
                         </span>
