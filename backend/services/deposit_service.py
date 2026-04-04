@@ -8,6 +8,7 @@ from models.shop import Shop
 from models.user import User
 from models.product import Item
 from services.receipt_service import create_receipt
+from utils.timezone_utils import get_local_time
 
 def _generate_deposit_receipt_html(deposit, shop, attendant, payment, total_paid, balance):
     attendant_name = attendant.name if attendant else "N/A"

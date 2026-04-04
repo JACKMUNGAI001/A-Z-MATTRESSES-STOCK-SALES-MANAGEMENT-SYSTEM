@@ -6,6 +6,7 @@ from models.notification import Notification
 from models.user import User
 from datetime import datetime
 from sqlalchemy import func
+from utils.timezone_utils import get_local_time
 
 def adjust_stock(shop_id, item_id, qty, movement_type="adjustment", user_id=None, buy_price=None, sell_price=None, override=False):
     # Try to find existing stock record

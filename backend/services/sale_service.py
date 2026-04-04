@@ -9,6 +9,7 @@ from datetime import datetime
 from models.notification import Notification
 from sqlalchemy import func
 from datetime import datetime, timedelta
+from utils.timezone_utils import get_local_time
 
 def _generate_sale_receipt_html(sale, shop, attendant, sale_items):
     items_html = ""

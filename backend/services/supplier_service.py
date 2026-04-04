@@ -3,6 +3,7 @@ from models.supplier import Supplier, SupplierInvoice, SupplierInvoiceItem, Supp
 from models.stock import ShopStock, StockMovement, StockBatch
 from models.product import Item
 from datetime import datetime
+from utils.timezone_utils import get_local_time
 
 def create_supplier(name, contact_person=None, phone=None, email=None, address=None, item_ids=None):
     s = Supplier(name=name, contact_person=contact_person, phone=phone, email=email, address=address)
