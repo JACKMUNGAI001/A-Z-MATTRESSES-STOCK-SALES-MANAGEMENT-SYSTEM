@@ -7,6 +7,7 @@ from models.deposit import DepositSale
 from models.supplier import SupplierInvoice
 from sqlalchemy import func
 from datetime import datetime, timedelta
+from utils.timezone_utils import get_local_time
 
 
 def get_global_financial_overview():
@@ -41,7 +42,7 @@ def get_global_financial_overview():
         raise e
 
 def get_pnl_report(year, month=None, shop_id=None, period=None):
-    now = datetime.utcnow()
+    now = get_local_time()
     
     if period == 'today':
         start_date = datetime.combine(now.date(), datetime.min.time())
@@ -123,7 +124,7 @@ def get_pnl_report(year, month=None, shop_id=None, period=None):
     }
 
 def get_daily_sales(shop_id=None):
-    today = datetime.utcnow().date()
+    today = get_local_time().date()
     start_of_day = datetime.combine(today, datetime.min.time())
     end_of_day = datetime.combine(today, datetime.max.time())
 
@@ -138,7 +139,7 @@ def get_daily_sales(shop_id=None):
     return {"total_sales": float(total_sales_today)}
 
 def get_sales_summary(shop_id=None):
-    now = datetime.utcnow()
+    now = get_local_time()
     today_start = datetime.combine(now.date(), datetime.min.time())
     
     # Base queries
@@ -167,7 +168,7 @@ def get_sales_summary(shop_id=None):
     }
 
 def get_deposits_summary(shop_id=None):
-    now = datetime.utcnow()
+    now = get_local_time()
     today_start = datetime.combine(now.date(), datetime.min.time())
     
     # Base queries

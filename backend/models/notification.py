@@ -1,5 +1,6 @@
 from datetime import datetime
 from extensions import db
+from utils.timezone_utils import get_local_time
 
 class Notification(db.Model):
     __tablename__ = "notifications"
@@ -9,4 +10,4 @@ class Notification(db.Model):
     type = db.Column(db.String(64))
     message = db.Column(db.Text)
     status = db.Column(db.String(20), default="unread")  # unread, read, resolved
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=get_local_time)

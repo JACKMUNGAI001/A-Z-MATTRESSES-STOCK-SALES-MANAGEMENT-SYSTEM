@@ -48,7 +48,7 @@ def create_supplier_invoice(supplier_id, invoice_number, items_data, status="Pen
     if received_date and isinstance(received_date, str) and received_date.strip():
         received_date = datetime.strptime(received_date, '%Y-%m-%d')
     else:
-        received_date = datetime.utcnow()
+        received_date = get_local_time()
 
     if due_date and isinstance(due_date, str) and due_date.strip():
         due_date = datetime.strptime(due_date, '%Y-%m-%d')

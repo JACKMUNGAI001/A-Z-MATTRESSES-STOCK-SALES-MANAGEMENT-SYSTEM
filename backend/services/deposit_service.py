@@ -220,7 +220,7 @@ def get_deposits_by_shop_id(shop_id):
     return [_serialize_deposit(d) for d in deposits]
 
 def get_todays_deposit_payments(shop_id=None):
-    today = datetime.utcnow().date()
+    today = get_local_time().date()
     start_of_day = datetime(today.year, today.month, today.day)
     end_of_day = start_of_day + timedelta(days=1, microseconds=-1)
     
@@ -232,7 +232,7 @@ def get_todays_deposit_payments(shop_id=None):
     return [_serialize_deposit(d) for d in deposits]
 
 def get_weeks_deposit_payments(shop_id=None):
-    now = datetime.utcnow()
+    now = get_local_time()
     start_of_week = datetime.combine(now.date() - timedelta(days=now.weekday()), datetime.min.time())
     end_of_week = start_of_week + timedelta(days=7, microseconds=-1)
 
@@ -244,7 +244,7 @@ def get_weeks_deposit_payments(shop_id=None):
     return [_serialize_deposit(d) for d in deposits]
 
 def get_months_deposit_payments(shop_id=None):
-    now = datetime.utcnow()
+    now = get_local_time()
     start_of_month = datetime(now.year, now.month, 1)
     if now.month == 12:
         end_of_month = datetime(now.year + 1, 1, 1) - timedelta(microseconds=1)
@@ -259,7 +259,7 @@ def get_months_deposit_payments(shop_id=None):
     return [_serialize_deposit(d) for d in deposits]
 
 def get_years_deposit_payments(shop_id=None):
-    now = datetime.utcnow()
+    now = get_local_time()
     start_of_year = datetime(now.year, 1, 1)
     end_of_year = datetime(now.year, 12, 31, 23, 59, 59, 999999)
 

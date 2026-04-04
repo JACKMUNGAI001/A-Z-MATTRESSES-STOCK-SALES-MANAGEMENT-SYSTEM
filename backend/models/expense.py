@@ -1,5 +1,6 @@
 from datetime import datetime
 from extensions import db
+from utils.timezone_utils import get_local_time
 
 class Expense(db.Model):
     __tablename__ = "expenses"
@@ -10,4 +11,4 @@ class Expense(db.Model):
     description = db.Column(db.Text)
     recurring = db.Column(db.Boolean, default=False)
     frequency = db.Column(db.String(20))  # monthly
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    created_at = db.Column(db.DateTime, default=get_local_time, index=True)

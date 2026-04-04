@@ -1,5 +1,6 @@
 from datetime import datetime
 from extensions import db
+from utils.timezone_utils import get_local_time
 
 class ShopStock(db.Model):
     __tablename__ = "shop_stocks"
@@ -8,7 +9,7 @@ class ShopStock(db.Model):
     item_id = db.Column(db.Integer, db.ForeignKey("items.id"), nullable=False)
     quantity = db.Column(db.Integer, default=0)
     buy_price = db.Column(db.Numeric(10,2))
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=get_local_time)
 
     __table_args__ = (db.UniqueConstraint("shop_id", "item_id", name="uq_shop_item"),)
 
@@ -22,7 +23,7 @@ class StockBatch(db.Model):
     buy_price = db.Column(db.Numeric(12,2), nullable=False)
     source_type = db.Column(db.String(50))  # purchase, transfer, initial
     source_id = db.Column(db.Integer)       # ID of SupplierInvoiceItem, Transfer, etc.
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    created_at = db.Column(db.DateTime, default=get_local_time, index=True)
 
 class StockMovement(db.Model):
     __tablename__ = "stock_movements"
@@ -35,4 +36,4 @@ class StockMovement(db.Model):
     unit_sell_price = db.Column(db.Numeric(10,2))
     user_id = db.Column(db.Integer)
     reference = db.Column(db.Text)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=get_local_time)

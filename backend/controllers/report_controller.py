@@ -1,6 +1,6 @@
 from flask import request, jsonify
 from services.report_service import get_global_financial_overview, get_pnl_report, get_daily_sales, get_sales_summary, get_deposits_summary, get_stock_summary_by_category
-from datetime import datetime
+from utils.timezone_utils import get_local_time
 from flask_jwt_extended import get_jwt_identity
 from utils.auth_utils import get_shop_id_for_attendant
 
@@ -9,7 +9,7 @@ def global_financial_overview_controller():
     return jsonify(overview), 200
 
 def pnl_report_controller():
-    year = request.args.get('year', type=int, default=datetime.utcnow().year)
+    year = request.args.get('year', type=int, default=get_local_time().year)
     month = request.args.get('month', type=int) # Now optional for yearly report
     shop_id = request.args.get('shop_id', type=int) # Optional for global report
     period = request.args.get('period') # e.g. today, this_week

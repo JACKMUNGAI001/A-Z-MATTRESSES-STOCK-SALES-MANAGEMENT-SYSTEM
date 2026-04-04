@@ -1,4 +1,5 @@
 from datetime import datetime
+from utils.timezone_utils import get_local_time
 from extensions import db
 
 class Transfer(db.Model):
@@ -9,7 +10,7 @@ class Transfer(db.Model):
     created_by = db.Column(db.Integer)
     status = db.Column(db.String(20), default="completed")  # requested, approved, completed
     notes = db.Column(db.Text, nullable=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    created_at = db.Column(db.DateTime, default=get_local_time, index=True)
 
 class TransferItem(db.Model):
     __tablename__ = "transfer_items"

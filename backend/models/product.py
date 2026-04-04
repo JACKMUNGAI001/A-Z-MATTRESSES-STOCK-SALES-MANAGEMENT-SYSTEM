@@ -1,4 +1,5 @@
 from datetime import datetime
+from utils.timezone_utils import get_local_time
 from extensions import db
 
 class Category(db.Model):
@@ -14,4 +15,4 @@ class Item(db.Model):
     category_id = db.Column(db.Integer, db.ForeignKey("categories.id"), nullable=False)
     brand = db.Column(db.String(255), nullable=True)
     description = db.Column(db.Text)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=get_local_time)

@@ -1,5 +1,6 @@
 from datetime import datetime
 from extensions import db
+from utils.timezone_utils import get_local_time
 
 class Sale(db.Model):
     __tablename__ = "sales"
@@ -9,7 +10,7 @@ class Sale(db.Model):
     total_amount = db.Column(db.Numeric(12,2))
     payment_type = db.Column(db.String(50))  # mobile_money
     receipt_uuid = db.Column(db.String(64), db.ForeignKey("receipts.uuid"), nullable=True, index=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    created_at = db.Column(db.DateTime, default=get_local_time, index=True)
 
     items = db.relationship("SaleItem", backref="sale", lazy=True)
 

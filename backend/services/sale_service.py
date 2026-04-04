@@ -119,7 +119,7 @@ def create_sale(shop_id, user_id, items, payment_type="mobile_money"):
                         )
                         sale_items.append(si)
                 
-                mv = StockMovement(shop_id=shop_id, item_id=item_id, movement_type="sale", qty=-qty_to_sell, user_id=user_id, created_at=datetime.utcnow())
+                mv = StockMovement(shop_id=shop_id, item_id=item_id, movement_type="sale", qty=-qty_to_sell, user_id=user_id, created_at=get_local_time())
                 db.session.add(mv)
                 
                 total += unit_price * qty_to_sell
@@ -199,7 +199,7 @@ def get_sales_by_shop(shop_id):
     return [_serialize_sale(sale) for sale in sales]
 
 def get_todays_sales(shop_id=None):
-    today = datetime.utcnow().date()
+    today = get_local_time().date()
     start_of_day = datetime(today.year, today.month, today.day)
     end_of_day = start_of_day + timedelta(days=1, microseconds=-1)
     
@@ -211,7 +211,7 @@ def get_todays_sales(shop_id=None):
     return [_serialize_sale(sale) for sale in sales]
 
 def get_current_weeks_sales(shop_id=None):
-    now = datetime.utcnow()
+    now = get_local_time()
     # Find the start of the current week (Monday)
     start_of_week = datetime.combine(now.date() - timedelta(days=now.weekday()), datetime.min.time())
     end_of_week = start_of_week + timedelta(days=7, microseconds=-1)
@@ -224,7 +224,7 @@ def get_current_weeks_sales(shop_id=None):
     return [_serialize_sale(sale) for sale in sales]
 
 def get_current_months_sales(shop_id=None):
-    now = datetime.utcnow()
+    now = get_local_time()
     start_of_month = datetime(now.year, now.month, 1)
     # Calculate end of month
     if now.month == 12:
@@ -240,7 +240,7 @@ def get_current_months_sales(shop_id=None):
     return [_serialize_sale(sale) for sale in sales]
 
 def get_current_years_sales(shop_id=None):
-    now = datetime.utcnow()
+    now = get_local_time()
     start_of_year = datetime(now.year, 1, 1)
     end_of_year = datetime(now.year, 12, 31, 23, 59, 59, 999999)
 
@@ -263,7 +263,7 @@ def delete_sale(sale_id, user_id):
                 stock = ShopStock.query.filter_by(shop_id=sale.shop_id, item_id=item.item_id).first()
                 if stock:
                     stock.quantity += item.qty
-                    stock.updated_at = datetime.utcnow()
+                    stock.updated_at = get_local_time()
                 
                 # Restore to batch if linked
                 if item.batch_id:
@@ -279,7 +279,7 @@ def delete_sale(sale_id, user_id):
                         qty=item.qty, 
                         user_id=user_id, 
                         reference=f"Sale {sale_id} deleted (restored to batch {item.batch_id})",
-                        created_at=datetime.utcnow()
+                        created_at=get_local_time()
                     )
                     db.session.add(mv)
 
@@ -306,7 +306,7 @@ def update_sale(sale_id, user_id, items, payment_type):
                 stock = ShopStock.query.filter_by(shop_id=sale.shop_id, item_id=item.item_id).first()
                 if stock:
                     stock.quantity += item.qty
-                    stock.updated_at = datetime.utcnow()
+                    stock.updated_at = get_local_time()
                 
                 # Restore to batch if linked
                 if item.batch_id:
@@ -322,7 +322,7 @@ def update_sale(sale_id, user_id, items, payment_type):
                     qty=item.qty, 
                     user_id=user_id, 
                     reference=f"Sale {sale_id} updated (reversal)",
-                    created_at=datetime.utcnow()
+                    created_at=get_local_time()
                 )
                 db.session.add(mv_rev)
 
@@ -342,7 +342,7 @@ def update_sale(sale_id, user_id, items, payment_type):
                     raise ValueError(f"Insufficient stock for item {item_id}")
                 
                 stock.quantity -= qty_to_sell
-                stock.updated_at = datetime.utcnow()
+                stock.updated_at = get_local_time()
                 
                 # FIFO Logic: Consume from batches
                 remaining_to_pull = qty_to_sell
@@ -377,7 +377,7 @@ def update_sale(sale_id, user_id, items, payment_type):
                     qty=-qty_to_sell, 
                     user_id=user_id, 
                     reference=f"Sale {sale_id} updated",
-                    created_at=datetime.utcnow()
+                    created_at=get_local_time()
                 )
                 db.session.add(mv)
                 

@@ -49,7 +49,7 @@ def transfer_stock(from_shop_id, to_shop_id, items, created_by, notes=None):
                             buy_price=s_from.buy_price or 0,
                             source_type="transfer",
                             source_id=t.id,
-                            created_at=datetime.utcnow()
+                            created_at=get_local_time()
                         )
                         db.session.add(new_batch)
                         remaining_to_pull = 0
@@ -66,13 +66,13 @@ def transfer_stock(from_shop_id, to_shop_id, items, created_by, notes=None):
                             buy_price=batch.buy_price,
                             source_type="transfer",
                             source_id=t.id,
-                            created_at=datetime.utcnow()
+                            created_at=get_local_time()
                         )
                         db.session.add(dest_batch)
                         remaining_to_pull -= pull_qty
 
-                mv_out = StockMovement(shop_id=from_shop_id, item_id=item_id, movement_type="transfer_out", qty=-qty_to_transfer, user_id=created_by, created_at=datetime.utcnow())
-                mv_in = StockMovement(shop_id=to_shop_id, item_id=item_id, movement_type="transfer_in", qty=qty_to_transfer, user_id=created_by, created_at=datetime.utcnow())
+                mv_out = StockMovement(shop_id=from_shop_id, item_id=item_id, movement_type="transfer_out", qty=-qty_to_transfer, user_id=created_by, created_at=get_local_time())
+                mv_in = StockMovement(shop_id=to_shop_id, item_id=item_id, movement_type="transfer_in", qty=qty_to_transfer, user_id=created_by, created_at=get_local_time())
                 db.session.add_all([mv_out, mv_in])
 
                 ti = TransferItem(transfer_id=t.id, item_id=item_id, qty=qty_to_transfer)
@@ -137,8 +137,8 @@ def delete_transfer(transfer_id, user_id):
                     s_to.quantity -= ti.qty
 
                 # 3. Create restoration movements
-                mv_from = StockMovement(shop_id=t.from_shop_id, item_id=ti.item_id, movement_type="adjustment", qty=ti.qty, user_id=user_id, reference=f"Transfer {t.id} deleted (restored to source)", created_at=datetime.utcnow())
-                mv_to = StockMovement(shop_id=t.to_shop_id, item_id=ti.item_id, movement_type="adjustment", qty=-ti.qty, user_id=user_id, reference=f"Transfer {t.id} deleted (removed from destination)", created_at=datetime.utcnow())
+                mv_from = StockMovement(shop_id=t.from_shop_id, item_id=ti.item_id, movement_type="adjustment", qty=ti.qty, user_id=user_id, reference=f"Transfer {t.id} deleted (restored to source)", created_at=get_local_time())
+                mv_to = StockMovement(shop_id=t.to_shop_id, item_id=ti.item_id, movement_type="adjustment", qty=-ti.qty, user_id=user_id, reference=f"Transfer {t.id} deleted (removed from destination)", created_at=get_local_time())
                 db.session.add_all([mv_from, mv_to])
 
             # 4. Restore batches in source shop using destination batch info
@@ -154,7 +154,7 @@ def delete_transfer(transfer_id, user_id):
                     buy_price=db_batch.buy_price,
                     source_type="transfer_reversal",
                     source_id=t.id,
-                    created_at=datetime.utcnow()
+                    created_at=get_local_time()
                 )
                 db.session.add(new_batch)
                 
@@ -198,8 +198,8 @@ def update_transfer(transfer_id, user_id, from_shop_id, to_shop_id, items, notes
                     s_to_old.quantity -= ti.qty
 
                 # Create reversal movements
-                mv_rev_from = StockMovement(shop_id=t.from_shop_id, item_id=ti.item_id, movement_type="adjustment", qty=ti.qty, user_id=user_id, reference=f"Transfer {t.id} updated (undoing old state)", created_at=datetime.utcnow())
-                mv_rev_to = StockMovement(shop_id=t.to_shop_id, item_id=ti.item_id, movement_type="adjustment", qty=-ti.qty, user_id=user_id, reference=f"Transfer {t.id} updated (undoing old state)", created_at=datetime.utcnow())
+                mv_rev_from = StockMovement(shop_id=t.from_shop_id, item_id=ti.item_id, movement_type="adjustment", qty=ti.qty, user_id=user_id, reference=f"Transfer {t.id} updated (undoing old state)", created_at=get_local_time())
+                mv_rev_to = StockMovement(shop_id=t.to_shop_id, item_id=ti.item_id, movement_type="adjustment", qty=-ti.qty, user_id=user_id, reference=f"Transfer {t.id} updated (undoing old state)", created_at=get_local_time())
                 db.session.add_all([mv_rev_from, mv_rev_to])
 
             # Delete destination batches created by old state
@@ -247,7 +247,7 @@ def update_transfer(transfer_id, user_id, from_shop_id, to_shop_id, items, notes
                             buy_price=s_from.buy_price or 0,
                             source_type="transfer",
                             source_id=t.id,
-                            created_at=datetime.utcnow()
+                            created_at=get_local_time()
                         )
                         db.session.add(new_batch)
                         remaining_to_pull = 0
@@ -263,13 +263,13 @@ def update_transfer(transfer_id, user_id, from_shop_id, to_shop_id, items, notes
                             buy_price=batch.buy_price,
                             source_type="transfer",
                             source_id=t.id,
-                            created_at=datetime.utcnow()
+                            created_at=get_local_time()
                         )
                         db.session.add(dest_batch)
                         remaining_to_pull -= pull_qty
 
-                mv_out = StockMovement(shop_id=from_shop_id, item_id=item_id, movement_type="transfer_out", qty=-qty_to_transfer, user_id=user_id, reference=f"Transfer {t.id} updated (new state)", created_at=datetime.utcnow())
-                mv_in = StockMovement(shop_id=to_shop_id, item_id=item_id, movement_type="transfer_in", qty=qty_to_transfer, user_id=user_id, reference=f"Transfer {t.id} updated (new state)", created_at=datetime.utcnow())
+                mv_out = StockMovement(shop_id=from_shop_id, item_id=item_id, movement_type="transfer_out", qty=-qty_to_transfer, user_id=user_id, reference=f"Transfer {t.id} updated (new state)", created_at=get_local_time())
+                mv_in = StockMovement(shop_id=to_shop_id, item_id=item_id, movement_type="transfer_in", qty=qty_to_transfer, user_id=user_id, reference=f"Transfer {t.id} updated (new state)", created_at=get_local_time())
                 db.session.add_all([mv_out, mv_in])
 
                 ti = TransferItem(transfer_id=t.id, item_id=item_id, qty=qty_to_transfer)
@@ -314,6 +314,10 @@ def get_transfers(shop_id=None):
             "status": t.status,
             "notes": t.notes,
             "created_at": t.created_at.isoformat(),
+            "items": items
+        })
+    return out
+rmat(),
             "items": items
         })
     return out

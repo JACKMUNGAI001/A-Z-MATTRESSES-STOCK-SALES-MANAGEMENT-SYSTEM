@@ -1,6 +1,7 @@
 from datetime import datetime
 from passlib.hash import bcrypt
 from extensions import db
+from utils.timezone_utils import get_local_time
 
 class User(db.Model):
     __tablename__ = "users"
@@ -11,7 +12,7 @@ class User(db.Model):
     role = db.Column(db.String(50), default="attendant")  # admin | manager | attendant
     is_verified = db.Column(db.Boolean, default=False)
     shop_id = db.Column(db.Integer, db.ForeignKey("shops.id"), nullable=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=get_local_time)
 
     def set_password(self, password):
         self.password_hash = bcrypt.hash(password)

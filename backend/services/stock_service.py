@@ -25,7 +25,7 @@ def adjust_stock(shop_id, item_id, qty, movement_type="adjustment", user_id=None
         qty_change = qty
 
     if buy_price is not None: stock.buy_price = buy_price
-    stock.updated_at = datetime.utcnow()
+    stock.updated_at = get_local_time()
     
     # Handle Batches
     if qty_change > 0:
@@ -37,7 +37,7 @@ def adjust_stock(shop_id, item_id, qty, movement_type="adjustment", user_id=None
             remaining_qty=qty_change,
             buy_price=buy_price if buy_price is not None else (stock.buy_price or 0),
             source_type=movement_type,
-            created_at=datetime.utcnow()
+            created_at=get_local_time()
         )
         db.session.add(new_batch)
     elif qty_change < 0:
@@ -80,7 +80,7 @@ def adjust_stock(shop_id, item_id, qty, movement_type="adjustment", user_id=None
 
     db.session.commit()
 
-    mv = StockMovement(shop_id=shop_id, item_id=item_id, movement_type=movement_type, qty=qty_change, unit_buy_price=buy_price, unit_sell_price=sell_price, user_id=user_id, reference=None, created_at=datetime.utcnow())
+    mv = StockMovement(shop_id=shop_id, item_id=item_id, movement_type=movement_type, qty=qty_change, unit_buy_price=buy_price, unit_sell_price=sell_price, user_id=user_id, reference=None, created_at=get_local_time())
     db.session.add(mv)
     db.session.commit()
     return stock
@@ -129,7 +129,7 @@ def adjust_stock_bulk(shop_id, items, user_id=None):
             qty_change = qty
 
         if buy_price is not None: stock.buy_price = buy_price
-        stock.updated_at = datetime.utcnow()
+        stock.updated_at = get_local_time()
         
         # Handle Batches
         if qty_change > 0:
@@ -140,7 +140,7 @@ def adjust_stock_bulk(shop_id, items, user_id=None):
                 remaining_qty=qty_change,
                 buy_price=buy_price if buy_price is not None else (stock.buy_price or 0),
                 source_type=movement_type,
-                created_at=datetime.utcnow()
+                created_at=get_local_time()
             )
             db.session.add(new_batch)
         elif qty_change < 0:
@@ -172,7 +172,7 @@ def adjust_stock_bulk(shop_id, items, user_id=None):
 
         mv = StockMovement(shop_id=shop_id, item_id=item_id, movement_type=movement_type, qty=qty_change, 
                            unit_buy_price=buy_price, unit_sell_price=sell_price, user_id=user_id, 
-                           reference=None, created_at=datetime.utcnow())
+                           reference=None, created_at=get_local_time())
         db.session.add(mv)
 
     db.session.commit()
@@ -237,7 +237,7 @@ def delete_stock(shop_id, item_id, user_id):
     deleted_qty = stock.quantity
     db.session.delete(stock)
     
-    mv = StockMovement(shop_id=shop_id, item_id=item_id, movement_type="deletion", qty=-deleted_qty, user_id=user_id, created_at=datetime.utcnow())
+    mv = StockMovement(shop_id=shop_id, item_id=item_id, movement_type="deletion", qty=-deleted_qty, user_id=user_id, created_at=get_local_time())
     db.session.add(mv)
     db.session.commit()
     return True
