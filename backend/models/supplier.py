@@ -59,4 +59,3 @@ class SupplierInvoicePayment(db.Model):
     created_at = db.Column(db.DateTime, default=get_local_time)
 
     invoice_rel = db.relationship("SupplierInvoice", backref=db.backref("payments", lazy=True, cascade="all, delete-orphan"))
-payments", lazy=True, cascade="all, delete-orphan"))
