@@ -6,6 +6,7 @@ from models.shop import Shop
 from models.product import Item
 from models.user import User
 from datetime import datetime
+from utils.timezone_utils import get_local_time
 
 def transfer_stock(from_shop_id, to_shop_id, items, created_by, notes=None):
     try:
@@ -314,10 +315,6 @@ def get_transfers(shop_id=None):
             "status": t.status,
             "notes": t.notes,
             "created_at": t.created_at.isoformat(),
-            "items": items
-        })
-    return out
-rmat(),
             "items": items
         })
     return out
