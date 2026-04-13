@@ -12,6 +12,7 @@ class Config:
         db_url = db_url.replace("postgres://", "postgresql://", 1)
     
     SQLALCHEMY_DATABASE_URI = db_url
+    SQLALCHEMY_ENGINE_OPTIONS = {"connect_args": {"sslmode": "require"}}
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "change-me-jwt")
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=12)
