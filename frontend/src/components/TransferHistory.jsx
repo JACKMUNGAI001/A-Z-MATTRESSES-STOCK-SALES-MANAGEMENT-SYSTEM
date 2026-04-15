@@ -26,8 +26,10 @@ export default function TransferHistory() {
   };
 
   useEffect(() => {
-    fetchTransfers();
-  }, [searchQuery]);
+    if (isExpanded) {
+        fetchTransfers();
+    }
+  }, [searchQuery, isExpanded]);
 
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this transfer? This will revert all stock movements.")) return;

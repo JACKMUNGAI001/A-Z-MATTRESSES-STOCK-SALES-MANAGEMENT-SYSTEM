@@ -1,5 +1,13 @@
 from flask import request, jsonify
-from services.report_service import get_global_financial_overview, get_pnl_report, get_daily_sales, get_sales_summary, get_deposits_summary, get_stock_summary_by_category
+from services.report_service import (
+    get_global_financial_overview, 
+    get_pnl_report, 
+    get_daily_sales, 
+    get_sales_summary, 
+    get_deposits_summary, 
+    get_stock_summary_by_category, 
+    get_dashboard_summary
+)
 from utils.timezone_utils import get_local_time
 from flask_jwt_extended import get_jwt_identity
 from utils.auth_utils import get_shop_id_for_attendant
@@ -7,6 +15,15 @@ from utils.auth_utils import get_shop_id_for_attendant
 def global_financial_overview_controller():
     overview = get_global_financial_overview()
     return jsonify(overview), 200
+
+def dashboard_summary_controller():
+    shop_id = request.args.get('shop_id', type=int)
+    user_identity = get_jwt_identity()
+    if user_identity.get("role") == "attendant":
+        shop_id = get_shop_id_for_attendant()
+    
+    summary = get_dashboard_summary(shop_id)
+    return jsonify(summary), 200
 
 def pnl_report_controller():
     year = request.args.get('year', type=int, default=get_local_time().year)

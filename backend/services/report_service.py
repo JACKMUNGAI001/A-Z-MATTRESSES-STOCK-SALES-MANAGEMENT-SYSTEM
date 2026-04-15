@@ -221,3 +221,44 @@ def get_stock_summary_by_category(shop_id=None):
         summary[shop_name][category_name] = int(total_quantity or 0)
     
     return summary
+    
+def get_dashboard_summary(shop_id=None):
+    """
+    Unified dashboard summary to reduce multiple API calls on login.
+    """
+    from models.deposit import DepositSale
+    
+    # Run all summaries in parallel/batch if possible
+    # For now, just call existing optimized services
+    sales = get_sales_summary(shop_id)
+    deposits = get_deposits_summary(shop_id)
+    stock_summary = get_stock_summary_by_category(shop_id)
+    
+    financial = None
+    if not shop_id: # Only for Admin (Global)
+        financial = get_global_financial_overview()
+
+    # Get additional metrics usually requested
+    low_stock_count = 0
+    from models.stock import ShopStock
+    from config import Config
+    
+    low_stock_query = db.session.query(func.count(ShopStock.id)).filter(ShopStock.quantity <= 2)
+    if shop_id:
+        low_stock_query = low_stock_query.filter(ShopStock.shop_id == shop_id)
+    low_stock_count = low_stock_query.scalar() or 0
+
+    deposit_customers_count = 0
+    cust_query = db.session.query(func.count(DepositSale.id)).filter(DepositSale.status == 'active')
+    if shop_id:
+        cust_query = cust_query.filter(DepositSale.shop_id == shop_id)
+    deposit_customers_count = cust_query.scalar() or 0
+
+    return {
+        "sales": sales,
+        "deposits": deposits,
+        "stock_summary": stock_summary,
+        "financial_overview": financial,
+        "low_stock_count": int(low_stock_count),
+        "deposit_customers_count": int(deposit_customers_count)
+    }

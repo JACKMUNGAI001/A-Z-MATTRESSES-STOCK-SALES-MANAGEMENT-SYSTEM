@@ -27,25 +27,15 @@ export default function AttendantDashboard(){
 
     const fetchDashboardData = async () => {
         try {
-            // Fetch Sales Summary
-            const salesRes = await api.get('/reports/sales-summary');
-            setSalesSummary(salesRes.data);
-
-            // Fetch Deposits Summary
-            const depositsRes = await api.get('/reports/deposits-summary');
-            setDepositsSummary(depositsRes.data);
-
-            // Fetch Low Stock Count
-            const lowStockResponse = await api.get('/stocks/low_stock_count');
-            setLowStockCount(lowStockResponse.data.count);
-
-            // Fetch Deposit Customers Count
-            const depositCustomersResponse = await api.get('/deposits/customers_count');
-            setDepositCustomersCount(depositCustomersResponse.data.count);
-
-            // Fetch Stock Summary
-            const stockSummaryRes = await api.get('/reports/stock-summary');
-            setStockSummary(stockSummaryRes.data);
+            // Unified dashboard summary call
+            const res = await api.get('/reports/dashboard-summary');
+            const data = res.data;
+            
+            setSalesSummary(data.sales);
+            setDepositsSummary(data.deposits);
+            setLowStockCount(data.low_stock_count);
+            setDepositCustomersCount(data.deposit_customers_count);
+            setStockSummary(data.stock_summary);
 
         } catch (err) {
             console.error('Error fetching dashboard data:', err);

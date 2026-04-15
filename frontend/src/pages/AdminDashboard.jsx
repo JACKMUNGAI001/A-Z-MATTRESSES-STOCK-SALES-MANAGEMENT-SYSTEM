@@ -22,10 +22,15 @@ export default function AdminDashboard(){
     api.get('/shops').then(res=>setShops(res.data)).catch(()=>{})
     fetchPendingAttendants()
     fetchAllAttendants()
-    api.get('/reports/sales-summary').then(res=>setSalesSummary(res.data)).catch(()=>{})
-    api.get('/reports/deposits-summary').then(res=>setDepositsSummary(res.data)).catch(()=>{})
-    api.get('/reports/financial-overview').then(res=>setFinancialOverview(res.data)).catch(()=>{})
-    api.get('/reports/stock-summary').then(res=>setStockSummary(res.data)).catch(()=>{})
+    
+    // Unified dashboard summary call
+    api.get('/reports/dashboard-summary').then(res => {
+        const data = res.data;
+        setSalesSummary(data.sales);
+        setDepositsSummary(data.deposits);
+        setFinancialOverview(data.financial_overview);
+        setStockSummary(data.stock_summary);
+    }).catch(err => console.error("Error fetching summary", err));
   },[])
 
   const fetchPendingAttendants = async () => {
