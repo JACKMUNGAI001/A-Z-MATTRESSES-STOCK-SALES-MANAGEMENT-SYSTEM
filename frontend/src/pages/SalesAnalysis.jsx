@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import api, { fetchProductAnalysis } from "../api/api";
 import { BarChart3, Store, Calendar, Clock, Package } from "lucide-react";
-import PageLayout from "../components/PageLayout";
 
 export default function SalesAnalysis() {
   const [year, setYear] = useState(new Date().getFullYear());
@@ -27,7 +26,7 @@ export default function SalesAnalysis() {
       const response = await api.get("/shops");
       setShops(response.data);
     } catch (err) {
-      console.error("Error fetching shops", err);
+      console.error("Error fetching shops");
     }
   };
 
@@ -78,18 +77,8 @@ export default function SalesAnalysis() {
   };
 
   return (
-    <PageLayout role="admin">
+    <>
       <div className="space-y-8">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div>
-            <h1 className="text-3xl font-black text-gray-900 dark:text-white tracking-tight flex items-center gap-3">
-              <BarChart3 className="text-blue-600" size={32} />
-              Sales Analysis
-            </h1>
-            <p className="text-gray-500 dark:text-gray-400 font-medium mt-1">Identify top-performing products and shop trends</p>
-          </div>
-        </div>
-
         {/* FILTERS */}
         <div className="bg-white dark:bg-gray-800 p-6 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -245,6 +234,6 @@ export default function SalesAnalysis() {
           </div>
         )}
       </div>
-    </PageLayout>
+    </>
   );
 }
