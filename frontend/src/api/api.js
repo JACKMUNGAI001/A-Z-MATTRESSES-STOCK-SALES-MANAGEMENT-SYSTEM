@@ -41,4 +41,7 @@ export const recordSupplierInvoicePayment = (id, data) => api.post(`/suppliers/i
 export const fetchNotifications = () => api.get('/notifications/')
 export const markNotificationRead = (id) => api.post(`/notifications/mark-read/${id}`)
 
+// Report APIs
+export const fetchProductAnalysis = (params) => api.get('/reports/product-analysis', { params })
+
 export default api

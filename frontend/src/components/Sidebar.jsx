@@ -6,6 +6,7 @@ import {
   Store, 
   Package, 
   TrendingUp, 
+  BarChart3,
   Receipt, 
   ArrowLeftRight, 
   UserCircle,
@@ -57,6 +58,7 @@ export default function Sidebar({ role: propRole, onClose }){
             <NavLink to="/admin/items" icon={Package}>Products</NavLink>
             <NavLink to="/admin/restock-history" icon={Truck}>Restock History</NavLink>
             <NavLink to="/admin/suppliers" icon={Truck}>Suppliers</NavLink>
+            <NavLink to="/admin/analysis" icon={BarChart3}>Sales Analysis</NavLink>
             <NavLink to="/admin/pnl" icon={TrendingUp}>Profit & Loss</NavLink>
             <NavLink to="/admin/expenses" icon={Receipt}>Expenses</NavLink>
             <NavLink to="/transfers" icon={ArrowLeftRight}>Transfers</NavLink>

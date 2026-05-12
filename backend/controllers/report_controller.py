@@ -6,7 +6,8 @@ from services.report_service import (
     get_sales_summary, 
     get_deposits_summary, 
     get_stock_summary_by_category, 
-    get_dashboard_summary
+    get_dashboard_summary,
+    get_product_sales_analysis
 )
 from utils.timezone_utils import get_local_time
 from flask_jwt_extended import get_jwt_identity
@@ -71,3 +72,12 @@ def stock_summary_by_category_controller():
     
     summary = get_stock_summary_by_category(shop_id)
     return jsonify(summary), 200
+
+def product_sales_analysis_controller():
+    shop_id = request.args.get('shop_id', type=int)
+    year = request.args.get('year', type=int)
+    month = request.args.get('month', type=int)
+    period = request.args.get('period')
+    
+    analysis = get_product_sales_analysis(year=year, month=month, shop_id=shop_id, period=period)
+    return jsonify(analysis), 200

@@ -6,7 +6,8 @@ from controllers.report_controller import (
     sales_summary_controller, 
     deposits_summary_controller, 
     stock_summary_by_category_controller, 
-    dashboard_summary_controller
+    dashboard_summary_controller,
+    product_sales_analysis_controller
 )
 from flask_jwt_extended import jwt_required
 
@@ -19,3 +20,4 @@ bp.add_url_rule("/daily_sales", "daily_sales_report", jwt_required()(daily_sales
 bp.add_url_rule("/sales-summary", "sales_summary", jwt_required()(sales_summary_controller), methods=["GET"])
 bp.add_url_rule("/deposits-summary", "deposits_summary", jwt_required()(deposits_summary_controller), methods=["GET"])
 bp.add_url_rule("/stock-summary", "stock_summary", jwt_required()(stock_summary_by_category_controller), methods=["GET"])
+bp.add_url_rule("/product-analysis", "product_analysis", jwt_required()(product_sales_analysis_controller), methods=["GET"])

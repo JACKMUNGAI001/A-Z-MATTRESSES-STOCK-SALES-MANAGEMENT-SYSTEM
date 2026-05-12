@@ -262,3 +262,85 @@ def get_dashboard_summary(shop_id=None):
         "low_stock_count": int(low_stock_count),
         "deposit_customers_count": int(deposit_customers_count)
     }
+
+def get_product_sales_analysis(year=None, month=None, shop_id=None, period=None):
+    from models.product import Item
+    from models.shop import Shop
+    from models.sale import Sale, SaleItem
+    
+    now = get_local_time()
+    
+    if period == 'today':
+        start_date = datetime.combine(now.date(), datetime.min.time())
+        end_date = datetime.combine(now.date(), datetime.max.time())
+    elif period == 'this_week':
+        start_date = datetime.combine(now.date() - timedelta(days=now.weekday()), datetime.min.time())
+        end_date = datetime.combine(now.date(), datetime.max.time())
+    elif month:
+        start_date = datetime(year, month, 1)
+        if month == 12:
+            end_date = datetime(year + 1, 1, 1)
+        else:
+            end_date = datetime(year, month + 1, 1)
+    elif year:
+        start_date = datetime(year, 1, 1)
+        end_date = datetime(year + 1, 1, 1)
+    else:
+        start_date = None
+        end_date = None
+
+    query = db.session.query(
+        Item.name.label("product_name"),
+        Shop.name.label("shop_name"),
+        func.sum(SaleItem.qty).label("total_qty"),
+        func.sum(SaleItem.qty * SaleItem.unit_price).label("total_revenue")
+    ).join(SaleItem, SaleItem.item_id == Item.id) \
+     .join(Sale, SaleItem.sale_id == Sale.id) \
+     .join(Shop, Sale.shop_id == Shop.id)
+
+    if shop_id:
+        query = query.filter(Sale.shop_id == shop_id)
+    
+    if start_date:
+        query = query.filter(Sale.created_at >= start_date)
+    if end_date:
+        query = query.filter(Sale.created_at <= end_date)
+
+    results = query.group_by(Item.name, Shop.name).order_by(func.sum(SaleItem.qty).desc()).all()
+
+    analysis = [
+        {
+            "product_name": row.product_name,
+            "shop_name": row.shop_name,
+            "total_qty": int(row.total_qty),
+            "total_revenue": float(row.total_revenue)
+        } for row in results
+    ]
+
+    # Overall summary (all shops combined)
+    overall_query = db.session.query(
+        Item.name.label("product_name"),
+        func.sum(SaleItem.qty).label("total_qty"),
+        func.sum(SaleItem.qty * SaleItem.unit_price).label("total_revenue")
+    ).join(SaleItem, SaleItem.item_id == Item.id) \
+     .join(Sale, SaleItem.sale_id == Sale.id)
+
+    if start_date:
+        overall_query = overall_query.filter(Sale.created_at >= start_date)
+    if end_date:
+        overall_query = overall_query.filter(Sale.created_at <= end_date)
+
+    overall_results = overall_query.group_by(Item.name).order_by(func.sum(SaleItem.qty).desc()).all()
+
+    overall_analysis = [
+        {
+            "product_name": row.product_name,
+            "total_qty": int(row.total_qty),
+            "total_revenue": float(row.total_revenue)
+        } for row in overall_results
+    ]
+
+    return {
+        "by_shop": analysis,
+        "overall": overall_analysis
+    }
