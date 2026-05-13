@@ -4,7 +4,7 @@ import api from '../api/api'
 import { AuthContext } from '../context/AuthContext'
 import { useNavigate, Link } from 'react-router-dom'
 import { UserCheck, UserX, MapPin, Mail, ShieldCheck, UserCircle, Store, ChevronDown, ChevronUp } from 'lucide-react'
-import TransferHistory from '../components/TransferHistory'
+import TransferCardLink from '../components/TransferCardLink'
 
 export default function AdminDashboard(){
   const { user } = useContext(AuthContext)
@@ -204,7 +204,7 @@ export default function AdminDashboard(){
         </div>
 
         {/* TRANSFER HISTORY */}
-        <TransferHistory />
+        <TransferCardLink />
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 pb-20 mt-10">
           {/* PENDING ATTENDANTS */}

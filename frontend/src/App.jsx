@@ -3,6 +3,8 @@ import Dashboard from "./pages/Dashboard";
 import POS from "./pages/POS";
 import Deposits from "./pages/Deposits";
 import Transfers from "./pages/Transfers";
+import GlobalInventory from "./pages/GlobalInventory";
+import AttendantInventory from "./pages/AttendantInventory";
 import Expenses from "./pages/Expenses";
 import Profile from "./pages/Profile";
 import Login from "./pages/Login";
@@ -48,6 +50,8 @@ function App() {
         <Route path="/attendant/sales/year" element={<ProtectedRoute><AttendantLayout><YearsSales /></AttendantLayout></ProtectedRoute>} />
         <Route path="/attendant/low-stock" element={<ProtectedRoute><AttendantLayout><LowStockItems /></AttendantLayout></ProtectedRoute>} />
         <Route path="/attendant/deposits" element={<ProtectedRoute><AttendantLayout><DepositCustomers /></AttendantLayout></ProtectedRoute>} />
+        <Route path="/attendant/inventory" element={<ProtectedRoute><AttendantLayout><AttendantInventory /></AttendantLayout></ProtectedRoute>} />
+        <Route path="/global-inventory" element={<ProtectedRoute role={["admin","manager"]}><GlobalInventory /></ProtectedRoute>} />
         
         {/* Admin Routes */}
         <Route path="/admin/dashboard" element={<ProtectedRoute role="admin"><AdminDashboard /></ProtectedRoute>} />

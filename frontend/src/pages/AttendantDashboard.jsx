@@ -5,7 +5,7 @@ import { AuthContext } from '../context/AuthContext'
 import { SearchContext } from '../context/SearchContext'
 import api from '../api/api'
 import { Store, Package, TrendingUp, Users, Wallet, SearchX, ChevronDown, ChevronUp } from 'lucide-react'
-import TransferHistory from '../components/TransferHistory'
+import TransferCardLink from '../components/TransferCardLink'
 
 export default function AttendantDashboard(){
   const { user } = useContext(AuthContext)
@@ -183,14 +183,16 @@ export default function AttendantDashboard(){
         </div>
 
         {/* TRANSFER HISTORY */}
-        <TransferHistory />
+        <TransferCardLink />
 
         <div className="mt-10">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-bold text-gray-800 dark:text-white tracking-tight flex items-center gap-2 transition-colors">
-              <TrendingUp size={24} className="text-blue-600 dark:text-blue-400" />
-              Current Inventory {searchQuery && <span className="text-sm font-medium text-blue-500 bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded-full ml-2">Searching: "{searchQuery}"</span>}
-            </h2>
+            <Link to="/attendant/inventory" className="no-underline group">
+              <h2 className="text-xl font-bold text-gray-800 dark:text-white tracking-tight flex items-center gap-2 transition-colors">
+                <TrendingUp size={24} className="text-blue-600 dark:text-blue-400" />
+                Current Inventory {searchQuery && <span className="text-sm font-medium text-blue-500 bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded-full ml-2">Searching: "{searchQuery}"</span>}
+              </h2>
+            </Link>
           </div>
           
           {shopStock.length === 0 ? (
