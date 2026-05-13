@@ -29,3 +29,12 @@ export const timeAgo = (date) => {
   if (interval > 1) return interval + " minutes ago";
   return Math.floor(seconds) + " seconds ago";
 };
+
+export const formatCurrency = (val) => {
+  try {
+    return new Intl.NumberFormat('en-KE', { style: 'currency', currency: 'KES', minimumFractionDigits: 0 }).format(val || 0);
+  } catch (e) {
+    return `KES ${val || 0}`;
+  }
+};
+
