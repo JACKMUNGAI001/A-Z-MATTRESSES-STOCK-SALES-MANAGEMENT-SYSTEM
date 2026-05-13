@@ -42,6 +42,7 @@ import WeeksDeposits from './pages/WeeksDeposits'
 import MonthsDeposits from './pages/MonthsDeposits'
 import YearsDeposits from './pages/YearsDeposits'
 import RestockHistory from './pages/RestockHistory'
+import GlobalInventory from './pages/GlobalInventory'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
@@ -86,6 +87,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
             
             {/* Manager Protected */}
             <Route path="/manager" element={<ProtectedRoute role="manager"><PageLayout role="manager"><ManagerDashboard/></PageLayout></ProtectedRoute>} />
+            <Route path="/global-inventory" element={<ProtectedRoute role={['admin','manager']}><PageLayout><GlobalInventory/></PageLayout></ProtectedRoute>} />
             
             {/* Filtered Detail Views (Shared) */}
             <Route path="/attendant/sales" element={<ProtectedRoute><PageLayout><TodaysSales /></PageLayout></ProtectedRoute>} />
