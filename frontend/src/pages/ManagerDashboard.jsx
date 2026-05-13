@@ -56,11 +56,22 @@ export default function ManagerDashboard(){
 
   const fetchGlobalStock = async () => {
     try {
-      // For manager, we want to see stock across all shops
-      const response = await api.get(`/stocks/low_stock_items?threshold=1000000`);
-      setGlobalStock(response.data);
+      // Fetch shops first then aggregate each shop's stocks to avoid heavy server endpoint
+      const shopsRes = await api.get('/shops')
+      const shopsData = shopsRes.data || []
+      const aggregated = []
+      await Promise.all(shopsData.map(async (s) => {
+        try {
+          const res = await api.get(`/stocks/${s.id}`)
+          (res.data || []).forEach(item => item.shop_name = s.name)
+          aggregated.push(...(res.data || []))
+        } catch (err) {
+          console.warn('Failed to fetch stocks for shop', s.id, err)
+        }
+      }))
+      setGlobalStock(aggregated)
     } catch (err) {
-      console.error('Error fetching global stock');
+      console.error('Error fetching global stock', err);
     }
   };
 
