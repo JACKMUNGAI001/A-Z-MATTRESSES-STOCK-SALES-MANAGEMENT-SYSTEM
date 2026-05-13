@@ -15,6 +15,11 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    // If the low_stock_items endpoint returns 500, return an empty list so UI can continue
+    if (error.response && error.response.status === 500 && error.config && error.config.url && error.config.url.includes('low_stock_items')) {
+      return Promise.resolve({ data: [] })
+    }
+
     if (error.response && error.response.status === 401) {
       localStorage.removeItem('token')
       localStorage.removeItem('user')
