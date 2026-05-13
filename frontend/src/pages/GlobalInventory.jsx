@@ -12,26 +12,27 @@ export default function GlobalInventory(){
     const fetchData = async () => {
       setErrorMessage(null)
       try {
-        // Try the lightweight low_stock endpoint first, fallback to /stocks
         const shopsRes = await api.get('/shops')
-        setShops(shopsRes.data || [])
+        const shopsData = shopsRes.data || []
+        setShops(shopsData)
 
-        try {
-          const stockRes = await api.get('/stocks/low_stock_items?threshold=1000000')
-          setGlobalStock(stockRes.data || [])
-        } catch (firstErr) {
-          console.warn('low_stock_items failed, retrying /stocks', firstErr)
+        // Fetch stocks per shop to avoid relying on single heavy endpoint
+        const allStocks = []
+        await Promise.all(shopsData.map(async (s) => {
           try {
-            const stockRes2 = await api.get('/stocks')
-            setGlobalStock(stockRes2.data || [])
-          } catch (secondErr) {
-            console.error('Error fetching global stock', secondErr)
-            setErrorMessage('Failed to load global inventory. Please try again later.')
+            const res = await api.get(`/stocks/${s.id}`)
+            // attach shop name to each item
+            (res.data || []).forEach(item => item.shop_name = s.name)
+            allStocks.push(...(res.data || []))
+          } catch (err) {
+            console.warn('Failed to fetch stocks for shop', s.id, err)
           }
-        }
+        }))
+
+        setGlobalStock(allStocks)
       } catch (err) {
         console.error('Error fetching shops or stock', err)
-        setErrorMessage('Failed to load inventory. Please check your connection.')
+        setErrorMessage('Failed to load inventory. Please check your connection or permissions.')
       } finally {
         setLoading(false)
       }
