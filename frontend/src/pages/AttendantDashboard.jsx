@@ -186,54 +186,22 @@ export default function AttendantDashboard(){
         <TransferCardLink />
 
         <div className="mt-10">
-          <div className="flex justify-between items-center mb-4">
-            <Link to="/attendant/inventory" className="no-underline group">
-              <h2 className="text-xl font-bold text-gray-800 dark:text-white tracking-tight flex items-center gap-2 transition-colors">
-                <TrendingUp size={24} className="text-blue-600 dark:text-blue-400" />
-                Current Inventory {searchQuery && <span className="text-sm font-medium text-blue-500 bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded-full ml-2">Searching: "{searchQuery}"</span>}
-              </h2>
-            </Link>
-          </div>
-          
-          {shopStock.length === 0 ? (
-            <div className="bg-white dark:bg-gray-800 p-10 rounded-2xl shadow-sm border border-dashed border-gray-300 dark:border-gray-700 text-center text-gray-400 dark:text-gray-500 transition-colors">
-              No stock items recorded for your shop yet.
+          <Link to="/attendant/inventory" className="no-underline group">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden transition-colors hover:bg-gray-50 dark:hover:bg-gray-900/50">
+              <div className="w-full flex justify-between items-center p-6">
+                <div className="flex items-center gap-3">
+                  <TrendingUp size={24} className="text-blue-600 dark:text-blue-400" />
+                  <div className="text-left">
+                    <h2 className="text-xl font-bold text-gray-800 dark:text-white tracking-tight">Current Inventory</h2>
+                    {searchQuery && <p className="text-sm font-medium text-blue-500 bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded-full mt-1">Searching: "{searchQuery}"</p>}
+                  </div>
+                </div>
+                <div className="flex items-center gap-4">
+                  <span className="text-gray-400">View</span>
+                </div>
+              </div>
             </div>
-          ) : filteredStock.length === 0 ? (
-            <div className="bg-white dark:bg-gray-800 p-20 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 text-center transition-colors">
-              <SearchX size={48} className="mx-auto text-gray-300 dark:text-gray-600 mb-4 transition-colors" />
-              <p className="text-gray-500 dark:text-gray-400 font-bold uppercase tracking-widest text-sm transition-colors">No products match your search</p>
-              <p className="text-xs text-gray-400 mt-2">Try a different name or clear the search</p>
-            </div>
-          ) : (
-            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden transition-colors">
-              <table className="min-w-full divide-y divide-gray-100 dark:divide-gray-700">
-                <thead>
-                  <tr className="bg-gray-50/50 dark:bg-gray-900/50 transition-colors">
-                    <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Item Name</th>
-                    <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Quantity</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-50 dark:divide-gray-700 bg-white dark:bg-gray-800 transition-colors">
-                  {filteredStock.map((stock) => {
-                    const isMatch = searchQuery && stock.item_name.toLowerCase().includes(searchQuery.toLowerCase());
-                    return (
-                      <tr key={stock.item_id} className="hover:bg-gray-50/50 dark:hover:bg-gray-900/50 transition-colors">
-                        <td className={`px-6 py-4 whitespace-nowrap font-bold transition-colors ${isMatch ? 'text-blue-600 dark:text-blue-400 font-black' : 'text-gray-900 dark:text-white'}`}>
-                          {stock.item_name}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`px-3 py-1 rounded-full text-sm font-bold ${stock.qty <= 2 ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400' : 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'}`}>
-                            {stock.qty}
-                          </span>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
+          </Link>
         </div>
       </>
   )
