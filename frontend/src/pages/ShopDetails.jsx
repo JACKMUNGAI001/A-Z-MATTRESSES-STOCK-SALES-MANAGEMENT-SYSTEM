@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import api, { API_BASE } from '../api/api';
 import Card from '../components/Card';
 import { AuthContext } from '../context/AuthContext';
@@ -426,232 +426,47 @@ export default function ShopDetails() {
           </div>
         </div>
 
-        {/* COLLAPSIBLE SECTIONS */}
-        <div className="space-y-4 transition-colors">
-          <Section 
-            title="Sales History" 
-            count={filteredSales.length} 
-            icon={TrendingUp} 
-            color="blue"
-            isExpanded={expandedSection === 'sales'} 
-            onToggle={() => setExpandedSection(expandedSection === 'sales' ? null : 'sales')}
-          >
-            <table className="w-full relative border-collapse">
-              <thead className="bg-gray-50/90 dark:bg-gray-900/90 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase transition-colors sticky top-0 z-10 backdrop-blur-sm">
-                <tr>
-                  <th className="px-6 py-4 text-left border-b border-gray-100 dark:border-gray-700">ID</th>
-                  <th className="px-6 py-4 text-left border-b border-gray-100 dark:border-gray-700">Items Sold</th>
-                  <th className="px-6 py-4 text-right border-b border-gray-100 dark:border-gray-700">Amount</th>
-                  <th className="px-6 py-4 text-left border-b border-gray-100 dark:border-gray-700">Type</th>
-                  <th className="px-6 py-4 text-left border-b border-gray-100 dark:border-gray-700">Date</th>
-                  <th className="px-6 py-4 text-center border-b border-gray-100 dark:border-gray-700">Receipt</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-50 dark:divide-gray-700 transition-colors">
-                {filteredSales.map(s => (
-                  <tr key={s.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-900/50 transition-colors">
-                    <td className="px-6 py-4 font-bold text-gray-900 dark:text-white">{s.id}</td>
-                    <td className="px-6 py-4">
-                      <div className="flex flex-wrap gap-1 max-w-xs">
-                        {s.items?.map((item, idx) => {
-                          const isMatch = searchQuery && item.item_name.toLowerCase().includes(searchQuery.toLowerCase());
-                          return (
-                            <span key={idx} className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-tight ${isMatch ? 'bg-blue-600 text-white shadow-sm' : 'bg-gray-100 dark:bg-gray-700/50 text-gray-700 dark:text-gray-300'}`}>
-                              {item.item_name} (x{item.qty})
-                            </span>
-                          );
-                        })}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-right font-black text-gray-900 dark:text-white">{formatCurrency(s.total_amount)}</td>
-                    <td className="px-6 py-4 text-blue-600 dark:text-blue-400 uppercase text-xs font-bold tracking-widest">{formatPaymentMethod(s.payment_type)}</td>
-                    <td className="px-6 py-4 text-gray-500 dark:text-gray-400">{formatDate(s.created_at)}</td>
-                    <td className="px-6 py-4 text-center">
-                      {s.receipt_uuid ? (
-                        <a
-                          href={`${API_BASE}/receipts/${s.receipt_uuid}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 px-3 py-1.5 rounded-lg hover:bg-blue-600 hover:text-white transition-all font-black text-[10px] uppercase tracking-widest border border-blue-100 dark:border-blue-800 flex items-center justify-center gap-1 mx-auto w-fit"
-                        >
-                          <CheckCircle size={14} /> VIEW
-                        </a>
-                      ) : (
-                        <span className="text-gray-400 italic text-[10px]">N/A</span>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </Section>
+        {/* QUICK NAV CARDS */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Link to={`/admin/shops/${shopId}/sales`} className="block bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 hover:shadow-lg transition-all">
+            <div className="flex items-center gap-3">
+              <TrendingUp size={28} className="text-blue-600" />
+              <div>
+                <h3 className="text-lg font-black">Sales History</h3>
+                <p className="text-sm text-gray-500">{filteredSales.length} records</p>
+              </div>
+            </div>
+          </Link>
 
-          <Section 
-            title="Customer Deposits" 
-            count={filteredDeposits.length} 
-            icon={History} 
-            color="indigo"
-            isExpanded={expandedSection === 'deposits'} 
-            onToggle={() => setExpandedSection(expandedSection === 'deposits' ? null : 'deposits')}
-          >
-            <table className="w-full relative border-collapse">
-              <thead className="bg-gray-50/90 dark:bg-gray-900/90 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase transition-colors sticky top-0 z-10 backdrop-blur-sm">
-                <tr>
-                    <th className="px-6 py-4 text-left border-b border-gray-100 dark:border-gray-700">Buyer</th>
-                    <th className="px-6 py-4 text-left border-b border-gray-100 dark:border-gray-700">Item Info</th>
-                    <th className="px-6 py-4 text-right border-b border-gray-100 dark:border-gray-700">Paid/Balance</th>
-                    <th className="px-6 py-4 text-center border-b border-gray-100 dark:border-gray-700">Status</th>
-                    <th className="px-6 py-4 text-center border-b border-gray-100 dark:border-gray-700">Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-50 dark:divide-gray-700 transition-colors">
-                {filteredDeposits.map(d => (
-                  <tr key={d.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-900/50 transition-colors">
-                    <td className="px-6 py-4">
-                        <div className={`font-bold transition-colors ${searchQuery && d.buyer_name.toLowerCase().includes(searchQuery.toLowerCase()) ? 'text-blue-600 dark:text-blue-400' : 'text-gray-900 dark:text-white'}`}>{d.buyer_name}</div>
-                        <div className="text-[10px] text-gray-400 font-bold uppercase">{d.buyer_phone}</div>
-                    </td>
-                    <td className={`px-6 py-4 text-xs font-bold transition-colors uppercase tracking-tight ${searchQuery && d.item_name.toLowerCase().includes(searchQuery.toLowerCase()) ? 'text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300'}`}>{d.item_name}</td>
-                    <td className="px-6 py-4 text-right">
-                        <div className="font-black text-gray-900 dark:text-white">{formatCurrency(d.total_paid)}</div>
-                        <div className="text-[10px] font-black text-red-500 uppercase tracking-tight">Due: {formatCurrency(d.balance)}</div>
-                    </td>
-                    <td className="px-6 py-4 italic text-sm text-gray-500 dark:text-gray-400 uppercase tracking-widest font-bold text-center">{d.status}</td>
-                    <td className="px-6 py-4 text-center">
-                        <button
-                            onClick={() => {
-                                setSelectedDeposit(d);
-                                setShowHistory(true);
-                            }}
-                            className="bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 px-3 py-1.5 rounded-lg hover:bg-indigo-600 hover:text-white transition-all font-black text-[10px] uppercase tracking-widest border border-indigo-100 dark:border-indigo-800"
-                        >
-                            HISTORY
-                        </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </Section>
+          <Link to={`/admin/shops/${shopId}/deposits`} className="block bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 hover:shadow-lg transition-all">
+            <div className="flex items-center gap-3">
+              <History size={28} className="text-indigo-600" />
+              <div>
+                <h3 className="text-lg font-black">Customer Deposits</h3>
+                <p className="text-sm text-gray-500">{filteredDeposits.length} records</p>
+              </div>
+            </div>
+          </Link>
 
-          <Section 
-            title="Full Inventory List" 
-            count={filteredStock.length} 
-            icon={Package} 
-            color="purple"
-            isExpanded={expandedSection === 'stock'} 
-            onToggle={() => setExpandedSection(expandedSection === 'stock' ? null : 'stock')}
-          >
-            <table className="w-full relative border-collapse">
-              <thead className="bg-gray-50/90 dark:bg-gray-900/90 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase transition-colors sticky top-0 z-10 backdrop-blur-sm">
-                <tr>
-                    <th className="px-6 py-4 text-left border-b border-gray-100 dark:border-gray-700">Item Name</th>
-                    <th className="px-6 py-4 text-center border-b border-gray-100 dark:border-gray-700">Qty</th>
-                    {user?.role === 'admin' && <th className="px-6 py-4 text-right border-b border-gray-100 dark:border-gray-700">Cost Price</th>}
-                    {(user?.role === 'admin' || user?.role === 'manager') && <th className="px-6 py-4 text-center border-b border-gray-100 dark:border-gray-700">Actions</th>}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-50 dark:divide-gray-700 transition-colors">
-                {filteredStock.map(s => {
-                  const item = availableItems.find(i => i.id === s.item_id);
-                  const isMatch = searchQuery && item?.name.toLowerCase().includes(searchQuery.toLowerCase());
-                  const isExpanded = expandedStockItems.includes(s.item_id);
-                  return (
-                    <React.Fragment key={s.item_id}>
-                      <tr 
-                        className={`hover:bg-gray-50/50 dark:hover:bg-gray-900/50 transition-colors cursor-pointer ${isExpanded ? 'bg-blue-50/30 dark:bg-blue-900/10' : ''}`}
-                        onClick={() => toggleStockItemExpansion(s.item_id)}
-                      >
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-2">
-                            {isExpanded ? <ChevronUp size={14} className="text-blue-500" /> : <ChevronDown size={14} className="text-gray-400" />}
-                            <span className={`font-bold transition-colors ${isMatch ? 'text-blue-600 dark:text-blue-400 font-black' : 'text-gray-900 dark:text-white'}`}>
-                              {item?.name}
-                            </span>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 text-center">
-                          <span className={`px-2 py-1 rounded-full text-xs font-black transition-colors ${s.qty <= 2 ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400' : 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'}`}>
-                            {s.qty}
-                          </span>
-                        </td>
-                        {user?.role === 'admin' && <td className="px-6 py-4 text-right font-mono text-xs text-gray-400 dark:text-gray-500 transition-colors">{formatCurrency(s.buy_price)}</td>}
-                        {(user?.role === 'admin' || user?.role === 'manager') && (
-                          <td className="px-6 py-4 text-center">
-                              <button 
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleEditStock(s);
-                                  }} 
-                                  className="text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 p-2 rounded-lg transition-all"
-                                  title="Edit Stock"
-                              >
-                                  <Edit size={16} />
-                              </button>
-                          </td>
-                        )}
-                      </tr>
-                      {isExpanded && (
-                        <tr className="bg-gray-50/30 dark:bg-gray-900/20">
-                          <td colSpan={user?.role === 'admin' ? 4 : 3} className="px-12 py-4">
-                            <div className="border-l-2 border-blue-200 dark:border-blue-900 pl-4 py-2">
-                              <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-2">
-                                <Clock size={12} /> Stock Batches (FIFO Order)
-                              </h4>
-                              {s.batches && s.batches.length > 0 ? (
-                                <table className="w-full text-xs">
-                                  <thead>
-                                    <tr className="text-gray-400 font-bold">
-                                      <th className="text-left pb-2">Batch ID</th>
-                                      <th className="text-center pb-2">Remaining Qty</th>
-                                      {user?.role === 'admin' && <th className="text-right pb-2">Buy Price</th>}
-                                      <th className="text-right pb-2">Received Date</th>
-                                    </tr>
-                                  </thead>
-                                  <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-                                    {s.batches.map(batch => (
-                                      <tr key={batch.id}>
-                                        <td className="py-2 text-gray-500 font-mono">#{batch.id}</td>
-                                        <td className="py-2 text-center font-black text-blue-600 dark:text-blue-400">{batch.qty}</td>
-                                        {user?.role === 'admin' && <td className="py-2 text-right font-medium">{formatCurrency(batch.buy_price)}</td>}
-                                        <td className="py-2 text-right text-gray-400">{formatDate(batch.created_at)}</td>
-                                      </tr>
-                                    ))}
-                                  </tbody>
-                                </table>
-                              ) : (
-                                <p className="text-gray-400 italic text-xs">No active batches found for this item.</p>
-                              )}
-                            </div>
-                          </td>
-                        </tr>
-                      )}
-                    </React.Fragment>
-                  );
-                })}
-              </tbody>
-            </table>
-          </Section>
+          <Link to={`/admin/shops/${shopId}/stock`} className="block bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 hover:shadow-lg transition-all">
+            <div className="flex items-center gap-3">
+              <Package size={28} className="text-purple-600" />
+              <div>
+                <h3 className="text-lg font-black">Full Inventory List</h3>
+                <p className="text-sm text-gray-500">{filteredStock.length} items</p>
+              </div>
+            </div>
+          </Link>
 
-          <Section 
-            title="Low Stock Alerts" 
-            count={lowStockItems.length} 
-            icon={AlertTriangle} 
-            color="orange"
-            isExpanded={expandedSection === 'low_stock'} 
-            onToggle={() => setExpandedSection(expandedSection === 'low_stock' ? null : 'low_stock')}
-          >
-            <table className="w-full relative border-collapse">
-              <thead className="bg-orange-50/90 dark:bg-orange-900/90 text-xs font-bold text-orange-800 dark:text-orange-400 uppercase transition-colors sticky top-0 z-10 backdrop-blur-sm">
-                <tr><th className="px-6 py-4 text-left border-b border-orange-100 dark:border-orange-800">Item Name</th><th className="px-6 py-4 text-center border-b border-orange-100 dark:border-orange-800">Qty</th></tr>
-              </thead>
-              <tbody className="divide-y divide-gray-50 dark:divide-gray-700 transition-colors">
-                {lowStockItems.map(s => (
-                  <tr key={s.item_id} className="hover:bg-orange-50/20 dark:hover:bg-orange-900/10 transition-colors"><td className="px-6 py-4 font-bold text-gray-900 dark:text-white">{availableItems.find(i => i.id === s.item_id)?.name}</td><td className="px-6 py-4 text-center font-black text-red-600 dark:text-red-400">{s.qty}</td></tr>
-                ))}
-              </tbody>
-            </table>
-          </Section>
+          <Link to={`/admin/shops/${shopId}/low-stock`} className="block bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 hover:shadow-lg transition-all">
+            <div className="flex items-center gap-3">
+              <AlertTriangle size={28} className="text-orange-500" />
+              <div>
+                <h3 className="text-lg font-black">Low Stock Alerts</h3>
+                <p className="text-sm text-gray-500">{lowStockItems.length} items</p>
+              </div>
+            </div>
+          </Link>
         </div>
 
         {/* EDIT MODAL */}

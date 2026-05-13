@@ -23,6 +23,9 @@ import AdminShops from './pages/AdminShops'
 import AdminItems from './pages/AdminItems'
 import ShopDetails from './pages/ShopDetails'
 import AdminShopStock from './pages/AdminShopStock'
+import ShopSales from './pages/ShopSales'
+import ShopDeposits from './pages/ShopDeposits'
+import ShopLowStock from './pages/ShopLowStock'
 import ProtectedRoute from './components/ProtectedRoute'
 import PageLayout from './components/PageLayout'
 import AllSales from './pages/AllSales'
@@ -69,6 +72,9 @@ ReactDOM.createRoot(document.getElementById('root')).render(
             <Route path="/admin/supplier-invoices" element={<ProtectedRoute role="admin"><PageLayout role="admin" title="Supplier Invoices"><AdminSupplierInvoices/></PageLayout></ProtectedRoute>} />
             <Route path="/admin/shops/:shopId" element={<ProtectedRoute role={['admin', 'manager']}><PageLayout><ShopDetails/></PageLayout></ProtectedRoute>} />
             <Route path="/admin/shops/:shopId/stock" element={<ProtectedRoute role={['admin', 'manager']}><PageLayout><AdminShopStock/></PageLayout></ProtectedRoute>} />
+            <Route path="/admin/shops/:shopId/sales" element={<ProtectedRoute role={['admin', 'manager']}><PageLayout><ShopSales/></PageLayout></ProtectedRoute>} />
+            <Route path="/admin/shops/:shopId/deposits" element={<ProtectedRoute role={['admin', 'manager']}><PageLayout><ShopDeposits/></PageLayout></ProtectedRoute>} />
+            <Route path="/admin/shops/:shopId/low-stock" element={<ProtectedRoute role={['admin', 'manager']}><PageLayout><ShopLowStock/></PageLayout></ProtectedRoute>} />
             <Route path="/admin/all-sales" element={<ProtectedRoute role={['admin', 'manager']}><PageLayout><AllSales/></PageLayout></ProtectedRoute>} />
             <Route path="/admin/all-deposits" element={<ProtectedRoute role={['admin', 'manager']}><PageLayout><AllDeposits/></PageLayout></ProtectedRoute>} />
             <Route path="/admin/outstanding-deposits" element={<ProtectedRoute role={['admin', 'manager']}><PageLayout><OutstandingDeposits/></PageLayout></ProtectedRoute>} />
