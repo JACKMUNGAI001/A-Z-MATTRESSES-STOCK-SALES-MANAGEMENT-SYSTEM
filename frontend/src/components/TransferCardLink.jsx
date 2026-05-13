@@ -1,22 +1,8 @@
-import React, { useState, useEffect } from 'react'
+import React from 'react'
 import { Link } from 'react-router-dom'
-import api from '../api/api'
 import { ArrowLeftRight } from 'lucide-react'
 
 export default function TransferCardLink(){
-  const [count, setCount] = useState(null)
-
-  const fetchCount = async () => {
-    try {
-      const res = await api.get('/transfers')
-      setCount(res.data.length)
-    } catch (err){
-      console.error('Error fetching transfer count', err)
-    }
-  }
-
-  useEffect(() => { fetchCount() }, [])
-
   return (
     <div className="mt-10">
       <Link to="/transfers" className="no-underline group">
@@ -30,9 +16,6 @@ export default function TransferCardLink(){
               </div>
             </div>
             <div className="flex items-center gap-4">
-              {count !== null && (
-                <span className="bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-400 px-3 py-1 rounded-full text-xs font-black uppercase tracking-widest transition-all">{count} Records</span>
-              )}
               <span className="text-gray-400">View</span>
             </div>
           </div>

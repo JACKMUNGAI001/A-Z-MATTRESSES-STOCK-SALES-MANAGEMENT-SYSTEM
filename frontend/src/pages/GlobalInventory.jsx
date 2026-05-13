@@ -6,18 +6,32 @@ export default function GlobalInventory(){
   const [globalStock, setGlobalStock] = useState([])
   const [shops, setShops] = useState([])
   const [loading, setLoading] = useState(true)
+  const [errorMessage, setErrorMessage] = useState(null)
 
   useEffect(() => {
     const fetchData = async () => {
+      setErrorMessage(null)
       try {
-        const [stockRes, shopsRes] = await Promise.all([
-          api.get('/stocks/low_stock_items?threshold=1000000'),
-          api.get('/shops')
-        ])
-        setGlobalStock(stockRes.data)
-        setShops(shopsRes.data)
+        // Try the lightweight low_stock endpoint first, fallback to /stocks
+        const shopsRes = await api.get('/shops')
+        setShops(shopsRes.data || [])
+
+        try {
+          const stockRes = await api.get('/stocks/low_stock_items?threshold=1000000')
+          setGlobalStock(stockRes.data || [])
+        } catch (firstErr) {
+          console.warn('low_stock_items failed, retrying /stocks', firstErr)
+          try {
+            const stockRes2 = await api.get('/stocks')
+            setGlobalStock(stockRes2.data || [])
+          } catch (secondErr) {
+            console.error('Error fetching global stock', secondErr)
+            setErrorMessage('Failed to load global inventory. Please try again later.')
+          }
+        }
       } catch (err) {
-        console.error('Error fetching global inventory', err)
+        console.error('Error fetching shops or stock', err)
+        setErrorMessage('Failed to load inventory. Please check your connection.')
       } finally {
         setLoading(false)
       }
@@ -36,6 +50,8 @@ export default function GlobalInventory(){
 
       {loading ? (
         <div className="p-10 text-center text-gray-400">Loading inventory...</div>
+      ) : errorMessage ? (
+        <div className="p-10 text-center text-red-600 dark:text-red-400">{errorMessage}</div>
       ) : shops.length === 0 ? (
         <div className="p-10 text-center text-gray-400">No shops found.</div>
       ) : (
