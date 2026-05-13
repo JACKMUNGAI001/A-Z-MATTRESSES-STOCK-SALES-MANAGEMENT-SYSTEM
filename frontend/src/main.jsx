@@ -14,6 +14,7 @@ import POS from './pages/POS'
 import Deposits from './pages/Deposits'
 import Transfers from './pages/Transfers'
 import AttendantTransfers from './pages/AttendantTransfers'
+import AttendantInventory from './pages/AttendantInventory'
 import Expenses from './pages/Expenses'
 import Profile from './pages/Profile'
 import PNLReport from './pages/PNLReport'
@@ -81,6 +82,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
             <Route path="/pos" element={<ProtectedRoute role={['attendant', 'manager', 'admin']}><PageLayout><POS/></PageLayout></ProtectedRoute>} />
             <Route path="/deposits" element={<ProtectedRoute role={['attendant', 'manager', 'admin']}><PageLayout><Deposits/></PageLayout></ProtectedRoute>} />
             <Route path="/attendant/low-stock" element={<ProtectedRoute role={['attendant', 'manager', 'admin']}><PageLayout><LowStockItems /></PageLayout></ProtectedRoute>} />
+            <Route path="/attendant/inventory" element={<ProtectedRoute role={['attendant', 'manager', 'admin']}><PageLayout role="attendant"><AttendantInventory/></PageLayout></ProtectedRoute>} />
             
             {/* Manager Protected */}
             <Route path="/manager" element={<ProtectedRoute role="manager"><PageLayout role="manager"><ManagerDashboard/></PageLayout></ProtectedRoute>} />
