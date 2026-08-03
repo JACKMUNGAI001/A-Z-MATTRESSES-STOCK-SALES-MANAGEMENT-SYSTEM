@@ -18,7 +18,7 @@ export default function ShopDetails() {
   const [shopStock, setShopStock] = useState([]);
   const [availableItems, setAvailableItems] = useState([]);
   const [stockFormData, setStockFormData] = useState({
-    itemId: "", quantity: "", buyPrice: "",
+    itemId: "", quantity: "", buyPrice: "", priceUnit: "unit",
   });
   const [itemsToRestock, setItemsToRestock] = useState([]);
   const [editingStock, setEditingStock] = useState(null);
@@ -122,6 +122,11 @@ export default function ShopDetails() {
     }
   };
 
+  const isGasLikeItem = (item) => {
+    const text = `${item?.name || ''} ${item?.category_name || ''}`.toLowerCase();
+    return text.includes('gas') || text.includes('kg');
+  };
+
   const handleStockInputChange = (e) => {
     const { name, value } = e.target;
     setStockFormData({ ...stockFormData, [name]: value });
@@ -140,6 +145,7 @@ export default function ShopDetails() {
     const selectedItem = availableItems.find(i => i.id === parseInt(stockFormData.itemId));
     const quantity = parseInt(stockFormData.quantity);
     const buyPrice = stockFormData.buyPrice ? parseFloat(stockFormData.buyPrice) : null;
+    const priceUnit = stockFormData.priceUnit || "unit";
 
     // Check if item already exists in the restock list
     const existingIndex = itemsToRestock.findIndex(item => item.itemId === stockFormData.itemId);
@@ -149,8 +155,8 @@ export default function ShopDetails() {
       updatedList[existingIndex] = {
         ...updatedList[existingIndex],
         quantity: updatedList[existingIndex].quantity + quantity,
-        // Update buy price if provided
-        buyPrice: buyPrice !== null ? buyPrice : updatedList[existingIndex].buyPrice
+        buyPrice: buyPrice !== null ? buyPrice : updatedList[existingIndex].buyPrice,
+        priceUnit: priceUnit || updatedList[existingIndex].priceUnit || "unit"
       };
       setItemsToRestock(updatedList);
     } else {
@@ -159,11 +165,12 @@ export default function ShopDetails() {
         itemName: selectedItem?.name,
         quantity: quantity,
         buyPrice: buyPrice,
+        priceUnit: priceUnit,
       };
       setItemsToRestock([...itemsToRestock, newItem]);
     }
     
-    setStockFormData({ itemId: "", quantity: "", buyPrice: "" });
+    setStockFormData({ itemId: "", quantity: "", buyPrice: "", priceUnit: "unit" });
   };
 
   const removeItemFromRestockList = (index) => {
@@ -183,6 +190,7 @@ export default function ShopDetails() {
           item_id: item.itemId,
           qty: item.quantity,
           buy_price: item.buyPrice,
+          price_unit: item.priceUnit || "unit",
           movement_type: "purchase_in",
         })),
       });
@@ -292,9 +300,11 @@ export default function ShopDetails() {
                 value={stockFormData.itemId}
                 onChange={(e) => {
                   const id = e.target.value;
+                  const selectedItem = availableItems.find(i => String(i.id) === String(id));
                   setStockFormData({
                     ...stockFormData,
                     itemId: id,
+                    priceUnit: isGasLikeItem(selectedItem) ? 'per_kg' : 'unit',
                   });
                 }}
                 placeholder="Choose Product..."
@@ -307,7 +317,23 @@ export default function ShopDetails() {
             {user?.role === 'admin' && (
               <div>
                 <label className="block text-sm font-bold text-gray-700 dark:text-gray-400 uppercase mb-1 px-1 transition-colors">Buy Price (Optional)</label>
-                <input name="buyPrice" type="number" className="w-full p-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all" value={stockFormData.buyPrice} onChange={handleStockInputChange} placeholder="Current buy price" />
+                <input name="buyPrice" type="number" className="w-full p-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all" value={stockFormData.buyPrice} onChange={handleStockInputChange} placeholder="Enter price" />
+              </div>
+            )}
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-4">
+            {user?.role === 'admin' && (
+              <div>
+                <label className="block text-sm font-bold text-gray-700 dark:text-gray-400 uppercase mb-1 px-1 transition-colors">Pricing Basis</label>
+                <select
+                  name="priceUnit"
+                  className="w-full p-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                  value={stockFormData.priceUnit}
+                  onChange={handleStockInputChange}
+                >
+                  <option value="unit">Per Unit</option>
+                  <option value="per_kg">Per KG</option>
+                </select>
               </div>
             )}
           </div>
@@ -328,7 +354,7 @@ export default function ShopDetails() {
                       </div>
                       <div>
                         <p className="font-bold text-gray-900 dark:text-white">{item.itemName}</p>
-                        <p className="text-xs text-gray-500 font-medium">Qty: <span className="text-blue-600 dark:text-blue-400 font-bold">{item.quantity}</span> {item.buyPrice && `| Buy Price: ${formatCurrency(item.buyPrice)}`}</p>
+                        <p className="text-xs text-gray-500 font-medium">Qty: <span className="text-blue-600 dark:text-blue-400 font-bold">{item.quantity}</span> {item.buyPrice && `| Buy Price: ${formatCurrency(item.buyPrice)}${item.priceUnit === 'per_kg' ? ' (per kg input converted)' : ''}`}</p>
                       </div>
                     </div>
                     <button onClick={() => removeItemFromRestockList(idx)} className="text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 p-2 rounded-lg transition-all">

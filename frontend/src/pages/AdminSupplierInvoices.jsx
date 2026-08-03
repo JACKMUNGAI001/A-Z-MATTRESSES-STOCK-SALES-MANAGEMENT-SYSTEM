@@ -27,7 +27,7 @@ export default function AdminSupplierInvoices() {
     received_date: new Date().toISOString().split('T')[0],
     due_date: '',
     notes: '',
-    items: [{ item_id: '', unit_cost: 0, distributions: [{ shop_id: '', quantity: 0 }] }]
+    items: [{ item_id: '', unit_cost: 0, price_unit: 'unit', distributions: [{ shop_id: '', quantity: 0 }] }]
   })
 
   useEffect(() => {
@@ -58,7 +58,7 @@ export default function AdminSupplierInvoices() {
       if (shopRes.data.length > 0) {
           setFormData(prev => ({
               ...prev,
-              items: [{ ...prev.items[0], distributions: [{ shop_id: shopRes.data[0].id, quantity: 0 }] }]
+              items: [{ ...prev.items[0], price_unit: prev.items[0]?.price_unit || 'unit', distributions: [{ shop_id: shopRes.data[0].id, quantity: 0 }] }]
           }))
       }
     } catch (err) {
@@ -80,7 +80,7 @@ export default function AdminSupplierInvoices() {
   const handleAddItem = () => {
     setFormData({
       ...formData,
-      items: [...formData.items, { item_id: '', unit_cost: 0, distributions: [{ shop_id: shops[0]?.id || '', quantity: 0 }] }]
+      items: [...formData.items, { item_id: '', unit_cost: 0, price_unit: 'unit', distributions: [{ shop_id: shops[0]?.id || '', quantity: 0 }] }]
     })
   }
 
@@ -89,9 +89,18 @@ export default function AdminSupplierInvoices() {
     setFormData({ ...formData, items: newItems })
   }
 
+  const isGasLikeProduct = (product) => {
+    const text = `${product?.name || ''} ${product?.category_name || ''}`.toLowerCase();
+    return text.includes('gas') || text.includes('kg');
+  };
+
   const handleItemChange = (index, field, value) => {
     const newItems = [...formData.items]
     newItems[index][field] = value
+    if (field === 'item_id') {
+      const selectedProduct = supplierProducts.find(product => String(product.id) === String(value))
+      newItems[index].price_unit = isGasLikeProduct(selectedProduct) ? 'per_kg' : 'unit'
+    }
     setFormData({ ...formData, items: newItems })
   }
 
@@ -132,6 +141,7 @@ export default function AdminSupplierInvoices() {
         flattenedItems.push({
           item_id: item.item_id,
           unit_cost: parseFloat(item.unit_cost) || 0,
+          price_unit: item.price_unit || 'unit',
           shop_id: dist.shop_id,
           quantity: qty
         })
@@ -152,7 +162,7 @@ export default function AdminSupplierInvoices() {
         received_date: new Date().toISOString().split('T')[0],
         due_date: '',
         notes: '',
-        items: [{ item_id: '', unit_cost: 0, distributions: [{ shop_id: shops[0]?.id || '', quantity: 0 }] }]
+        items: [{ item_id: '', unit_cost: 0, price_unit: 'unit', distributions: [{ shop_id: shops[0]?.id || '', quantity: 0 }] }]
       })
       loadData()
     } catch (err) {
@@ -472,6 +482,17 @@ export default function AdminSupplierInvoices() {
                             value={item.unit_cost}
                             onChange={e => handleItemChange(idx, 'unit_cost', e.target.value)}
                           />
+                        </div>
+                        <div className="flex-none w-36">
+                          <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1 uppercase tracking-widest">Pricing Basis</label>
+                          <select
+                            className="w-full border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg p-2 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                            value={item.price_unit || 'unit'}
+                            onChange={e => handleItemChange(idx, 'price_unit', e.target.value)}
+                          >
+                            <option value="unit">Per Unit</option>
+                            <option value="per_kg">Per KG</option>
+                          </select>
                         </div>
                         <div className="flex-none">
                             <button 

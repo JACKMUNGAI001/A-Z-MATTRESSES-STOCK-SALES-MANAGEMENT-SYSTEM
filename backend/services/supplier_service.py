@@ -4,6 +4,7 @@ from models.stock import ShopStock, StockMovement, StockBatch
 from models.product import Item
 from datetime import datetime
 from utils.timezone_utils import get_local_time
+from utils.helpers import calculate_total_buy_price
 
 def create_supplier(name, contact_person=None, phone=None, email=None, address=None, item_ids=None):
     s = Supplier(name=name, contact_person=contact_person, phone=phone, email=email, address=address)
@@ -43,8 +44,6 @@ def delete_supplier(supplier_id):
 
 def create_supplier_invoice(supplier_id, invoice_number, items_data, status="Pending", received_date=None, due_date=None, notes=None, user_id=None):
     total_amount = 0
-    for it in items_data:
-        total_amount += (float(it['unit_cost']) * int(it['quantity']))
     
     if received_date and isinstance(received_date, str) and received_date.strip():
         received_date = datetime.strptime(received_date, '%Y-%m-%d')
@@ -72,18 +71,33 @@ def create_supplier_invoice(supplier_id, invoice_number, items_data, status="Pen
         item_id = item_data['item_id']
         qty = item_data['quantity']
         unit_cost = item_data['unit_cost']
+        price_unit = item_data.get('price_unit')
         item_shop_id = item_data.get('shop_id')
         if not item_shop_id:
             raise ValueError(f"Shop ID is required for all items")
             
-        total_cost = float(unit_cost) * int(qty)
+        item = Item.query.get(item_id)
+        category_name = None
+        if item and item.category_id:
+            from models.product import Category
+            category = Category.query.get(item.category_id)
+            category_name = category.name if category else None
+
+        effective_unit_cost = calculate_total_buy_price(
+            item=item,
+            price=unit_cost,
+            price_unit=price_unit,
+            category_name=category_name,
+        )
+        total_amount += float(effective_unit_cost) * int(qty)
+        total_cost = float(effective_unit_cost) * int(qty)
 
         inv_item = SupplierInvoiceItem(
             invoice_id=inv.id,
             item_id=item_id,
             shop_id=item_shop_id,
             quantity=qty,
-            unit_cost=unit_cost,
+            unit_cost=effective_unit_cost,
             total_cost=total_cost
         )
         db.session.add(inv_item)
@@ -92,9 +106,9 @@ def create_supplier_invoice(supplier_id, invoice_number, items_data, status="Pen
         stock = ShopStock.query.filter_by(shop_id=item_shop_id, item_id=item_id).first()
         if stock:
             stock.quantity += int(qty)
-            stock.buy_price = unit_cost
+            stock.buy_price = effective_unit_cost
         else:
-            stock = ShopStock(shop_id=item_shop_id, item_id=item_id, quantity=qty, buy_price=unit_cost)
+            stock = ShopStock(shop_id=item_shop_id, item_id=item_id, quantity=qty, buy_price=effective_unit_cost)
             db.session.add(stock)
 
         # Create Stock Batch for FIFO tracking
@@ -103,7 +117,7 @@ def create_supplier_invoice(supplier_id, invoice_number, items_data, status="Pen
             item_id=item_id,
             initial_qty=qty,
             remaining_qty=qty,
-            buy_price=unit_cost,
+            buy_price=effective_unit_cost,
             source_type="purchase",
             source_id=inv_item.id
         )
@@ -115,7 +129,7 @@ def create_supplier_invoice(supplier_id, invoice_number, items_data, status="Pen
             item_id=item_id,
             movement_type="purchase_in",
             qty=qty,
-            unit_buy_price=unit_cost,
+            unit_buy_price=effective_unit_cost,
             user_id=user_id,
             reference=f"Supplier Invoice {invoice_number}"
         )

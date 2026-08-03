@@ -186,5 +186,12 @@ def record_invoice_payment_controller(invoice_id):
 
 def list_supplier_products_controller(supplier_id):
     products = get_supplier_products(supplier_id)
-    out = [{"id": p.id, "name": p.name} for p in products]
+    out = []
+    for p in products:
+        category_name = None
+        if getattr(p, 'category_id', None):
+            from models.product import Category
+            category = Category.query.get(p.category_id)
+            category_name = category.name if category else None
+        out.append({"id": p.id, "name": p.name, "category_name": category_name})
     return jsonify(out), 200

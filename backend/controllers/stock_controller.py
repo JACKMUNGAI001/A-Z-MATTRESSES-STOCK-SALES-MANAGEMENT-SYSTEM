@@ -65,7 +65,7 @@ def adjust_stock_controller(identity):
     user_id = identity.get("id")
     # We still accept sell_price in the request for StockMovement if needed, 
     # but we won't store it in ShopStock anymore.
-    stock = adjust_stock(shop_id, item_id, qty, movement_type=movement_type, user_id=user_id, buy_price=data.get("buy_price"), sell_price=data.get("sell_price"), override=override)
+    stock = adjust_stock(shop_id, item_id, qty, movement_type=movement_type, user_id=user_id, buy_price=data.get("buy_price"), sell_price=data.get("sell_price"), override=override, price_unit=data.get("price_unit"))
     return jsonify({"msg":"adjusted","qty":stock.quantity}), 200
 
 def adjust_stock_bulk_controller(identity):

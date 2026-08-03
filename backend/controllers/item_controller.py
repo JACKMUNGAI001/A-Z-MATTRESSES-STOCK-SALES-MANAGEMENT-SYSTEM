@@ -11,12 +11,14 @@ def list_items_controller():
     
     out = []
     for it in items:
+        category = Category.query.get(it.category_id)
         item_data = {
             "id":it.id,
             "sku": it.sku,
             "name":it.name,
             "brand":it.brand,
             "category_id":it.category_id,
+            "category_name": category.name if category else None,
             "description": it.description,
         }
             

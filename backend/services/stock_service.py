@@ -7,14 +7,30 @@ from models.user import User
 from datetime import datetime
 from sqlalchemy import func
 from utils.timezone_utils import get_local_time
+from utils.helpers import calculate_total_buy_price
 
-def adjust_stock(shop_id, item_id, qty, movement_type="adjustment", user_id=None, buy_price=None, sell_price=None, override=False):
+
+def adjust_stock(shop_id, item_id, qty, movement_type="adjustment", user_id=None, buy_price=None, sell_price=None, override=False, price_unit=None):
+    item = Item.query.get(item_id)
+    category_name = None
+    if item and item.category_id:
+        from models.product import Category
+        category = Category.query.get(item.category_id)
+        category_name = category.name if category else None
+
+    effective_buy_price = calculate_total_buy_price(
+        item=item,
+        price=buy_price,
+        price_unit=price_unit,
+        category_name=category_name,
+    )
+
     # Try to find existing stock record
     stock = ShopStock.query.filter_by(shop_id=shop_id, item_id=item_id).first()
     if not stock:
         # Check if there are any duplicates (just in case) and merge them or pick one
         # For new records, we just create one
-        stock = ShopStock(shop_id=shop_id, item_id=item_id, quantity=0, buy_price=buy_price)
+        stock = ShopStock(shop_id=shop_id, item_id=item_id, quantity=0, buy_price=effective_buy_price)
         db.session.add(stock)
     
     if override:
@@ -25,7 +41,7 @@ def adjust_stock(shop_id, item_id, qty, movement_type="adjustment", user_id=None
         stock.quantity += qty
         qty_change = qty
 
-    if buy_price is not None: stock.buy_price = buy_price
+    if buy_price is not None: stock.buy_price = effective_buy_price
     stock.updated_at = get_local_time()
     
     # Handle Batches
@@ -36,7 +52,7 @@ def adjust_stock(shop_id, item_id, qty, movement_type="adjustment", user_id=None
             item_id=item_id,
             initial_qty=qty_change,
             remaining_qty=qty_change,
-            buy_price=buy_price if buy_price is not None else (stock.buy_price or 0),
+            buy_price=effective_buy_price if buy_price is not None else (stock.buy_price or 0),
             source_type=movement_type,
             created_at=get_local_time()
         )
@@ -81,7 +97,7 @@ def adjust_stock(shop_id, item_id, qty, movement_type="adjustment", user_id=None
 
     db.session.commit()
 
-    mv = StockMovement(shop_id=shop_id, item_id=item_id, movement_type=movement_type, qty=qty_change, unit_buy_price=buy_price, unit_sell_price=sell_price, user_id=user_id, reference=None, created_at=get_local_time())
+    mv = StockMovement(shop_id=shop_id, item_id=item_id, movement_type=movement_type, qty=qty_change, unit_buy_price=effective_buy_price, unit_sell_price=sell_price, user_id=user_id, reference=None, created_at=get_local_time())
     db.session.add(mv)
     db.session.commit()
     return stock
@@ -105,6 +121,8 @@ def adjust_stock_bulk(shop_id, items, user_id=None):
             except (TypeError, ValueError):
                 buy_price = None
 
+        price_unit = item_data.get("price_unit")
+
         sell_price = item_data.get("sell_price")
         if sell_price is not None:
             try:
@@ -115,9 +133,23 @@ def adjust_stock_bulk(shop_id, items, user_id=None):
         override = item_data.get("override", False)
 
         # Try to find existing stock record
+        item = Item.query.get(item_id)
+        category_name = None
+        if item and item.category_id:
+            from models.product import Category
+            category = Category.query.get(item.category_id)
+            category_name = category.name if category else None
+
+        effective_buy_price = calculate_total_buy_price(
+            item=item,
+            price=buy_price,
+            price_unit=price_unit,
+            category_name=category_name,
+        )
+
         stock = ShopStock.query.filter_by(shop_id=shop_id, item_id=item_id).first()
         if not stock:
-            stock = ShopStock(shop_id=shop_id, item_id=item_id, quantity=0, buy_price=buy_price)
+            stock = ShopStock(shop_id=shop_id, item_id=item_id, quantity=0, buy_price=effective_buy_price)
             db.session.add(stock)
             db.session.flush() # Ensure it's found in subsequent iterations of the same item_id in this bulk request
         
@@ -129,7 +161,7 @@ def adjust_stock_bulk(shop_id, items, user_id=None):
             stock.quantity += qty
             qty_change = qty
 
-        if buy_price is not None: stock.buy_price = buy_price
+        if buy_price is not None: stock.buy_price = effective_buy_price
         stock.updated_at = get_local_time()
         
         # Handle Batches
@@ -139,7 +171,7 @@ def adjust_stock_bulk(shop_id, items, user_id=None):
                 item_id=item_id,
                 initial_qty=qty_change,
                 remaining_qty=qty_change,
-                buy_price=buy_price if buy_price is not None else (stock.buy_price or 0),
+                buy_price=effective_buy_price if buy_price is not None else (stock.buy_price or 0),
                 source_type=movement_type,
                 created_at=get_local_time()
             )
@@ -172,7 +204,7 @@ def adjust_stock_bulk(shop_id, items, user_id=None):
                 db.session.add(n_att)
 
         mv = StockMovement(shop_id=shop_id, item_id=item_id, movement_type=movement_type, qty=qty_change, 
-                           unit_buy_price=buy_price, unit_sell_price=sell_price, user_id=user_id, 
+                           unit_buy_price=effective_buy_price, unit_sell_price=sell_price, user_id=user_id, 
                            reference=None, created_at=get_local_time())
         db.session.add(mv)
 
