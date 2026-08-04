@@ -104,7 +104,7 @@ export default function RecordCreditSale() {
         saleType: saleType,
       });
       setReceiptUuid(response.data.receipt_uuid);
-      alert(`Credit sale recorded successfully!\nServer response: ${JSON.stringify(response.data)}`);
+      alert("Credit sale recorded successfully!");
       setCartItems([]);
     } catch (err) {
       alert(`Error recording sale: ${err.response?.data?.msg || err.message}`);

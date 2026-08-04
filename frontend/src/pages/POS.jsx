@@ -105,7 +105,7 @@ export default function POS() {
       });
       setReceiptUuid(response.data.receipt_uuid);
       // Show server response for debugging sale_type
-      alert(`Sale recorded successfully!\nServer response: ${JSON.stringify(response.data)}`);
+      alert("Sale recorded successfully!");
       setCartItems([]);
     } catch (err) {
       alert(`Error recording sale: ${err.response?.data?.msg || err.message}`);
