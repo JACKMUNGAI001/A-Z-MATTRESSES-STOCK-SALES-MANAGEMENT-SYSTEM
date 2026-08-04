@@ -40,7 +40,7 @@ export default function Sidebar({ role: propRole, onClose }){
   );
 
   return (
-    <aside className="w-64 bg-[#1e293b] text-white flex flex-col h-screen sticky top-0 shadow-2xl overflow-y-auto">
+    <aside className="w-64 min-h-screen h-full bg-[#1e293b] text-white flex flex-col shadow-2xl overflow-y-auto">
       <div className="p-6 border-b border-gray-700 mb-4 flex justify-between items-center">
         <h2 className="text-xl font-bold tracking-tight">A-Z Mattresses and Gas</h2>
         <button onClick={onClose} className="lg:hidden p-1 text-gray-400 hover:text-white transition-colors">

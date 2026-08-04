@@ -15,7 +15,7 @@ export default function PageLayout({ children, role, title }) {
       {/* Sidebar - Responsive handling */}
       <div className={`fixed inset-0 z-40 transition-opacity bg-black/50 lg:hidden ${isSidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} onClick={toggleSidebar} />
       
-      <div className={`fixed inset-y-0 left-0 z-50 lg:relative lg:translate-x-0 transition-transform duration-300 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+      <div className={`fixed inset-y-0 left-0 z-50 lg:relative lg:self-stretch lg:translate-x-0 transition-transform duration-300 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <Sidebar role={currentRole} onClose={() => setIsSidebarOpen(false)} />
       </div>
 
