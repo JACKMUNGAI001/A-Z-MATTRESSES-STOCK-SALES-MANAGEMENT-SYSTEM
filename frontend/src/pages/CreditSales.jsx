@@ -1,10 +1,14 @@
-import React, { useEffect, useState } from 'react'
+import React, { useContext, useEffect, useState } from 'react'
 import api, { API_BASE } from '../api/api'
-import { Wallet, FileText } from 'lucide-react'
+import { Wallet, FileText, Edit, Trash2 } from 'lucide-react'
+import { AuthContext } from '../context/AuthContext'
+import EditSaleModal from '../components/EditSaleModal'
 
 export default function CreditSales(){
   const [sales, setSales] = useState([])
   const [loading, setLoading] = useState(true)
+  const [editingSale, setEditingSale] = useState(null)
+  const { user } = useContext(AuthContext)
 
   useEffect(() => { fetchSales() }, [])
 
@@ -28,6 +32,21 @@ export default function CreditSales(){
       alert('Payment recorded')
       fetchSales()
     }catch(err){ alert(`Error recording payment: ${err.response?.data?.msg || err.message}`) }
+  }
+
+  const handleDelete = async (sale) => {
+    const confirmed = window.confirm(
+      `Delete credit sale #${sale.id}? This will restore its items to stock and remove the sale from totals.`
+    )
+    if (!confirmed) return
+
+    try {
+      await api.delete(`/sales/${sale.id}`)
+      alert('Credit sale deleted and stock restored successfully.')
+      fetchSales()
+    } catch (err) {
+      alert(`Error deleting sale: ${err.response?.data?.msg || err.message}`)
+    }
   }
 
   return (
@@ -65,14 +84,36 @@ export default function CreditSales(){
                   <td className="px-4 py-3 text-right font-bold">KES {Number(c.remaining).toLocaleString()}</td>
                   <td className="px-4 py-3">{c.status?.toUpperCase()}</td>
                   <td className="px-4 py-3 text-center">
-                    {c.status !== 'paid' && (
-                      <button onClick={() => handlePay(c)} className="bg-green-50 text-green-600 px-3 py-1 rounded-lg inline-flex items-center gap-2">
-                        <Wallet size={14} /> PAY
-                      </button>
-                    )}
-                    {c.receipt_uuid && (
-                      <a href={`${API_BASE}/receipts/${c.receipt_uuid}`} target="_blank" rel="noreferrer" className="ml-2 text-blue-600"> <FileText size={14} /> </a>
-                    )}
+                    <div className="flex items-center justify-center gap-2">
+                      {c.status !== 'paid' && (
+                        <button onClick={() => handlePay(c)} className="bg-green-50 text-green-600 px-3 py-1 rounded-lg inline-flex items-center gap-2" title="Record payment">
+                          <Wallet size={14} /> PAY
+                        </button>
+                      )}
+                      {user?.role === 'admin' && (
+                        <>
+                          <button
+                            onClick={() => setEditingSale(c)}
+                            className="bg-amber-50 text-amber-600 p-2 rounded-lg hover:bg-amber-600 hover:text-white transition-all"
+                            title="Edit credit sale"
+                          >
+                            <Edit size={16} />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(c)}
+                            className="bg-red-50 text-red-600 p-2 rounded-lg hover:bg-red-600 hover:text-white transition-all"
+                            title="Delete credit sale and restore stock"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </>
+                      )}
+                      {c.receipt_uuid && (
+                        <a href={`${API_BASE}/receipts/${c.receipt_uuid}`} target="_blank" rel="noreferrer" className="text-blue-600" title="View receipt">
+                          <FileText size={14} />
+                        </a>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -80,6 +121,13 @@ export default function CreditSales(){
           </table>
         )}
       </div>
+      {editingSale && (
+        <EditSaleModal
+          sale={editingSale}
+          onClose={() => setEditingSale(null)}
+          onUpdate={fetchSales}
+        />
+      )}
     </div>
   )
 }

@@ -368,6 +368,9 @@ def delete_sale(sale_id, user_id):
 
             # Delete sale items first
             SaleItem.query.filter_by(sale_id=sale_id).delete()
+            # Payment records reference the sale, so remove them before the
+            # parent sale to keep the delete valid on PostgreSQL as well.
+            SalePayment.query.filter_by(sale_id=sale_id).delete()
             # Delete the sale
             db.session.delete(sale)
 

@@ -3,6 +3,7 @@ from models.sale import Sale, SaleItem
 from models.deposit import DepositPayment
 from models.expense import Expense
 from models.stock import ShopStock
+from models.product import Item
 from models.deposit import DepositSale
 from models.supplier import SupplierInvoice
 from sqlalchemy import func
@@ -315,6 +316,17 @@ def get_all_credit_sales(shop_id=None):
             "status": s.status,
             "created_at": s.created_at.isoformat(),
             "receipt_uuid": s.receipt_uuid,
+            "payment_type": s.payment_type,
+            "sale_type": s.sale_type,
+            "items": [
+                {
+                    "item_id": item.item_id,
+                    "item_name": Item.query.get(item.item_id).name if Item.query.get(item.item_id) else "N/A",
+                    "qty": item.qty,
+                    "unit_price": float(item.unit_price or 0),
+                }
+                for item in s.items
+            ],
         })
     return results
     
