@@ -4,7 +4,7 @@ import Card from '../components/Card'
 import { AuthContext } from '../context/AuthContext'
 import { SearchContext } from '../context/SearchContext'
 import api from '../api/api'
-import { Store, Package, TrendingUp, Users, Wallet, SearchX, ChevronDown, ChevronUp } from 'lucide-react'
+import { Store, Package, TrendingUp, Users, Wallet, SearchX, ChevronDown, ChevronUp, CreditCard } from 'lucide-react'
 import TransferCardLink from '../components/TransferCardLink'
 
 export default function AttendantDashboard(){
@@ -145,6 +145,18 @@ export default function AttendantDashboard(){
               <Card title="Manage Active Deposits" interactive={true} className="border-l-4 border-l-indigo-500 flex justify-between items-center !p-5 sm:!p-6">
                 <span className="text-2xl sm:text-3xl">{depositCustomersCount} <span className="text-sm font-bold uppercase">Accounts</span></span>
                 <Users className="text-indigo-200 dark:text-indigo-900/30 group-hover:text-indigo-400 dark:group-hover:text-indigo-500 transition-colors" size={32} />
+              </Card>
+          </Link>
+          <Link to="/pos/credit" className="no-underline group">
+              <Card title="Record Credit Sale" interactive={true} className="border-l-4 border-l-amber-500 flex justify-between items-center !p-5 sm:!p-6">
+                <span className="text-sm font-bold uppercase">Customer Credit</span>
+                <CreditCard className="text-amber-200 dark:text-amber-900/30 group-hover:text-amber-400 dark:group-hover:text-amber-500 transition-colors" size={32} />
+              </Card>
+          </Link>
+          <Link to="/admin/credit-sales" className="no-underline group">
+              <Card title="Credit Sales" interactive={true} className="border-l-4 border-l-violet-500 flex justify-between items-center !p-5 sm:!p-6">
+                <span className="text-sm font-bold uppercase">Follow Up</span>
+                <CreditCard className="text-violet-200 dark:text-violet-900/30 group-hover:text-violet-400 dark:group-hover:text-violet-500 transition-colors" size={32} />
               </Card>
           </Link>
         </div>
