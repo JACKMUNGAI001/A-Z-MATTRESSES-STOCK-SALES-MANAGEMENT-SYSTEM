@@ -110,10 +110,12 @@ def get_pnl_report(year, month=None, shop_id=None, period=None):
     # Traditional Gross Profit uses COGS (cost of items SOLD)
     gross_profit = total_sales - total_cogs
     
-    # Net Profit now includes total invoice costs (purchases) as requested
-    # To avoid double counting stock costs (COGS + Invoices), 
-    # we use the formula: Revenue - Operating Expenses - Total Stock Purchases
-    net_profit = total_sales - total_expenses - total_invoices
+    # Supplier invoices are inventory purchases, not the cost of inventory
+    # sold during this reporting period.  COGS already captures the cost of
+    # the units actually sold, so deducting invoices here would double count
+    # inventory costs.  Net profit therefore follows the P&L formula:
+    # net sales - COGS - operating expenses.
+    net_profit = total_sales - total_cogs - total_expenses
 
     return {
         "year": year,
