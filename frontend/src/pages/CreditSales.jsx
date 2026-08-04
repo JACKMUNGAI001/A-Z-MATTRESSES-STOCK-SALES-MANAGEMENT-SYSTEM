@@ -8,6 +8,7 @@ export default function CreditSales(){
   const [sales, setSales] = useState([])
   const [loading, setLoading] = useState(true)
   const [editingSale, setEditingSale] = useState(null)
+  const [activeSection, setActiveSection] = useState('unpaid')
   const { user } = useContext(AuthContext)
 
   useEffect(() => { fetchSales() }, [])
@@ -49,16 +50,34 @@ export default function CreditSales(){
     }
   }
 
+  const unpaidSales = sales.filter((sale) => sale.status !== 'paid')
+  const paidSales = sales.filter((sale) => sale.status === 'paid')
+  const displayedSales = activeSection === 'unpaid' ? unpaidSales : paidSales
+
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-black">Credit Sales</h1>
       </div>
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border p-4">
+      <div className="mb-4 flex gap-3 border-b border-gray-200 dark:border-gray-700">
+        <button
+          onClick={() => setActiveSection('unpaid')}
+          className={`px-5 py-3 font-bold text-sm border-b-2 transition-colors ${activeSection === 'unpaid' ? 'border-amber-500 text-amber-600 dark:text-amber-400' : 'border-transparent text-gray-500 hover:text-gray-900 dark:hover:text-white'}`}
+        >
+          Unpaid Sales ({unpaidSales.length})
+        </button>
+        <button
+          onClick={() => setActiveSection('paid')}
+          className={`px-5 py-3 font-bold text-sm border-b-2 transition-colors ${activeSection === 'paid' ? 'border-green-500 text-green-600 dark:text-green-400' : 'border-transparent text-gray-500 hover:text-gray-900 dark:hover:text-white'}`}
+        >
+          Paid Sales ({paidSales.length})
+        </button>
+      </div>
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border p-4 overflow-x-auto">
         {loading ? (
           <div className="p-8 text-center">Loading...</div>
-        ) : sales.length === 0 ? (
-          <div className="p-8 text-center">No credit sales found.</div>
+        ) : displayedSales.length === 0 ? (
+          <div className="p-8 text-center">No {activeSection} credit sales found.</div>
         ) : (
           <table className="w-full text-sm">
             <thead className="text-xs text-gray-500 uppercase">
@@ -76,7 +95,7 @@ export default function CreditSales(){
               </tr>
             </thead>
             <tbody>
-              {sales.map(c => (
+              {displayedSales.map(c => (
                 <tr key={c.id} className="border-t">
                   <td className="px-4 py-3">#{c.id}</td>
                   <td className="px-4 py-3">{c.shop_name}</td>
