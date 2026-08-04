@@ -12,6 +12,8 @@ export default function RecordCreditSale() {
   const [quantity, setQuantity] = useState("");
   const [unitPrice, setUnitPrice] = useState("");
   const [paymentType, setPaymentType] = useState("mobile_money");
+  const [customerName, setCustomerName] = useState("");
+  const [customerPhone, setCustomerPhone] = useState("");
   const saleType = "credit";
   const [receiptUuid, setReceiptUuid] = useState(null);
   const [shops, setShops] = useState([]);
@@ -95,6 +97,10 @@ export default function RecordCreditSale() {
       alert("Please select a shop.");
       return;
     }
+    if (!customerName.trim() || !customerPhone.trim()) {
+      alert("Please enter the customer's name and phone number.");
+      return;
+    }
     try {
       const response = await api.post("/sales", {
         shop_id: selectedShop,
@@ -102,10 +108,14 @@ export default function RecordCreditSale() {
         payment_type: paymentType,
         sale_type: saleType,
         saleType: saleType,
+        customer_name: customerName.trim(),
+        customer_phone: customerPhone.trim(),
       });
       setReceiptUuid(response.data.receipt_uuid);
       alert("Credit sale recorded successfully!");
       setCartItems([]);
+      setCustomerName("");
+      setCustomerPhone("");
     } catch (err) {
       alert(`Error recording sale: ${err.response?.data?.msg || err.message}`);
     }
@@ -238,6 +248,17 @@ export default function RecordCreditSale() {
                 <label className="block text-sm font-bold text-gray-700 dark:text-gray-400 uppercase tracking-wider mb-2">Payment Method</label>
                 <div className="w-full p-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 font-bold flex items-center gap-2 text-sm sm:text-base">
                   <span>📱 Mobile Money (M-PESA)</span>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 dark:text-gray-400 uppercase tracking-wider mb-2">Customer Name</label>
+                  <input type="text" value={customerName} onChange={(e) => setCustomerName(e.target.value)} placeholder="Full name" className="w-full p-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none" />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 dark:text-gray-400 uppercase tracking-wider mb-2">Contact Tel No.</label>
+                  <input type="tel" value={customerPhone} onChange={(e) => setCustomerPhone(e.target.value)} placeholder="e.g. 0712 345 678" className="w-full p-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none" />
                 </div>
               </div>
 

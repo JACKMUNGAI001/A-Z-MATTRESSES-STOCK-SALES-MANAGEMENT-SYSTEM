@@ -66,6 +66,8 @@ export default function CreditSales(){
                 <th className="px-4 py-2 text-left">ID</th>
                 <th className="px-4 py-2 text-left">Shop</th>
                 <th className="px-4 py-2 text-left">Attendant</th>
+                <th className="px-4 py-2 text-left">Customer</th>
+                <th className="px-4 py-2 text-left">Contact</th>
                 <th className="px-4 py-2 text-right">Total</th>
                 <th className="px-4 py-2 text-right">Paid</th>
                 <th className="px-4 py-2 text-right">Remaining</th>
@@ -79,6 +81,8 @@ export default function CreditSales(){
                   <td className="px-4 py-3">#{c.id}</td>
                   <td className="px-4 py-3">{c.shop_name}</td>
                   <td className="px-4 py-3">{c.attendant_name}</td>
+                  <td className="px-4 py-3 font-medium">{c.customer_name || '—'}</td>
+                  <td className="px-4 py-3">{c.customer_phone || '—'}</td>
                   <td className="px-4 py-3 text-right">KES {Number(c.total_amount).toLocaleString()}</td>
                   <td className="px-4 py-3 text-right">KES {Number(c.paid_amount).toLocaleString()}</td>
                   <td className="px-4 py-3 text-right font-bold">KES {Number(c.remaining).toLocaleString()}</td>

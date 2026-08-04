@@ -310,6 +310,8 @@ def get_all_credit_sales(shop_id=None):
             "shop_id": s.shop_id,
             "shop_name": shop.name if shop else 'N/A',
             "attendant_name": user.name if user else 'N/A',
+            "customer_name": s.customer_name,
+            "customer_phone": s.customer_phone,
             "total_amount": float(s.total_amount or 0),
             "paid_amount": float(s.paid_amount or 0),
             "remaining": rem,

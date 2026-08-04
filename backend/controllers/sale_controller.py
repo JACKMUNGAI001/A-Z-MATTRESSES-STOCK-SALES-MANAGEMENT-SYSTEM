@@ -16,9 +16,11 @@ def create_sale_controller():
     items = data.get("items", [])
     payment_type = data.get("payment_type", "mobile_money")
     sale_type = data.get("sale_type") or data.get("saleType") or "standard"
+    customer_name = data.get("customer_name")
+    customer_phone = data.get("customer_phone")
     user = get_jwt_identity()
     try:
-        sale = create_sale(shop_id=shop_id, user_id=user.get("id"), items=items, payment_type=payment_type, sale_type=sale_type)
+        sale = create_sale(shop_id=shop_id, user_id=user.get("id"), items=items, payment_type=payment_type, sale_type=sale_type, customer_name=customer_name, customer_phone=customer_phone)
         return jsonify({"msg":"sale recorded","sale_id":sale.id, "receipt_uuid": sale.receipt_uuid, "sale_type": sale.sale_type}), 201
     except ValueError as e:
         return jsonify({"msg":str(e)}), 400
@@ -76,9 +78,11 @@ def update_sale_controller(sale_id):
     items = data.get("items", [])
     payment_type = data.get("payment_type")
     sale_type = data.get("sale_type") or data.get("saleType") or "standard"
+    customer_name = data.get("customer_name")
+    customer_phone = data.get("customer_phone")
     
     try:
-        sale = update_sale(sale_id, user_identity.get("id"), items, payment_type, sale_type)
+        sale = update_sale(sale_id, user_identity.get("id"), items, payment_type, sale_type, customer_name, customer_phone)
         return jsonify({"msg": "Sale updated successfully", "sale_id": sale.id, "receipt_uuid": sale.receipt_uuid, "sale_type": sale.sale_type}), 200
     except ValueError as e:
         return jsonify({"msg": str(e)}), 400

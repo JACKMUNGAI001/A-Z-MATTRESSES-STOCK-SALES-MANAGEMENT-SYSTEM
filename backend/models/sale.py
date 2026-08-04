@@ -12,6 +12,8 @@ class Sale(db.Model):
     total_amount = db.Column(db.Numeric(12,2))
     payment_type = db.Column(db.String(50))  # mobile_money
     sale_type = db.Column(db.String(50), nullable=False, default="standard", server_default="standard")
+    customer_name = db.Column(db.String(255), nullable=True)
+    customer_phone = db.Column(db.String(50), nullable=True)
     receipt_uuid = db.Column(db.String(64), db.ForeignKey("receipts.uuid"), nullable=True, index=True)
     created_at = db.Column(db.DateTime, default=get_local_time, index=True)
 
@@ -50,6 +52,8 @@ def ensure_sale_type_column():
             columns = [column["name"] for column in inspector.get_columns("sales")]
             required_columns = {
                 "sale_type": "VARCHAR(50) DEFAULT 'standard' NOT NULL",
+                "customer_name": "VARCHAR(255)",
+                "customer_phone": "VARCHAR(50)",
                 "paid_amount": "NUMERIC(12,2) DEFAULT 0 NOT NULL",
                 "status": "VARCHAR(32) DEFAULT 'unpaid' NOT NULL",
                 "profit_amount": "NUMERIC(12,2) DEFAULT 0 NOT NULL",

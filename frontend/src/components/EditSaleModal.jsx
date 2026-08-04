@@ -11,6 +11,8 @@ export default function EditSaleModal({ sale, onClose, onUpdate }) {
   const [unitPrice, setUnitPrice] = useState("");
   const [paymentType, setPaymentType] = useState(sale.payment_type || "mobile_money");
   const [saleType, setSaleType] = useState(sale.sale_type || "standard");
+  const [customerName, setCustomerName] = useState(sale.customer_name || "");
+  const [customerPhone, setCustomerPhone] = useState(sale.customer_phone || "");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -87,8 +89,10 @@ export default function EditSaleModal({ sale, onClose, onUpdate }) {
       await api.put(`/sales/${sale.id}`, {
         items: cartItems.map(({ item_id, qty, unit_price }) => ({ item_id, qty, unit_price })),
         payment_type: paymentType,
-        sale_type: saleType,
-        saleType: saleType,
+      sale_type: saleType,
+      saleType: saleType,
+      customer_name: customerName.trim(),
+      customer_phone: customerPhone.trim(),
       });
       alert("Sale updated successfully!");
       onUpdate();
@@ -217,6 +221,18 @@ export default function EditSaleModal({ sale, onClose, onUpdate }) {
                       <option value="credit">BAADAYE ( SOLD ON CREDIT)</option>
                     </select>
                   </div>
+                  {saleType === "credit" && (
+                    <>
+                      <div>
+                        <label className="block text-[10px] font-black text-blue-400 uppercase mb-1">Customer Name</label>
+                        <input type="text" value={customerName} onChange={(e) => setCustomerName(e.target.value)} className="w-full p-2 text-sm border border-blue-200 dark:border-blue-800 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white" />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-black text-blue-400 uppercase mb-1">Contact Tel No.</label>
+                        <input type="tel" value={customerPhone} onChange={(e) => setCustomerPhone(e.target.value)} className="w-full p-2 text-sm border border-blue-200 dark:border-blue-800 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white" />
+                      </div>
+                    </>
+                  )}
                   <div className="pt-4 border-t border-blue-100 dark:border-blue-900/50">
                     <div className="text-[10px] font-black text-blue-400 uppercase mb-1">New Total Amount</div>
                     <div className="text-2xl font-black text-blue-700 dark:text-blue-400">

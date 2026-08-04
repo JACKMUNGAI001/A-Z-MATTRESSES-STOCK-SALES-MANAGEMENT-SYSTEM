@@ -119,26 +119,31 @@ def _generate_sale_receipt_html(sale, shop, attendant, sale_items):
             <p><strong>Total Amount:</strong> {sale.total_amount}</p>
             <p><strong>Payment Type:</strong> {'M-PESA' if sale.payment_type == 'mobile_money' else sale.payment_type}</p>
             <p><strong>Sale Type:</strong> {get_sale_type_label(sale.sale_type)}</p>
+            {f'<p><strong>Customer:</strong> {sale.customer_name}</p><p><strong>Phone:</strong> {sale.customer_phone}</p>' if sale.sale_type == 'credit' else ''}
         </div>
     </body>
     </html>
     """
     return html
 
-def create_sale(shop_id, user_id, items, payment_type="mobile_money", sale_type="standard"):
+def create_sale(shop_id, user_id, items, payment_type="mobile_money", sale_type="standard", customer_name=None, customer_phone=None):
     try:
         ensure_sale_type_column()
         normalized_sale_type = normalize_sale_type(sale_type)
+        customer_name = str(customer_name or "").strip() or None
+        customer_phone = str(customer_phone or "").strip() or None
         logger.debug(f"create_sale called with sale_type={sale_type!r}; normalized={normalized_sale_type!r}")
         if not items:
             raise ValueError("Cannot create a sale with no items.")
+        if normalized_sale_type == "credit" and (not customer_name or not customer_phone):
+            raise ValueError("Customer name and phone number are required for a credit sale.")
 
         sale_items = []
         sale = None
         
         with db.session.begin_nested():
             total = 0
-            sale = Sale(shop_id=shop_id, user_id=user_id, total_amount=0, payment_type=payment_type, sale_type=normalized_sale_type)
+            sale = Sale(shop_id=shop_id, user_id=user_id, total_amount=0, payment_type=payment_type, sale_type=normalized_sale_type, customer_name=customer_name, customer_phone=customer_phone)
             logger.debug(f"Sale instance created with sale.sale_type={normalized_sale_type!r}")
             db.session.add(sale)
             db.session.flush() # Ensure sale.id is available
@@ -258,6 +263,8 @@ def _serialize_sale(sale):
         "payment_type": sale.payment_type,
         "sale_type": sale.sale_type,
         "sale_type_label": get_sale_type_label(sale.sale_type),
+        "customer_name": sale.customer_name,
+        "customer_phone": sale.customer_phone,
         "paid_amount": float(sale.paid_amount) if getattr(sale, 'paid_amount', None) is not None else 0.0,
         "status": sale.status if getattr(sale, 'status', None) is not None else 'unpaid',
         "profit_amount": float(sale.profit_amount) if getattr(sale, 'profit_amount', None) is not None else 0.0,
@@ -380,10 +387,14 @@ def delete_sale(sale_id, user_id):
         db.session.rollback()
         raise e
 
-def update_sale(sale_id, user_id, items, payment_type, sale_type="standard"):
+def update_sale(sale_id, user_id, items, payment_type, sale_type="standard", customer_name=None, customer_phone=None):
     try:
         ensure_sale_type_column()
         normalized_sale_type = normalize_sale_type(sale_type)
+        customer_name = str(customer_name or "").strip() or None
+        customer_phone = str(customer_phone or "").strip() or None
+        if normalized_sale_type == "credit" and (not customer_name or not customer_phone):
+            raise ValueError("Customer name and phone number are required for a credit sale.")
         sale = Sale.query.get(sale_id)
         if not sale:
             raise ValueError("Sale not found")
@@ -475,6 +486,8 @@ def update_sale(sale_id, user_id, items, payment_type, sale_type="standard"):
             sale.total_amount = total
             sale.payment_type = payment_type
             sale.sale_type = normalized_sale_type
+            sale.customer_name = customer_name
+            sale.customer_phone = customer_phone
             db.session.add_all(new_sale_items)
 
         # 5. Regenerate receipt
