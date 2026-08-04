@@ -121,6 +121,30 @@ export default function AdminDashboard(){
                 <span className="text-indigo-100 text-xs font-medium">Open lay-by account</span>
               </div>
             </button>
+            <button
+              onClick={() => navigate('/pos/credit')}
+              className="flex-1 bg-amber-600 text-white p-6 rounded-2xl shadow-lg shadow-amber-100 dark:shadow-none hover:bg-amber-700 hover:-translate-y-1 transition-all flex flex-col items-center justify-center gap-3 text-center group"
+            >
+              <div className="bg-white/20 p-3 rounded-xl group-hover:scale-110 transition-transform">
+                <CreditCard size={28} />
+              </div>
+              <div>
+                <span className="block text-lg font-black uppercase tracking-tight">Record Credit Sale</span>
+                <span className="text-amber-100 text-xs font-medium">Create a customer credit account</span>
+              </div>
+            </button>
+            <button
+              onClick={() => navigate('/admin/credit-sales')}
+              className="flex-1 bg-violet-600 text-white p-6 rounded-2xl shadow-lg shadow-violet-100 dark:shadow-none hover:bg-violet-700 hover:-translate-y-1 transition-all flex flex-col items-center justify-center gap-3 text-center group"
+            >
+              <div className="bg-white/20 p-3 rounded-xl group-hover:scale-110 transition-transform">
+                <CreditCard size={28} />
+              </div>
+              <div>
+                <span className="block text-lg font-black uppercase tracking-tight">Credit Sales</span>
+                <span className="text-violet-100 text-xs font-medium">View unpaid and paid sales</span>
+              </div>
+            </button>
           </div>
         </div>
 
