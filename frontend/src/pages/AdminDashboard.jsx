@@ -138,19 +138,15 @@ export default function AdminDashboard(){
           <Card title="Total Outstanding" interactive={true} onClick={() => navigate('/admin/outstanding-deposits')}>
             {financialOverview ? financialOverview.customers_with_balances : '...'}
           </Card>
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border p-4">
+          <Card title="Credit Sales" interactive={true} onClick={() => navigate('/admin/credit-sales')} className="group">
             <div className="flex items-start justify-between">
               <div>
-                <h3 className="text-xs text-gray-400">Credit Sales</h3>
                 <div className="text-2xl font-extrabold">KES {Number(creditsSummary?.total_outstanding_amount || 0).toLocaleString()}</div>
                 <div className="text-xs text-gray-500 mt-1">Outstanding: {creditsSummary ? creditsSummary.outstanding_count : '-'}</div>
               </div>
-              <div className="text-gray-400"><CreditCard /></div>
+              <CreditCard className="text-blue-200 dark:text-blue-900/30 group-hover:text-blue-400 dark:group-hover:text-blue-500 transition-colors" />
             </div>
-            <div className="mt-3">
-              <button onClick={() => navigate('/admin/credit-sales')} className="text-sm text-blue-600">View Credit Sales</button>
-            </div>
-          </div>
+          </Card>
         </div>
 
         {/* SALES SUMMARY */}
