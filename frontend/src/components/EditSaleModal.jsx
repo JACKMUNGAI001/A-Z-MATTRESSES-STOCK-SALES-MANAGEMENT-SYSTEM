@@ -7,7 +7,7 @@ export default function EditSaleModal({ sale, onClose, onUpdate }) {
   const [apiItems, setApiItems] = useState([]);
   const [cartItems, setCartItems] = useState([]);
   const [selectedItem, setSelectedItem] = useState("");
-  const [quantity, setQuantity] = useState(0);
+  const [quantity, setQuantity] = useState("");
   const [unitPrice, setUnitPrice] = useState("");
   const [paymentType, setPaymentType] = useState(sale.payment_type || "mobile_money");
   const [saleType, setSaleType] = useState(sale.sale_type || "standard");
@@ -68,7 +68,7 @@ export default function EditSaleModal({ sale, onClose, onUpdate }) {
         unit_price: price,
       }]);
     }
-    setQuantity(0);
+    setQuantity("");
     setUnitPrice("");
     setSelectedItem("");
   };

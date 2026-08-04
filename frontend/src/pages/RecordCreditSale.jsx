@@ -9,7 +9,7 @@ export default function RecordCreditSale() {
   const [apiItems, setApiItems] = useState([]);
   const [cartItems, setCartItems] = useState([]);
   const [selectedItem, setSelectedItem] = useState("");
-  const [quantity, setQuantity] = useState(0);
+  const [quantity, setQuantity] = useState("");
   const [unitPrice, setUnitPrice] = useState("");
   const [paymentType, setPaymentType] = useState("mobile_money");
   const saleType = "credit";
@@ -77,7 +77,7 @@ export default function RecordCreditSale() {
         unit_price: price,
       }]);
     }
-    setQuantity(0);
+    setQuantity("");
     setUnitPrice("");
     setSelectedItem("");
   };
