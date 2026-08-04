@@ -1,5 +1,5 @@
 from extensions import db
-from models.sale import Sale, SaleItem, ensure_sale_type_column
+from models.sale import Sale, SaleItem, SalePayment, ensure_sale_type_column
 from models.stock import ShopStock, StockMovement, StockBatch
 from models.shop import Shop
 from models.user import User
@@ -42,16 +42,17 @@ def add_sale_payment(sale_id, amount, recorded_by=None):
         if not sale:
             raise ValueError("Sale not found")
 
-        # Create payment record via raw SQL (lightweight, avoids migration here)
-        from sqlalchemy import text as _text
-        with db.engine.begin() as conn:
-            conn.execute(
-                _text("INSERT INTO sale_payments (sale_id, amount, recorded_by) VALUES (:sale_id, :amount, :recorded_by)"),
-                {"sale_id": sale_id, "amount": float(amount), "recorded_by": recorded_by}
-            )
+        payment_amount = float(amount)
+        if payment_amount <= 0:
+            raise ValueError("Payment amount must be greater than zero")
+        db.session.add(SalePayment(
+            sale_id=sale_id,
+            amount=payment_amount,
+            recorded_by=recorded_by,
+        ))
 
         # Update sale paid amount
-        sale.paid_amount = float(sale.paid_amount or 0) + float(amount)
+        sale.paid_amount = float(sale.paid_amount or 0) + payment_amount
 
         # If fully paid or overpaid, mark paid and recognize profit
         if float(sale.paid_amount or 0) >= float(sale.total_amount or 0):

@@ -12,7 +12,12 @@ class Config:
         db_url = db_url.replace("postgres://", "postgresql://", 1)
     
     SQLALCHEMY_DATABASE_URI = db_url
-    SQLALCHEMY_ENGINE_OPTIONS = {"connect_args": {"sslmode": "require"}}
+    # ``sslmode`` is a PostgreSQL driver option; passing it to SQLite prevents
+    # local development and migration tests from opening the database.
+    SQLALCHEMY_ENGINE_OPTIONS = (
+        {"connect_args": {"sslmode": "require"}}
+        if db_url.startswith("postgresql") else {}
+    )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "change-me-jwt")
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=12)

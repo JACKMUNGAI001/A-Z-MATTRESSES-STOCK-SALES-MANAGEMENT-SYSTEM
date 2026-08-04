@@ -3,7 +3,8 @@ from controllers.sale_controller import (
     create_sale_controller, get_shop_sales_controller, 
     todays_sales_controller, current_weeks_sales_controller, 
     current_months_sales_controller, current_years_sales_controller, 
-    get_all_sales_controller, delete_sale_controller, update_sale_controller
+    get_all_sales_controller, delete_sale_controller, update_sale_controller,
+    add_sale_payment_controller,
 )
 from flask_jwt_extended import jwt_required
 

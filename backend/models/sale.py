@@ -1,5 +1,6 @@
 from datetime import datetime
 from sqlalchemy import text
+import logging
 from extensions import db
 from utils.timezone_utils import get_local_time
 
@@ -20,51 +21,51 @@ class Sale(db.Model):
     paid_amount = db.Column(db.Numeric(12,2), nullable=False, default=0)
     status = db.Column(db.String(32), nullable=False, default="unpaid", server_default="unpaid")
     profit_amount = db.Column(db.Numeric(12,2), nullable=False, default=0)
-    profit_recognized = db.Column(db.Boolean, nullable=False, default=False, server_default="0")
+    profit_recognized = db.Column(db.Boolean, nullable=False, default=False, server_default="false")
+
+
+class SalePayment(db.Model):
+    __tablename__ = "sale_payments"
+
+    id = db.Column(db.Integer, primary_key=True)
+    sale_id = db.Column(db.Integer, db.ForeignKey("sales.id"), nullable=False, index=True)
+    amount = db.Column(db.Numeric(12, 2), nullable=False)
+    recorded_by = db.Column(db.Integer, nullable=True)
+    recorded_at = db.Column(db.DateTime, default=get_local_time, nullable=False)
+
+
+logger = logging.getLogger(__name__)
 
 
 def ensure_sale_type_column():
+    """Bring older deployments forward until their Alembic migration runs.
+
+    This remains as a safe compatibility bridge for Render deployments that
+    start the web process before running ``flask db upgrade``.  The permanent
+    schema change is captured in the matching Alembic migration.
+    """
     try:
         inspector = db.inspect(db.engine)
         if inspector.has_table("sales"):
             columns = [column["name"] for column in inspector.get_columns("sales")]
-            if "sale_type" not in columns:
-                with db.engine.begin() as connection:
-                    connection.execute(text("ALTER TABLE sales ADD COLUMN sale_type VARCHAR(50) DEFAULT 'standard' NOT NULL"))
-            # Add payment/profit columns if missing (for older databases)
-            if "paid_amount" not in columns:
-                with db.engine.begin() as connection:
-                    connection.execute(text("ALTER TABLE sales ADD COLUMN paid_amount NUMERIC(12,2) DEFAULT 0 NOT NULL"))
-            if "status" not in columns:
-                with db.engine.begin() as connection:
-                    connection.execute(text("ALTER TABLE sales ADD COLUMN status VARCHAR(32) DEFAULT 'unpaid' NOT NULL"))
-            if "profit_amount" not in columns:
-                with db.engine.begin() as connection:
-                    connection.execute(text("ALTER TABLE sales ADD COLUMN profit_amount NUMERIC(12,2) DEFAULT 0 NOT NULL"))
-            if "profit_recognized" not in columns:
-                with db.engine.begin() as connection:
-                    connection.execute(text("ALTER TABLE sales ADD COLUMN profit_recognized BOOLEAN DEFAULT 0 NOT NULL"))
-    except Exception:
-        pass
-
-    # Ensure a payments table exists for recording partial/full payments against sales
-    try:
-        if not inspector.has_table("sale_payments"):
+            required_columns = {
+                "sale_type": "VARCHAR(50) DEFAULT 'standard' NOT NULL",
+                "paid_amount": "NUMERIC(12,2) DEFAULT 0 NOT NULL",
+                "status": "VARCHAR(32) DEFAULT 'unpaid' NOT NULL",
+                "profit_amount": "NUMERIC(12,2) DEFAULT 0 NOT NULL",
+                # PostgreSQL does not accept SQLite's DEFAULT 0 for BOOLEAN.
+                "profit_recognized": "BOOLEAN DEFAULT FALSE NOT NULL",
+            }
             with db.engine.begin() as connection:
-                connection.execute(text(
-                    """
-                    CREATE TABLE IF NOT EXISTS sale_payments (
-                        id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        sale_id INTEGER NOT NULL,
-                        amount NUMERIC(12,2) NOT NULL,
-                        recorded_by INTEGER,
-                        recorded_at DATETIME DEFAULT (CURRENT_TIMESTAMP),
-                        FOREIGN KEY(sale_id) REFERENCES sales(id)
-                    )
-                    """
-                ))
+                for name, definition in required_columns.items():
+                    if name not in columns:
+                        connection.execute(text(f"ALTER TABLE sales ADD COLUMN {name} {definition}"))
+            # Create through SQLAlchemy so the primary-key syntax works on
+            # both SQLite (local development) and PostgreSQL (Render).
+            SalePayment.__table__.create(bind=db.engine, checkfirst=True)
     except Exception:
-        pass
+        logger.exception("Unable to verify credit-sale database schema")
+        raise
 
 class SaleItem(db.Model):
     __tablename__ = "sale_items"
