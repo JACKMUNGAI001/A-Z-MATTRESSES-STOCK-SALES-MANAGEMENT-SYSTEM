@@ -35,6 +35,10 @@ class SaleSchema(Schema):
     user_id = fields.Int()
     total_amount = fields.Float()
     payment_type = fields.Str()
+    sale_type = fields.Str()
+    paid_amount = fields.Float()
+    status = fields.Str()
+    profit_amount = fields.Float()
     items = fields.Nested(SaleItemSchema, many=True)
     created_at = fields.DateTime()
 

@@ -10,6 +10,7 @@ export default function EditSaleModal({ sale, onClose, onUpdate }) {
   const [quantity, setQuantity] = useState(0);
   const [unitPrice, setUnitPrice] = useState("");
   const [paymentType, setPaymentType] = useState(sale.payment_type || "mobile_money");
+  const [saleType, setSaleType] = useState(sale.sale_type || "standard");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -86,6 +87,8 @@ export default function EditSaleModal({ sale, onClose, onUpdate }) {
       await api.put(`/sales/${sale.id}`, {
         items: cartItems.map(({ item_id, qty, unit_price }) => ({ item_id, qty, unit_price })),
         payment_type: paymentType,
+        sale_type: saleType,
+        saleType: saleType,
       });
       alert("Sale updated successfully!");
       onUpdate();
@@ -201,6 +204,17 @@ export default function EditSaleModal({ sale, onClose, onUpdate }) {
                     >
                       <option value="mobile_money">Mobile Money (M-PESA)</option>
                       <option value="cash">Cash</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-black text-blue-400 uppercase mb-1">Sale Type</label>
+                    <select
+                      className="w-full p-2 text-sm border border-blue-200 dark:border-blue-800 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-bold"
+                      value={saleType}
+                      onChange={(e) => setSaleType(e.target.value)}
+                    >
+                      <option value="standard">Regular Sale</option>
+                      <option value="credit">BAADAYE ( SOLD ON CREDIT)</option>
                     </select>
                   </div>
                   <div className="pt-4 border-t border-blue-100 dark:border-blue-900/50">

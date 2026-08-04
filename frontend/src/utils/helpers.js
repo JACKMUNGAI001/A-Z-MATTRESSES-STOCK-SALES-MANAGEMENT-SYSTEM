@@ -15,6 +15,14 @@ export const formatPaymentMethod = (method) => {
   return method?.toUpperCase() || "N/A";
 };
 
+export const formatSaleType = (saleType) => {
+  const normalized = (saleType || "").toString().trim().toLowerCase();
+  if (normalized === "credit" || normalized === "baadaye" || normalized === "sold on credit") {
+    return "BAADAYE ( SOLD ON CREDIT)";
+  }
+  return "Regular Sale";
+};
+
 export const timeAgo = (date) => {
   const seconds = Math.floor((new Date() - new Date(date)) / 1000);
   let interval = Math.floor(seconds / 31536000);

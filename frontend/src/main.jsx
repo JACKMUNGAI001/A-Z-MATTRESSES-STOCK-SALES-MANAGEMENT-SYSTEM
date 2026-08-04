@@ -11,6 +11,7 @@ import Landing from './pages/Landing'
 import AdminDashboard from './pages/AdminDashboard'
 import AttendantDashboard from './pages/AttendantDashboard'
 import POS from './pages/POS'
+import RecordCreditSale from './pages/RecordCreditSale'
 import Deposits from './pages/Deposits'
 import Transfers from './pages/Transfers'
 import AttendantTransfers from './pages/AttendantTransfers'
@@ -31,10 +32,12 @@ import PageLayout from './components/PageLayout'
 import AllSales from './pages/AllSales'
 import AllDeposits from './pages/AllDeposits'
 import OutstandingDeposits from './pages/OutstandingDeposits'
+import OutstandingCredits from './pages/OutstandingCredits'
 import AdminSuppliers from './pages/AdminSuppliers'
 import AdminSupplierInvoices from './pages/AdminSupplierInvoices'
 import ManagerDashboard from './pages/ManagerDashboard'
 import TodaysSales from './pages/TodaysSales'
+import CreditSales from './pages/CreditSales'
 import WeeksSales from './pages/WeeksSales'
 import MonthsSales from './pages/MonthsSales'
 import YearsSales from './pages/YearsSales'
@@ -78,6 +81,8 @@ ReactDOM.createRoot(document.getElementById('root')).render(
             <Route path="/admin/all-sales" element={<ProtectedRoute role={['admin', 'manager']}><PageLayout><AllSales/></PageLayout></ProtectedRoute>} />
             <Route path="/admin/all-deposits" element={<ProtectedRoute role={['admin', 'manager']}><PageLayout><AllDeposits/></PageLayout></ProtectedRoute>} />
             <Route path="/admin/outstanding-deposits" element={<ProtectedRoute role={['admin', 'manager']}><PageLayout><OutstandingDeposits/></PageLayout></ProtectedRoute>} />
+            <Route path="/admin/outstanding-credits" element={<ProtectedRoute role={['admin', 'manager']}><PageLayout><OutstandingCredits/></PageLayout></ProtectedRoute>} />
+            <Route path="/admin/credit-sales" element={<ProtectedRoute role={['admin', 'manager']}><PageLayout><CreditSales/></PageLayout></ProtectedRoute>} />
             <Route path="/admin/pnl" element={<ProtectedRoute role="admin"><PageLayout role="admin"><PNLReport/></PageLayout></ProtectedRoute>} />
             <Route path="/admin/analysis" element={<ProtectedRoute role="admin"><PageLayout role="admin" title="Sales Analysis"><SalesAnalysis/></PageLayout></ProtectedRoute>} />
             <Route path="/admin/expenses" element={<ProtectedRoute role={['admin', 'manager']}><PageLayout><Expenses/></PageLayout></ProtectedRoute>} />
@@ -87,6 +92,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
             {/* Attendant Protected */}
             <Route path="/attendant" element={<ProtectedRoute role="attendant"><PageLayout role="attendant"><AttendantDashboard/></PageLayout></ProtectedRoute>} />
             <Route path="/pos" element={<ProtectedRoute role={['attendant', 'manager', 'admin']}><PageLayout><POS/></PageLayout></ProtectedRoute>} />
+            <Route path="/pos/credit" element={<ProtectedRoute role={['attendant', 'manager', 'admin']}><PageLayout><RecordCreditSale/></PageLayout></ProtectedRoute>} />
             <Route path="/deposits" element={<ProtectedRoute role={['attendant', 'manager', 'admin']}><PageLayout><Deposits/></PageLayout></ProtectedRoute>} />
             <Route path="/attendant/low-stock" element={<ProtectedRoute role={['attendant', 'manager', 'admin']}><PageLayout><LowStockItems /></PageLayout></ProtectedRoute>} />
             <Route path="/attendant/inventory" element={<ProtectedRoute role={['attendant', 'manager', 'admin']}><PageLayout role="attendant"><AttendantInventory/></PageLayout></ProtectedRoute>} />

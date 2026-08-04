@@ -4,6 +4,7 @@ from services.sale_service import (
     get_current_months_sales, get_current_years_sales, get_all_sales, 
     get_sales_by_shop, delete_sale, update_sale
 )
+from services.sale_service import add_sale_payment
 from models.sale import Sale, SaleItem
 from extensions import db
 from flask_jwt_extended import get_jwt_identity
@@ -14,10 +15,11 @@ def create_sale_controller():
     shop_id = data.get("shop_id")
     items = data.get("items", [])
     payment_type = data.get("payment_type", "mobile_money")
+    sale_type = data.get("sale_type") or data.get("saleType") or "standard"
     user = get_jwt_identity()
     try:
-        sale = create_sale(shop_id=shop_id, user_id=user.get("id"), items=items, payment_type=payment_type)
-        return jsonify({"msg":"sale recorded","sale_id":sale.id, "receipt_uuid": sale.receipt_uuid}), 201
+        sale = create_sale(shop_id=shop_id, user_id=user.get("id"), items=items, payment_type=payment_type, sale_type=sale_type)
+        return jsonify({"msg":"sale recorded","sale_id":sale.id, "receipt_uuid": sale.receipt_uuid, "sale_type": sale.sale_type}), 201
     except ValueError as e:
         return jsonify({"msg":str(e)}), 400
 
@@ -73,11 +75,27 @@ def update_sale_controller(sale_id):
     data = request.get_json() or {}
     items = data.get("items", [])
     payment_type = data.get("payment_type")
+    sale_type = data.get("sale_type") or data.get("saleType") or "standard"
     
     try:
-        sale = update_sale(sale_id, user_identity.get("id"), items, payment_type)
-        return jsonify({"msg": "Sale updated successfully", "sale_id": sale.id, "receipt_uuid": sale.receipt_uuid}), 200
+        sale = update_sale(sale_id, user_identity.get("id"), items, payment_type, sale_type)
+        return jsonify({"msg": "Sale updated successfully", "sale_id": sale.id, "receipt_uuid": sale.receipt_uuid, "sale_type": sale.sale_type}), 200
     except ValueError as e:
         return jsonify({"msg": str(e)}), 400
+    except Exception as e:
+        return jsonify({"msg": "Internal Server Error"}), 500
+
+
+def add_sale_payment_controller(sale_id):
+    user_identity = get_jwt_identity()
+    data = request.get_json() or {}
+    amount = data.get("amount")
+    if amount is None:
+        return jsonify({"msg": "amount is required"}), 400
+    try:
+        sale = add_sale_payment(sale_id, amount, user_identity.get("id"))
+        return jsonify({"msg": "payment recorded", "sale_id": sale.id, "paid_amount": float(sale.paid_amount)}), 201
+    except ValueError as e:
+        return jsonify({"msg": str(e)}), 404
     except Exception as e:
         return jsonify({"msg": "Internal Server Error"}), 500

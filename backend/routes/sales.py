@@ -53,3 +53,9 @@ def delete_sale(sale_id):
 @jwt_required()
 def update_sale(sale_id):
     return update_sale_controller(sale_id)
+
+
+@bp.route("/<int:sale_id>/payments", methods=["POST"])
+@jwt_required()
+def add_sale_payment(sale_id):
+    return add_sale_payment_controller(sale_id)

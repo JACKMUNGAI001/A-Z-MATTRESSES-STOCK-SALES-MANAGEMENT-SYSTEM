@@ -48,5 +48,7 @@ export const markNotificationRead = (id) => api.post(`/notifications/mark-read/$
 
 // Report APIs
 export const fetchProductAnalysis = (params) => api.get('/reports/product-analysis', { params })
+export const fetchCreditsSummary = (params) => api.get('/reports/credits-summary', { params })
+export const fetchCreditSales = (params) => api.get('/reports/credit-sales', { params })
 
 export default api

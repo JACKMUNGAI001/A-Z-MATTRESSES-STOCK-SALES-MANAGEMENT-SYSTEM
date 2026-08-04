@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from "react";
 import api, { API_BASE } from "../api/api";
-import { History, ShoppingBag, Store, User, FileText, Trash2, SearchX, Edit } from "lucide-react";
-import { formatDate, formatPaymentMethod } from "../utils/helpers";
+import { History, ShoppingBag, Store, User, FileText, Trash2, SearchX, Edit, Wallet } from "lucide-react";
+import { formatDate, formatPaymentMethod, formatSaleType } from "../utils/helpers";
 import { AuthContext } from "../context/AuthContext";
 import { SearchContext } from "../context/SearchContext";
 import EditSaleModal from "../components/EditSaleModal";
@@ -26,6 +26,24 @@ export default function AllSales() {
       console.error("Error fetching sales");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handlePay = async (sale) => {
+    const remaining = (sale.total_amount || 0) - (sale.paid_amount || 0);
+    const input = window.prompt(`Enter payment amount (remaining KES ${remaining}):`, remaining);
+    if (!input) return;
+    const amount = parseFloat(input);
+    if (isNaN(amount) || amount <= 0) {
+      alert('Please enter a valid amount');
+      return;
+    }
+    try {
+      await api.post(`/sales/${sale.id}/payments`, { amount });
+      alert('Payment recorded');
+      fetchSales();
+    } catch (err) {
+      alert(`Error recording payment: ${err.response?.data?.msg || err.message}`);
     }
   };
 
@@ -130,6 +148,7 @@ export default function AllSales() {
                       <td className="px-8 py-4 text-right">
                         <div className="font-black text-gray-900 dark:text-white text-lg transition-colors">{formatCurrency(sale.total_amount)}</div>
                         <div className="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest">{formatPaymentMethod(sale.payment_type)}</div>
+                        <div className="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-widest mt-1">{formatSaleType(sale.sale_type)}</div>
                       </td>
                       <td className="px-8 py-4 text-center transition-colors">
                         <div className="flex items-center justify-center gap-2">
@@ -159,6 +178,16 @@ export default function AllSales() {
                               >
                                 <Trash2 size={16} />
                               </button>
+                              {/* Pay button for credit sales with outstanding balance */}
+                              {sale.sale_type === 'credit' && (sale.paid_amount || 0) < (sale.total_amount || 0) && (
+                                <button
+                                  onClick={() => handlePay(sale)}
+                                  className="bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 p-2 rounded-lg hover:bg-green-600 hover:text-white transition-all"
+                                  title="Record Payment"
+                                >
+                                  <Wallet size={16} />
+                                </button>
+                              )}
                             </>
                           )}
                         </div>

@@ -12,6 +12,7 @@ export default function POS() {
   const [quantity, setQuantity] = useState(0);
   const [unitPrice, setUnitPrice] = useState("");
   const [paymentType, setPaymentType] = useState("mobile_money");
+  const [saleType, setSaleType] = useState("standard");
   const [receiptUuid, setReceiptUuid] = useState(null);
   const [shops, setShops] = useState([]);
   const [selectedShop, setSelectedShop] = useState(user?.shop_id || "");
@@ -99,9 +100,12 @@ export default function POS() {
         shop_id: selectedShop,
         items: cartItems.map(({ item_id, qty, unit_price }) => ({ item_id, qty, unit_price })),
         payment_type: paymentType,
+        sale_type: saleType,
+        saleType: saleType,
       });
       setReceiptUuid(response.data.receipt_uuid);
-      alert("Sale recorded successfully!");
+      // Show server response for debugging sale_type
+      alert(`Sale recorded successfully!\nServer response: ${JSON.stringify(response.data)}`);
       setCartItems([]);
     } catch (err) {
       alert(`Error recording sale: ${err.response?.data?.msg || err.message}`);
@@ -237,6 +241,13 @@ export default function POS() {
                   <label className="block text-sm font-bold text-gray-700 dark:text-gray-400 uppercase tracking-wider mb-2">Payment Method</label>
                   <div className="w-full p-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 font-bold flex items-center gap-2 text-sm sm:text-base">
                     <span>📱 Mobile Money (M-PESA)</span>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 dark:text-gray-400 uppercase tracking-wider mb-2">Sale Type</label>
+                  <div className="w-full p-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white font-bold">
+                    Regular Sale
                   </div>
                 </div>
                 

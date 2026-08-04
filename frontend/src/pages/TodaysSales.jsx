@@ -1,9 +1,9 @@
 import React, { useEffect, useState, useContext } from 'react';
 import api, { API_BASE } from '../api/api';
-import { FileText, Calendar, Clock, CreditCard, Receipt, SearchX, Store } from "lucide-react";
+import { FileText, Calendar, Clock, CreditCard, Receipt, SearchX, Store, Wallet } from "lucide-react";
 import { SearchContext } from '../context/SearchContext';
 import { AuthContext } from '../context/AuthContext';
-import { formatPaymentMethod } from '../utils/helpers';
+import { formatPaymentMethod, formatSaleType } from '../utils/helpers';
 
 export default function TodaysSales() {
   const [sales, setSales] = useState([]);
@@ -24,6 +24,25 @@ export default function TodaysSales() {
     };
     fetchSales();
   }, []);
+
+  const handlePay = async (sale) => {
+    const remaining = (sale.total_amount || 0) - (sale.paid_amount || 0);
+    const input = window.prompt(`Enter payment amount (remaining KES ${remaining}):`, remaining);
+    if (!input) return;
+    const amount = parseFloat(input);
+    if (isNaN(amount) || amount <= 0) {
+      alert('Please enter a valid amount');
+      return;
+    }
+    try {
+      await api.post(`/sales/${sale.id}/payments`, { amount });
+      alert('Payment recorded');
+      const response = await api.get('/sales/today');
+      setSales(response.data);
+    } catch (err) {
+      alert(`Error recording payment: ${err.response?.data?.msg || err.message}`);
+    }
+  }
 
   const formatCurrency = (val) => {
     return new Intl.NumberFormat('en-KE', { style: 'currency', currency: 'KES', minimumFractionDigits: 0 }).format(val || 0);
@@ -116,9 +135,21 @@ export default function TodaysSales() {
                       </td>
                       <td className="px-8 py-4 text-right font-black text-gray-900 dark:text-white text-lg transition-colors">{formatCurrency(sale.total_amount)}</td>
                       <td className="px-8 py-4 text-center">
-                        <span className="bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-400 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border border-blue-200 dark:border-blue-600 transition-colors">
-                          {formatPaymentMethod(sale.payment_type)}
-                        </span>
+                        <div className="flex flex-col items-center gap-1">
+                          <span className="bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-400 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border border-blue-200 dark:border-blue-600 transition-colors">
+                            {formatPaymentMethod(sale.payment_type)}
+                          </span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-widest">
+                              {formatSaleType(sale.sale_type)}
+                            </span>
+                            {sale.sale_type === 'credit' && (sale.paid_amount || 0) < (sale.total_amount || 0) && (
+                              <button onClick={() => handlePay(sale)} className="ml-2 bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 px-2 py-1 rounded-full text-[10px] font-black uppercase tracking-widest inline-flex items-center gap-1">
+                                <Wallet size={12} /> PAY
+                              </button>
+                            )}
+                          </div>
+                        </div>
                       </td>
                       <td className="px-8 py-4 text-center text-gray-500 dark:text-gray-400 font-medium transition-colors">
                         <div className="flex items-center justify-center gap-1">

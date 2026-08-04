@@ -9,6 +9,8 @@ from services.report_service import (
     get_dashboard_summary,
     get_product_sales_analysis
 )
+from services.report_service import get_outstanding_credits
+from services.report_service import get_credits_summary, get_all_credit_sales
 from utils.timezone_utils import get_local_time
 from flask_jwt_extended import get_jwt_identity
 from utils.auth_utils import get_shop_id_for_attendant
@@ -81,3 +83,30 @@ def product_sales_analysis_controller():
     
     analysis = get_product_sales_analysis(year=year, month=month, shop_id=shop_id, period=period)
     return jsonify(analysis), 200
+
+
+def outstanding_credits_controller():
+    shop_id = request.args.get('shop_id', type=int)
+    user_identity = get_jwt_identity()
+    if user_identity.get("role") == "attendant":
+        shop_id = get_shop_id_for_attendant()
+    results = get_outstanding_credits(shop_id)
+    return jsonify(results), 200
+
+
+def credits_summary_controller():
+    shop_id = request.args.get('shop_id', type=int)
+    user_identity = get_jwt_identity()
+    if user_identity.get("role") == "attendant":
+        shop_id = get_shop_id_for_attendant()
+    summary = get_credits_summary(shop_id)
+    return jsonify(summary), 200
+
+
+def credit_sales_controller():
+    shop_id = request.args.get('shop_id', type=int)
+    user_identity = get_jwt_identity()
+    if user_identity.get("role") == "attendant":
+        shop_id = get_shop_id_for_attendant()
+    sales = get_all_credit_sales(shop_id)
+    return jsonify(sales), 200

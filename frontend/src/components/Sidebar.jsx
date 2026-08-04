@@ -7,6 +7,7 @@ import {
   Package, 
   TrendingUp, 
   BarChart3,
+  CreditCard,
   Receipt, 
   ArrowLeftRight, 
   UserCircle,
@@ -52,8 +53,10 @@ export default function Sidebar({ role: propRole, onClose }){
           <>
             <NavLink to="/admin" icon={LayoutDashboard}>Dashboard</NavLink>
             <NavLink to="/pos" icon={Receipt}>Record Sale</NavLink>
+            <NavLink to="/pos/credit" icon={Receipt}>Record Credit Sale</NavLink>
             <NavLink to="/deposits" icon={Store}>New Deposit</NavLink>
             <NavLink to="/attendant/deposits" icon={Users}>Active Deposits</NavLink>
+            <NavLink to="/admin/credit-sales" icon={CreditCard}>Credit Sales</NavLink>
             <NavLink to="/admin/shops" icon={Store}>Shops</NavLink>
             <NavLink to="/admin/items" icon={Package}>Products</NavLink>
             <NavLink to="/admin/restock-history" icon={Truck}>Restock History</NavLink>

@@ -1,5 +1,5 @@
 from extensions import db
-from models.sale import Sale, SaleItem
+from models.sale import Sale, SaleItem, ensure_sale_type_column
 from models.stock import ShopStock, StockMovement, StockBatch
 from models.shop import Shop
 from models.user import User
@@ -7,9 +7,71 @@ from models.product import Item
 from services.receipt_service import create_receipt
 from datetime import datetime
 from models.notification import Notification
-from sqlalchemy import func
+from sqlalchemy import func, or_
 from datetime import datetime, timedelta
 from utils.timezone_utils import get_local_time
+import logging
+
+logger = logging.getLogger(__name__)
+if not logger.handlers:
+    handler = logging.StreamHandler()
+    formatter = logging.Formatter('%(asctime)s %(levelname)s %(name)s: %(message)s')
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
+    logger.setLevel(logging.DEBUG)
+
+
+def normalize_sale_type(sale_type=None):
+    normalized = str(sale_type or "").strip().lower()
+    if normalized in {"credit", "baadaye", "baadaye ( sold on credit)", "sold on credit"}:
+        return "credit"
+    return "standard"
+
+
+def get_sale_type_label(sale_type=None):
+    normalized = str(sale_type or "").strip().lower()
+    if normalized in {"credit", "baadaye", "baadaye ( sold on credit)", "sold on credit"}:
+        return "BAADAYE ( SOLD ON CREDIT)"
+    return "Regular Sale"
+
+
+def add_sale_payment(sale_id, amount, recorded_by=None):
+    try:
+        ensure_sale_type_column()
+        sale = Sale.query.get(sale_id)
+        if not sale:
+            raise ValueError("Sale not found")
+
+        # Create payment record via raw SQL (lightweight, avoids migration here)
+        from sqlalchemy import text as _text
+        with db.engine.begin() as conn:
+            conn.execute(
+                _text("INSERT INTO sale_payments (sale_id, amount, recorded_by) VALUES (:sale_id, :amount, :recorded_by)"),
+                {"sale_id": sale_id, "amount": float(amount), "recorded_by": recorded_by}
+            )
+
+        # Update sale paid amount
+        sale.paid_amount = float(sale.paid_amount or 0) + float(amount)
+
+        # If fully paid or overpaid, mark paid and recognize profit
+        if float(sale.paid_amount or 0) >= float(sale.total_amount or 0):
+            sale.status = "paid"
+            # Compute profit across sale items (unit_price - unit_cost) * qty
+            profit = 0
+            for it in sale.items:
+                up = float(it.unit_price or 0)
+                uc = float(it.unit_cost or 0)
+                qty = int(it.qty or 0)
+                profit += (up - uc) * qty
+            sale.profit_amount = profit
+            sale.profit_recognized = True
+
+        db.session.add(sale)
+        db.session.commit()
+        return sale
+    except Exception as e:
+        db.session.rollback()
+        raise e
 
 def _generate_sale_receipt_html(sale, shop, attendant, sale_items):
     items_html = ""
@@ -55,14 +117,18 @@ def _generate_sale_receipt_html(sale, shop, attendant, sale_items):
             </table>
             <p><strong>Total Amount:</strong> {sale.total_amount}</p>
             <p><strong>Payment Type:</strong> {'M-PESA' if sale.payment_type == 'mobile_money' else sale.payment_type}</p>
+            <p><strong>Sale Type:</strong> {get_sale_type_label(sale.sale_type)}</p>
         </div>
     </body>
     </html>
     """
     return html
 
-def create_sale(shop_id, user_id, items, payment_type="mobile_money"):
+def create_sale(shop_id, user_id, items, payment_type="mobile_money", sale_type="standard"):
     try:
+        ensure_sale_type_column()
+        normalized_sale_type = normalize_sale_type(sale_type)
+        logger.debug(f"create_sale called with sale_type={sale_type!r}; normalized={normalized_sale_type!r}")
         if not items:
             raise ValueError("Cannot create a sale with no items.")
 
@@ -71,7 +137,8 @@ def create_sale(shop_id, user_id, items, payment_type="mobile_money"):
         
         with db.session.begin_nested():
             total = 0
-            sale = Sale(shop_id=shop_id, user_id=user_id, total_amount=0, payment_type=payment_type)
+            sale = Sale(shop_id=shop_id, user_id=user_id, total_amount=0, payment_type=payment_type, sale_type=normalized_sale_type)
+            logger.debug(f"Sale instance created with sale.sale_type={normalized_sale_type!r}")
             db.session.add(sale)
             db.session.flush() # Ensure sale.id is available
 
@@ -159,7 +226,9 @@ def create_sale(shop_id, user_id, items, payment_type="mobile_money"):
         receipt = create_receipt(payload=receipt_html)
         sale.receipt_uuid = receipt.uuid
 
+        logger.debug(f"About to commit sale id={sale.id} with sale_type={sale.sale_type!r}")
         db.session.commit()
+        logger.debug(f"Committed sale id={sale.id}")
         return sale
     except Exception as e:
         db.session.rollback()
@@ -186,17 +255,25 @@ def _serialize_sale(sale):
         "attendant_name": attendant.name if attendant else "N/A",
         "total_amount": float(sale.total_amount) if sale.total_amount is not None else 0.0,
         "payment_type": sale.payment_type,
+        "sale_type": sale.sale_type,
+        "sale_type_label": get_sale_type_label(sale.sale_type),
+        "paid_amount": float(sale.paid_amount) if getattr(sale, 'paid_amount', None) is not None else 0.0,
+        "status": sale.status if getattr(sale, 'status', None) is not None else 'unpaid',
+        "profit_amount": float(sale.profit_amount) if getattr(sale, 'profit_amount', None) is not None else 0.0,
         "created_at": sale.created_at.isoformat(),
         "receipt_uuid": sale.receipt_uuid,
         "items": items_summary
     }
 
 def get_all_sales():
-    sales = Sale.query.order_by(Sale.created_at.desc()).all()
+    query = Sale.query.filter(or_(Sale.sale_type != 'credit', Sale.status == 'paid')).order_by(Sale.created_at.desc())
+    sales = query.all()
     return [_serialize_sale(sale) for sale in sales]
 
+
 def get_sales_by_shop(shop_id):
-    sales = Sale.query.filter_by(shop_id=shop_id).order_by(Sale.created_at.desc()).all()
+    query = Sale.query.filter_by(shop_id=shop_id).filter(or_(Sale.sale_type != 'credit', Sale.status == 'paid')).order_by(Sale.created_at.desc())
+    sales = query.all()
     return [_serialize_sale(sale) for sale in sales]
 
 def get_todays_sales(shop_id=None):
@@ -205,6 +282,7 @@ def get_todays_sales(shop_id=None):
     end_of_day = start_of_day + timedelta(days=1, microseconds=-1)
     
     query = Sale.query.filter(Sale.created_at.between(start_of_day, end_of_day))
+    query = query.filter(or_(Sale.sale_type != 'credit', Sale.status == 'paid'))
     if shop_id:
         query = query.filter(Sale.shop_id == shop_id)
         
@@ -218,6 +296,7 @@ def get_current_weeks_sales(shop_id=None):
     end_of_week = start_of_week + timedelta(days=7, microseconds=-1)
 
     query = Sale.query.filter(Sale.created_at.between(start_of_week, end_of_week))
+    query = query.filter(or_(Sale.sale_type != 'credit', Sale.status == 'paid'))
     if shop_id:
         query = query.filter(Sale.shop_id == shop_id)
         
@@ -234,6 +313,7 @@ def get_current_months_sales(shop_id=None):
         end_of_month = datetime(now.year, now.month + 1, 1) - timedelta(microseconds=1)
 
     query = Sale.query.filter(Sale.created_at.between(start_of_month, end_of_month))
+    query = query.filter(or_(Sale.sale_type != 'credit', Sale.status == 'paid'))
     if shop_id:
         query = query.filter(Sale.shop_id == shop_id)
         
@@ -246,6 +326,7 @@ def get_current_years_sales(shop_id=None):
     end_of_year = datetime(now.year, 12, 31, 23, 59, 59, 999999)
 
     query = Sale.query.filter(Sale.created_at.between(start_of_year, end_of_year))
+    query = query.filter(or_(Sale.sale_type != 'credit', Sale.status == 'paid'))
     if shop_id:
         query = query.filter(Sale.shop_id == shop_id)
         
@@ -295,8 +376,10 @@ def delete_sale(sale_id, user_id):
         db.session.rollback()
         raise e
 
-def update_sale(sale_id, user_id, items, payment_type):
+def update_sale(sale_id, user_id, items, payment_type, sale_type="standard"):
     try:
+        ensure_sale_type_column()
+        normalized_sale_type = normalize_sale_type(sale_type)
         sale = Sale.query.get(sale_id)
         if not sale:
             raise ValueError("Sale not found")
@@ -387,6 +470,7 @@ def update_sale(sale_id, user_id, items, payment_type):
             # 4. Update sale record
             sale.total_amount = total
             sale.payment_type = payment_type
+            sale.sale_type = normalized_sale_type
             db.session.add_all(new_sale_items)
 
         # 5. Regenerate receipt

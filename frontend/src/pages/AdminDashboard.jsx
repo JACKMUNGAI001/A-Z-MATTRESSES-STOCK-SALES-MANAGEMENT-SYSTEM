@@ -3,7 +3,7 @@ import Card from '../components/Card'
 import api from '../api/api'
 import { AuthContext } from '../context/AuthContext'
 import { useNavigate, Link } from 'react-router-dom'
-import { UserCheck, UserX, MapPin, Mail, ShieldCheck, UserCircle, Store, ChevronDown, ChevronUp } from 'lucide-react'
+import { UserCheck, UserX, MapPin, Mail, ShieldCheck, UserCircle, Store, ChevronDown, ChevronUp, CreditCard } from 'lucide-react'
 import TransferCardLink from '../components/TransferCardLink'
 
 export default function AdminDashboard(){
@@ -17,6 +17,7 @@ export default function AdminDashboard(){
   const [stockSummary, setStockSummary] = useState(null)
   const [isStockSummaryOpen, setIsStockSummaryOpen] = useState(false)
   const navigate = useNavigate()
+    const [creditsSummary, setCreditsSummary] = useState(null)
 
   useEffect(()=> {
     api.get('/shops').then(res=>setShops(res.data)).catch(()=>{})
@@ -31,6 +32,7 @@ export default function AdminDashboard(){
         setFinancialOverview(data.financial_overview);
         setStockSummary(data.stock_summary);
     }).catch(err => console.error("Error fetching summary", err));
+      fetchCreditsSummary()
   },[])
 
   const fetchPendingAttendants = async () => {
@@ -50,6 +52,13 @@ export default function AdminDashboard(){
       console.error('Error fetching all attendants')
     }
   }
+  
+    const fetchCreditsSummary = async () => {
+      try{
+        const res = await api.get('/reports/credits-summary')
+        setCreditsSummary(res.data)
+      }catch(err){ console.error('Error fetching credits summary', err) }
+    }
 
   const handleVerifyAttendant = async (userId, shopId) => {
     if(!shopId) return;
@@ -129,6 +138,19 @@ export default function AdminDashboard(){
           <Card title="Total Outstanding" interactive={true} onClick={() => navigate('/admin/outstanding-deposits')}>
             {financialOverview ? financialOverview.customers_with_balances : '...'}
           </Card>
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border p-4">
+            <div className="flex items-start justify-between">
+              <div>
+                <h3 className="text-xs text-gray-400">Credit Sales</h3>
+                <div className="text-2xl font-extrabold">KES {Number(creditsSummary?.total_outstanding_amount || 0).toLocaleString()}</div>
+                <div className="text-xs text-gray-500 mt-1">Outstanding: {creditsSummary ? creditsSummary.outstanding_count : '-'}</div>
+              </div>
+              <div className="text-gray-400"><CreditCard /></div>
+            </div>
+            <div className="mt-3">
+              <button onClick={() => navigate('/admin/credit-sales')} className="text-sm text-blue-600">View Credit Sales</button>
+            </div>
+          </div>
         </div>
 
         {/* SALES SUMMARY */}

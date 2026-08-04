@@ -7,7 +7,10 @@ from controllers.report_controller import (
     deposits_summary_controller, 
     stock_summary_by_category_controller, 
     dashboard_summary_controller,
-    product_sales_analysis_controller
+    product_sales_analysis_controller,
+    outstanding_credits_controller,
+    credits_summary_controller,
+    credit_sales_controller
 )
 from flask_jwt_extended import jwt_required
 
@@ -21,3 +24,6 @@ bp.add_url_rule("/sales-summary", "sales_summary", jwt_required()(sales_summary_
 bp.add_url_rule("/deposits-summary", "deposits_summary", jwt_required()(deposits_summary_controller), methods=["GET"])
 bp.add_url_rule("/stock-summary", "stock_summary", jwt_required()(stock_summary_by_category_controller), methods=["GET"])
 bp.add_url_rule("/product-analysis", "product_analysis", jwt_required()(product_sales_analysis_controller), methods=["GET"])
+bp.add_url_rule("/outstanding-credits", "outstanding_credits", jwt_required()(outstanding_credits_controller), methods=["GET"])
+bp.add_url_rule("/credits-summary", "credits_summary", jwt_required()(credits_summary_controller), methods=["GET"])
+bp.add_url_rule("/credit-sales", "credit_sales", jwt_required()(credit_sales_controller), methods=["GET"])
