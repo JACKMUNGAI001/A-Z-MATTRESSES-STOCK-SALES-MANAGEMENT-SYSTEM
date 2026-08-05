@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import api from "../api/api";
 import { ArrowLeftRight, Store, Box, FileText, Send, Plus, Trash2 } from "lucide-react";
 import SearchableSelect from "../components/SearchableSelect";
+import useSubmissionLock from "../hooks/useSubmissionLock";
 
 export default function Transfers() {
   const [fromShop, setFromShop] = useState("");
@@ -12,6 +13,7 @@ export default function Transfers() {
   const [shops, setShops] = useState([]);
   const [items, setItems] = useState([]);
   const [itemsList, setItemsList] = useState([]);
+  const { isSubmitting: isTransferring, run: runTransfer } = useSubmissionLock();
 
   useEffect(() => {
     const fetchShopsAndItems = async () => {
@@ -73,7 +75,8 @@ export default function Transfers() {
       return;
     }
 
-    try {
+    await runTransfer(async () => {
+      try {
       await api.post("/transfers", {
         from_shop_id: fromShop,
         to_shop_id: toShop,
@@ -86,9 +89,10 @@ export default function Transfers() {
       setToShop(""); 
       setItemsList([]); 
       setNotes("");
-    } catch (err) {
-      alert(`Error creating transfer: ${err.response?.data?.msg || err.message}`);
-    }
+      } catch (err) {
+        alert(`Error creating transfer: ${err.response?.data?.msg || err.message}`);
+      }
+    });
   };
 
   return (
@@ -228,10 +232,10 @@ export default function Transfers() {
 
             <button
               onClick={handleTransfer}
-              disabled={itemsList.length === 0}
+              disabled={itemsList.length === 0 || isTransferring}
               className="w-full bg-blue-600 text-white py-4 sm:py-5 rounded-2xl font-black text-base sm:text-lg shadow-xl shadow-blue-100 dark:shadow-none hover:bg-blue-700 hover:-translate-y-0.5 transition-all flex items-center justify-center gap-3 mt-4 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0"
             >
-              <ArrowLeftRight size={20} className="sm:w-6 sm:h-6" /> Execute Transfer
+              <ArrowLeftRight size={20} className="sm:w-6 sm:h-6" /> {isTransferring ? "Transferring..." : "Execute Transfer"}
             </button>
           </div>
         </div>

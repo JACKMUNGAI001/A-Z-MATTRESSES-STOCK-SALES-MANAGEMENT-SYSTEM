@@ -3,6 +3,7 @@ import api, { API_BASE } from "../api/api";
 import { AuthContext } from "../context/AuthContext";
 import { ShoppingCart, Plus, Trash2, CreditCard, Store } from "lucide-react";
 import SearchableSelect from "../components/SearchableSelect";
+import useSubmissionLock from "../hooks/useSubmissionLock";
 
 export default function POS() {
   const { user } = useContext(AuthContext);
@@ -16,6 +17,7 @@ export default function POS() {
   const [receiptUuid, setReceiptUuid] = useState(null);
   const [shops, setShops] = useState([]);
   const [selectedShop, setSelectedShop] = useState(user?.shop_id || "");
+  const { isSubmitting: isCompletingSale, run: runSale } = useSubmissionLock();
 
   useEffect(() => {
     const fetchItems = async () => {
@@ -95,7 +97,8 @@ export default function POS() {
       alert("Please select a shop.");
       return;
     }
-    try {
+    await runSale(async () => {
+      try {
       const response = await api.post("/sales", {
         shop_id: selectedShop,
         items: cartItems.map(({ item_id, qty, unit_price }) => ({ item_id, qty, unit_price })),
@@ -107,9 +110,10 @@ export default function POS() {
       // Show server response for debugging sale_type
       alert("Sale recorded successfully!");
       setCartItems([]);
-    } catch (err) {
-      alert(`Error recording sale: ${err.response?.data?.msg || err.message}`);
-    }
+      } catch (err) {
+        alert(`Error recording sale: ${err.response?.data?.msg || err.message}`);
+      }
+    });
   };
 
   return (
@@ -262,10 +266,10 @@ export default function POS() {
 
                 <button
                   onClick={handleSale}
-                  disabled={cartItems.length === 0}
+                  disabled={cartItems.length === 0 || isCompletingSale}
                   className="w-full bg-blue-600 text-white py-4 rounded-xl font-bold shadow-lg shadow-blue-200 dark:shadow-none hover:bg-blue-700 hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                 >
-                  Complete Sale
+                  {isCompletingSale ? "Completing Sale..." : "Complete Sale"}
                 </button>
 
                 {receiptUuid && (

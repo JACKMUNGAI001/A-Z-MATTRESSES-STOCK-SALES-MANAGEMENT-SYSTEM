@@ -3,6 +3,7 @@ import api, { API_BASE } from "../api/api";
 import { AuthContext } from "../context/AuthContext";
 import { UserPlus, History, Wallet, CheckCircle, Store } from "lucide-react";
 import SearchableSelect from "../components/SearchableSelect";
+import useSubmissionLock from "../hooks/useSubmissionLock";
 
 export default function Deposits() {
   const { user } = useContext(AuthContext);
@@ -17,6 +18,7 @@ export default function Deposits() {
   });
   const [shops, setShops] = useState([]);
   const [lastReceipt, setLastReceipt] = useState(null);
+  const { isSubmitting: isCreatingDeposit, run: runDepositCreation } = useSubmissionLock();
 
   useEffect(() => {
     const fetchItems = async () => {
@@ -56,7 +58,8 @@ export default function Deposits() {
       alert("Please select a shop.");
       return;
     }
-    try {
+    await runDepositCreation(async () => {
+      try {
       const res = await api.post("/deposits", formData);
       // The backend now handles the initial payment recording automatically if amount is in formData
       setLastReceipt(res.data.receipt_uuid || null); 
@@ -69,9 +72,10 @@ export default function Deposits() {
         amount: "",
         shop_id: user?.shop_id || "",
       });
-    } catch (err) {
-      alert(`Error: ${err.response?.data?.msg || err.message}`);
-    }
+      } catch (err) {
+        alert(`Error: ${err.response?.data?.msg || err.message}`);
+      }
+    });
   };
 
   return (
@@ -187,9 +191,10 @@ export default function Deposits() {
 
               <button
                 type="submit"
+                disabled={isCreatingDeposit}
                 className="w-full bg-blue-600 text-white py-4 rounded-xl font-black text-lg shadow-xl shadow-blue-100 dark:shadow-none hover:bg-blue-700 hover:-translate-y-0.5 transition-all"
               >
-                Confirm & Create Account
+                {isCreatingDeposit ? "Creating Account..." : "Confirm & Create Account"}
               </button>
             </form>
           </div>

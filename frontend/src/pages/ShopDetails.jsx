@@ -7,6 +7,7 @@ import { SearchContext } from '../context/SearchContext';
 import { Store, Plus, ChevronDown, ChevronUp, AlertTriangle, TrendingUp, History, Package, SearchX, Edit, X, Save, History as HistoryIcon, Clock, CheckCircle } from 'lucide-react';
 import { formatDate, formatPaymentMethod } from '../utils/helpers';
 import SearchableSelect from '../components/SearchableSelect';
+import useSubmissionLock from '../hooks/useSubmissionLock';
 
 export default function ShopDetails() {
   const { shopId } = useParams();
@@ -29,6 +30,7 @@ export default function ShopDetails() {
   const [expandedSection, setExpandedSection] = useState('stock');
   const [expandedStockItems, setExpandedStockItems] = useState([]);
   const [salesSummary, setSalesSummary] = useState(null);
+  const { isSubmitting: isRestocking, run: runRestock } = useSubmissionLock();
 
   const toggleStockItemExpansion = (itemId) => {
     setExpandedStockItems(prev => 
@@ -183,8 +185,9 @@ export default function ShopDetails() {
       return;
     }
 
-    try {
-      await api.post("/stocks/adjust-bulk", {
+    await runRestock(async () => {
+      try {
+        await api.post("/stocks/adjust-bulk", {
         shop_id: shopId,
         items: itemsToRestock.map(item => ({
           item_id: item.itemId,
@@ -199,9 +202,10 @@ export default function ShopDetails() {
       setItemsToRestock([]);
       // Expand the inventory list section so user can see the updated stock
       setExpandedSection('stock');
-    } catch (err) {
-      alert(`Error adding stock: ${err.response?.data?.msg || err.message}`);
-    }
+      } catch (err) {
+        alert(`Error adding stock: ${err.response?.data?.msg || err.message}`);
+      }
+    });
   };
 
   const handleEditStock = (stock) => {
@@ -363,8 +367,8 @@ export default function ShopDetails() {
                   </div>
                 ))}
               </div>
-              <button onClick={handleConfirmRestock} className="mt-6 bg-blue-600 text-white py-4 px-12 rounded-xl font-black shadow-lg shadow-blue-100 dark:shadow-none hover:bg-blue-700 transition-all w-full md:w-auto uppercase tracking-widest">
-                Confirm All & Restock
+              <button onClick={handleConfirmRestock} disabled={isRestocking} className="mt-6 bg-blue-600 text-white py-4 px-12 rounded-xl font-black shadow-lg shadow-blue-100 dark:shadow-none hover:bg-blue-700 transition-all w-full md:w-auto uppercase tracking-widest disabled:opacity-50 disabled:cursor-not-allowed">
+                {isRestocking ? 'Restocking...' : 'Confirm All & Restock'}
               </button>
             </div>
           )}
