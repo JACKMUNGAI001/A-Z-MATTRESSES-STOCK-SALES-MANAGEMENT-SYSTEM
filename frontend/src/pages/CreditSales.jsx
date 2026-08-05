@@ -54,6 +54,16 @@ export default function CreditSales(){
   const paidSales = sales.filter((sale) => sale.status === 'paid')
   const displayedSales = activeSection === 'unpaid' ? unpaidSales : paidSales
 
+  const productSummary = (sale) => {
+    const products = sale.products || sale.items || []
+    if (products.length === 0) return '—'
+    return products.map((product, index) => (
+      <div key={`${product.item_id}-${index}`} className="whitespace-nowrap">
+        {product.item_name || 'N/A'} <span className="text-gray-500">× {product.qty}</span>
+      </div>
+    ))
+  }
+
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
@@ -87,6 +97,7 @@ export default function CreditSales(){
                 <th className="px-4 py-2 text-left">Attendant</th>
                 <th className="px-4 py-2 text-left">Customer</th>
                 <th className="px-4 py-2 text-left">Contact</th>
+                <th className="px-4 py-2 text-left">Product(s)</th>
                 <th className="px-4 py-2 text-right">Total</th>
                 <th className="px-4 py-2 text-right">Paid</th>
                 <th className="px-4 py-2 text-right">Remaining</th>
@@ -102,6 +113,7 @@ export default function CreditSales(){
                   <td className="px-4 py-3">{c.attendant_name}</td>
                   <td className="px-4 py-3 font-medium">{c.customer_name || '—'}</td>
                   <td className="px-4 py-3">{c.customer_phone || '—'}</td>
+                  <td className="px-4 py-3">{productSummary(c)}</td>
                   <td className="px-4 py-3 text-right">KES {Number(c.total_amount).toLocaleString()}</td>
                   <td className="px-4 py-3 text-right">KES {Number(c.paid_amount).toLocaleString()}</td>
                   <td className="px-4 py-3 text-right font-bold">KES {Number(c.remaining).toLocaleString()}</td>

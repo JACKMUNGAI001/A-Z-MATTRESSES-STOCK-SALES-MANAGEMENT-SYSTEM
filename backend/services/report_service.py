@@ -305,6 +305,28 @@ def get_all_credit_sales(shop_id=None):
         rem = float(s.total_amount or 0) - float(s.paid_amount or 0)
         shop = Shop.query.get(s.shop_id)
         user = User.query.get(s.user_id)
+        # A sale can have more than one SaleItem (and FIFO can split one
+        # product across batches).  Combine those rows so the credit-sales
+        # list has one clear entry per product.
+        products_by_id = {}
+        serialized_items = []
+        for sale_item in s.items:
+            item = Item.query.get(sale_item.item_id)
+            item_name = item.name if item else "N/A"
+            serialized_items.append({
+                "item_id": sale_item.item_id,
+                "item_name": item_name,
+                "qty": sale_item.qty,
+                "unit_price": float(sale_item.unit_price or 0),
+            })
+
+            product = products_by_id.setdefault(sale_item.item_id, {
+                "item_id": sale_item.item_id,
+                "item_name": item_name,
+                "qty": 0,
+            })
+            product["qty"] += int(sale_item.qty or 0)
+
         results.append({
             "id": s.id,
             "shop_id": s.shop_id,
@@ -320,15 +342,10 @@ def get_all_credit_sales(shop_id=None):
             "receipt_uuid": s.receipt_uuid,
             "payment_type": s.payment_type,
             "sale_type": s.sale_type,
-            "items": [
-                {
-                    "item_id": item.item_id,
-                    "item_name": Item.query.get(item.item_id).name if Item.query.get(item.item_id) else "N/A",
-                    "qty": item.qty,
-                    "unit_price": float(item.unit_price or 0),
-                }
-                for item in s.items
-            ],
+            # Keep item rows for the edit modal, and add an aggregated list
+            # for the product column in the credit-sales register.
+            "items": serialized_items,
+            "products": list(products_by_id.values()),
         })
     return results
     
