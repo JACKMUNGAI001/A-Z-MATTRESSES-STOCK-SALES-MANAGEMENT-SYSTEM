@@ -338,7 +338,7 @@ export default function ManagerDashboard(){
                 <div className="flex items-center gap-3">
                   <TrendingUp size={24} className="text-blue-600 dark:text-blue-400" />
                   <div className="text-left">
-                    <h2 className="text-xl font-bold text-gray-800 dark:text-white tracking-tight">Global Inventory Overview</h2>
+                    <h2 className="text-xl font-bold text-gray-800 dark:text-white tracking-tight">Global Product Overview</h2>
                     <p className="text-xs text-gray-500 dark:text-gray-400 font-medium italic">Stock distribution across all shop locations</p>
                   </div>
                 </div>
