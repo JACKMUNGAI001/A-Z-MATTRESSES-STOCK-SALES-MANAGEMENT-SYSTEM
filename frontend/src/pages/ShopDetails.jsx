@@ -306,7 +306,7 @@ export default function ShopDetails() {
         <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 mb-10 transition-colors">
           <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-6 flex items-center gap-2 transition-colors">
             <Plus size={24} className="text-blue-600 dark:text-blue-400" />
-            Replenish Inventory
+            Restock Inventory
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <div>

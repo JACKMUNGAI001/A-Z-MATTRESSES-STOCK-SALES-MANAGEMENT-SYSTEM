@@ -184,10 +184,10 @@ export default function AdminDashboard(){
           <Card title="Gross Profit" className="border-l-4 border-l-green-500">
             {financialOverview ? formatCurrency(financialOverview.gross_profit) : '...'}
           </Card>
-          <Card title="Total Collections" interactive={true} onClick={() => navigate('/admin/all-deposits')}>
+          <Card title="Total Deposits" interactive={true} onClick={() => navigate('/admin/all-deposits')}>
             {financialOverview ? formatCurrency(financialOverview.total_deposit_collections) : '...'}
           </Card>
-          <Card title="Total Outstanding" interactive={true} onClick={() => navigate('/admin/outstanding-deposits')}>
+          <Card title="Total Outstanding Deposits" interactive={true} onClick={() => navigate('/admin/outstanding-deposits')}>
             {financialOverview ? financialOverview.customers_with_balances : '...'}
           </Card>
           <Card title="Credit Sales" interactive={true} onClick={() => navigate('/admin/credit-sales')} className="group">
