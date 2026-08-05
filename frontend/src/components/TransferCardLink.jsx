@@ -1,15 +1,11 @@
-import React, { useContext } from 'react'
+import React from 'react'
 import { Link } from 'react-router-dom'
-import { AuthContext } from '../context/AuthContext'
 import { ArrowLeftRight } from 'lucide-react'
 
 export default function TransferCardLink(){
-  const { user } = useContext(AuthContext)
-  const href = user?.role === 'attendant' ? '/attendant/transfers' : '/transfers'
-
   return (
     <div className="mt-10">
-      <Link to={href} className="no-underline group">
+      <Link to="/transfers/history" className="no-underline group">
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden transition-colors hover:bg-gray-50 dark:hover:bg-gray-900/50">
           <div className="w-full flex justify-between items-center p-6">
             <div className="flex items-center gap-3">
