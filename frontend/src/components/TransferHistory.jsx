@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import api from '../api/api';
-import { ArrowLeftRight, Clock, Box, Store, SearchX, User, ChevronDown, ChevronUp, Edit2, Trash2 } from 'lucide-react';
+import { ArrowLeftRight, Clock, SearchX, User, Edit2, Trash2 } from 'lucide-react';
 import { formatDate } from '../utils/helpers';
 import { SearchContext } from '../context/SearchContext';
 import EditTransferModal from './EditTransferModal';
@@ -9,7 +9,6 @@ export default function TransferHistory() {
   const [transfers, setTransfers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [isExpanded, setIsExpanded] = useState(false);
   const [editingTransfer, setEditingTransfer] = useState(null);
   const { searchQuery } = useContext(SearchContext);
 
@@ -26,10 +25,8 @@ export default function TransferHistory() {
   };
 
   useEffect(() => {
-    if (isExpanded) {
-        fetchTransfers();
-    }
-  }, [searchQuery, isExpanded]);
+    fetchTransfers();
+  }, []);
 
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this transfer? This will revert all stock movements.")) return;
@@ -53,13 +50,7 @@ export default function TransferHistory() {
   return (
     <div className="mt-10">
       <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden transition-colors">
-        {/* COLLAPSIBLE HEADER */}
-        <button 
-          onClick={() => setIsExpanded(!isExpanded)}
-          className={`w-full flex justify-between items-center p-6 transition-all ${
-            isExpanded ? 'bg-blue-50 dark:bg-blue-900/20 border-b border-gray-100 dark:border-gray-700' : 'hover:bg-gray-50 dark:hover:bg-gray-900/50'
-          }`}
-        >
+        <div className="w-full flex justify-between items-center p-6 bg-blue-50 dark:bg-blue-900/20 border-b border-gray-100 dark:border-gray-700">
           <div className="flex items-center gap-3">
             <ArrowLeftRight size={20} className="sm:w-6 sm:h-6 text-blue-600 dark:text-blue-400" />
             <div className="text-left">
@@ -67,20 +58,15 @@ export default function TransferHistory() {
               <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 font-medium">Record of all inventory relocations</p>
             </div>
           </div>
-          <div className="flex items-center gap-4">
-            {!isExpanded && transfers.length > 0 && (
-              <span className="bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-400 px-3 py-1 rounded-full text-xs font-black uppercase tracking-widest transition-all">
-                {filteredTransfers.length} Records
-              </span>
-            )}
-            {isExpanded ? <ChevronUp className="text-gray-400" /> : <ChevronDown className="text-gray-400" />}
-          </div>
-        </button>
+          {!loading && !error && (
+            <span className="bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-400 px-3 py-1 rounded-full text-xs font-black uppercase tracking-widest">
+              {filteredTransfers.length} Records
+            </span>
+          )}
+        </div>
 
-        {/* EXPANDABLE CONTENT */}
-        {isExpanded && (
-          <div className="animate-in slide-in-from-top-2 duration-300">
-            {loading ? (
+        <div>
+          {loading ? (
               <div className="p-10 text-center text-gray-400 font-bold uppercase tracking-widest animate-pulse">
                 Loading transfers...
               </div>
@@ -176,9 +162,8 @@ export default function TransferHistory() {
                   </tbody>
                 </table>
               </div>
-            )}
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {editingTransfer && (
