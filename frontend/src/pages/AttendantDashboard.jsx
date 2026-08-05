@@ -4,7 +4,7 @@ import Card from '../components/Card'
 import { AuthContext } from '../context/AuthContext'
 import { SearchContext } from '../context/SearchContext'
 import api from '../api/api'
-import { Store, Package, TrendingUp, Users, Wallet, SearchX, ChevronDown, ChevronUp, CreditCard } from 'lucide-react'
+import { Store, Package, TrendingUp, Users, Wallet, SearchX, CreditCard } from 'lucide-react'
 import TransferCardLink from '../components/TransferCardLink'
 
 export default function AttendantDashboard(){
@@ -17,7 +17,6 @@ export default function AttendantDashboard(){
   const [lowStockCount, setLowStockCount] = useState(0);
   const [depositCustomersCount, setDepositCustomersCount] = useState(0);
   const [stockSummary, setStockSummary] = useState(null);
-  const [isStockSummaryOpen, setIsStockSummaryOpen] = useState(false);
 
   useEffect(() => {
     if (user?.shop_id) {
@@ -164,20 +163,11 @@ export default function AttendantDashboard(){
 
         {/* STOCK SUMMARY BY CATEGORY */}
         <div className="mb-10">
-          <div 
-            className="flex items-center justify-between mb-4 cursor-pointer"
-            onClick={() => setIsStockSummaryOpen(!isStockSummaryOpen)}
-          >
-            <h3 className="text-xl font-bold text-gray-800 dark:text-white tracking-tight border-l-4 border-l-green-600 pl-3 text-sm uppercase tracking-widest text-gray-400 dark:text-gray-500 transition-colors">
-              Stock Summary by Category
-            </h3>
-            <button className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
-              {isStockSummaryOpen ? <ChevronUp size={20} className="text-gray-500" /> : <ChevronDown size={20} className="text-gray-500" />}
-            </button>
-          </div>
+          <h3 className="text-xl font-bold text-gray-800 dark:text-white tracking-tight border-l-4 border-l-green-600 pl-3 text-sm uppercase tracking-widest text-gray-400 dark:text-gray-500 transition-colors mb-4">
+            Stock Summary by Category
+          </h3>
 
-          {isStockSummaryOpen && (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-in fade-in duration-300">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {stockSummary && Object.entries(stockSummary).map(([shopName, categories]) => (
                 <div key={shopName} className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-green-100 dark:border-gray-700 bg-gradient-to-br from-white to-green-50/30 dark:from-gray-800 dark:to-green-900/10 transition-all">
                   <div className="space-y-3">
@@ -190,8 +180,7 @@ export default function AttendantDashboard(){
                   </div>
                 </div>
               ))}
-            </div>
-          )}
+          </div>
         </div>
 
         {/* TRANSFER HISTORY */}
