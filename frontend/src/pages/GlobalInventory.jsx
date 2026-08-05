@@ -21,9 +21,9 @@ export default function GlobalInventory(){
         await Promise.all(shopsData.map(async (s) => {
           try {
             const res = await api.get(`/stocks/${s.id}`)
-            // attach shop name to each item
-            (res.data || []).forEach(item => item.shop_name = s.name)
-            allStocks.push(...(res.data || []))
+            // Match stock to its shop by ID, not its display name. Shop names can
+            // be edited or formatted differently, while IDs remain stable.
+            allStocks.push(...(res.data || []).map(item => ({ ...item, shop_id: s.id })))
           } catch (err) {
             console.warn('Failed to fetch stocks for shop', s.id, err)
           }
@@ -40,7 +40,7 @@ export default function GlobalInventory(){
     fetchData()
   }, [])
 
-  const filteredStockForShop = (shopName) => globalStock.filter(s => s.shop_name === shopName)
+  const filteredStockForShop = (shopId) => globalStock.filter(stock => String(stock.shop_id) === String(shopId))
 
   return (
     <div className="p-6">
@@ -58,7 +58,7 @@ export default function GlobalInventory(){
       ) : (
         <div className="flex flex-col gap-6">
           {shops.map((shop) => {
-            const shopStock = filteredStockForShop(shop.name)
+            const shopStock = filteredStockForShop(shop.id)
             return (
               <div key={shop.id} className="w-full bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm overflow-hidden flex flex-col group hover:border-blue-200 dark:hover:border-blue-900/50 transition-all">
                 <div className="p-4 bg-gray-50/50 dark:bg-gray-900/50 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center group-hover:bg-blue-50/30 dark:group-hover:bg-blue-900/10 transition-colors">
