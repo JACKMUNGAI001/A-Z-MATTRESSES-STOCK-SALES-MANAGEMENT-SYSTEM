@@ -330,7 +330,7 @@ export default function ShopDetails() {
               <label className="block text-sm font-bold text-gray-700 dark:text-gray-400 uppercase mb-1 px-1 transition-colors">Quantity</label>
               <input name="quantity" type="number" className="w-full p-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-blue-600 dark:text-blue-400 focus:ring-2 focus:ring-blue-500 outline-none font-bold transition-all" value={stockFormData.quantity} onChange={handleStockInputChange} min="0" placeholder="0" />
             </div>
-            {user?.role === 'admin' && (
+            {(user?.role === 'admin' || user?.role === 'manager') && (
               <div>
                 <label className="block text-sm font-bold text-gray-700 dark:text-gray-400 uppercase mb-1 px-1 transition-colors">Buy Price (Optional)</label>
                 <input name="buyPrice" type="number" className="w-full p-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all" value={stockFormData.buyPrice} onChange={handleStockInputChange} placeholder="Enter price" />
@@ -338,7 +338,7 @@ export default function ShopDetails() {
             )}
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-4">
-            {user?.role === 'admin' && (
+            {(user?.role === 'admin' || user?.role === 'manager') && (
               <div>
                 <label className="block text-sm font-bold text-gray-700 dark:text-gray-400 uppercase mb-1 px-1 transition-colors">Pricing Basis</label>
                 <select
