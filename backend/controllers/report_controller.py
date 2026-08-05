@@ -29,6 +29,8 @@ def dashboard_summary_controller():
     return jsonify(summary), 200
 
 def pnl_report_controller():
+    if get_jwt_identity().get("role") != "admin":
+        return jsonify({"msg": "Profit and margin reports are available to administrators only"}), 403
     year = request.args.get('year', type=int, default=get_local_time().year)
     month = request.args.get('month', type=int) # Now optional for yearly report
     shop_id = request.args.get('shop_id', type=int) # Optional for global report

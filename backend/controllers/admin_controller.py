@@ -50,3 +50,28 @@ def delete_attendant_controller(user_id, identity):
     db.session.delete(attendant)
     db.session.commit()
     return jsonify({"msg": "Attendant deleted"}), 200
+
+def list_managers_controller(identity):
+    if identity.get("role") != "admin":
+        return jsonify({"msg": "admin only"}), 403
+    managers = User.query.filter_by(role="manager").order_by(User.name.asc()).all()
+    return jsonify([{
+        "id": manager.id,
+        "name": manager.name,
+        "email": manager.email,
+        "can_restock_gas": bool(manager.can_restock_gas),
+    } for manager in managers]), 200
+
+def set_manager_gas_restock_permission(user_id, data, identity):
+    if identity.get("role") != "admin":
+        return jsonify({"msg": "admin only"}), 403
+    manager = User.query.filter_by(id=user_id, role="manager").first()
+    if not manager:
+        return jsonify({"msg": "Manager not found"}), 404
+    manager.can_restock_gas = bool(data.get("can_restock_gas", False))
+    db.session.commit()
+    return jsonify({"msg": "Gas restock permission updated", "can_restock_gas": manager.can_restock_gas}), 200
+
+def my_gas_restock_permission(identity):
+    user = User.query.get(identity.get("id"))
+    return jsonify({"can_restock_gas": bool(user and user.role == "manager" and user.can_restock_gas)}), 200

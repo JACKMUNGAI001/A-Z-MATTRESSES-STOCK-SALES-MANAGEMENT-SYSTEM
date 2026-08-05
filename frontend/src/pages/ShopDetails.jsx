@@ -30,7 +30,9 @@ export default function ShopDetails() {
   const [expandedSection, setExpandedSection] = useState('stock');
   const [expandedStockItems, setExpandedStockItems] = useState([]);
   const [salesSummary, setSalesSummary] = useState(null);
+  const [canRestockGas, setCanRestockGas] = useState(false);
   const { isSubmitting: isRestocking, run: runRestock } = useSubmissionLock();
+  const canRestock = user?.role === 'admin' || (user?.role === 'manager' && canRestockGas);
 
   const toggleStockItemExpansion = (itemId) => {
     setExpandedStockItems(prev => 
@@ -54,13 +56,22 @@ export default function ShopDetails() {
     fetchShopSummaries();
   }, [shopId]);
 
+  useEffect(() => {
+    if (user?.role !== 'manager') return;
+    api.get('/admin/my-gas-restock-permission')
+      .then(response => setCanRestockGas(response.data.can_restock_gas))
+      .catch(() => setCanRestockGas(false));
+  }, [user?.role]);
+
   const fetchShopSummaries = async () => {
     try {
       // Fetch sales summary for the shop
       const salesRes = await api.get(`/reports/sales-summary?shop_id=${shopId}`);
       setSalesSummary(salesRes.data);
 
-      // Fetch PNL for different periods
+      if (user?.role !== 'admin') return;
+
+      // Fetch PNL for different periods (administrator only)
       const [todayPnl, weekPnl, monthPnl, yearPnl] = await Promise.all([
         api.get(`/reports/pnl?shop_id=${shopId}&period=today`),
         api.get(`/reports/pnl?shop_id=${shopId}&period=this_week`),
@@ -145,6 +156,10 @@ export default function ShopDetails() {
     }
     
     const selectedItem = availableItems.find(i => i.id === parseInt(stockFormData.itemId));
+    if (user?.role === 'manager' && !isGasLikeItem(selectedItem)) {
+      alert('Managers can restock gas products only.');
+      return;
+    }
     const quantity = parseInt(stockFormData.quantity);
     const buyPrice = stockFormData.buyPrice ? parseFloat(stockFormData.buyPrice) : null;
     const priceUnit = stockFormData.priceUnit || "unit";
@@ -291,6 +306,7 @@ export default function ShopDetails() {
         </div>
 
         {/* ADD STOCK FORM */}
+        {canRestock ? (
         <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 mb-10 transition-colors">
           <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-6 flex items-center gap-2 transition-colors">
             <Plus size={24} className="text-blue-600 dark:text-blue-400" />
@@ -300,7 +316,7 @@ export default function ShopDetails() {
             <div>
               <label className="block text-sm font-bold text-gray-700 dark:text-gray-400 uppercase mb-1 px-1 transition-colors">Product</label>
               <SearchableSelect
-                options={availableItems}
+                options={user?.role === 'manager' ? availableItems.filter(isGasLikeItem) : availableItems}
                 value={stockFormData.itemId}
                 onChange={(e) => {
                   const id = e.target.value;
@@ -373,6 +389,11 @@ export default function ShopDetails() {
             </div>
           )}
         </div>
+        ) : user?.role === 'manager' ? (
+          <div className="bg-amber-50 dark:bg-amber-900/20 p-6 rounded-2xl border border-amber-200 dark:border-amber-800 mb-10 text-amber-800 dark:text-amber-200">
+            Gas restocking is currently disabled. Ask an administrator to enable your permission from the Admin Dashboard.
+          </div>
+        ) : null}
 
         {/* SHOP SUMMARIES */}
         <div className="mb-10">
@@ -383,7 +404,7 @@ export default function ShopDetails() {
               <Card title="Today's Sales" className="border-l-4 border-l-blue-500 !p-5">
                 <span className="text-xl font-black">{salesSummary ? formatCurrency(salesSummary.today) : '...'}</span>
               </Card>
-              <Card title="Today's Gross Profit" className={`border-l-4 !p-5 border-l-green-500`}>
+              {user?.role === 'admin' && <Card title="Today's Gross Profit" className={`border-l-4 !p-5 border-l-green-500`}>
                 <div className="flex flex-col">
                   <span className="text-xl font-black text-green-600 dark:text-green-400">
                     {pnlSummary.today ? formatCurrency(pnlSummary.today.gross_profit) : '...'}
@@ -394,7 +415,7 @@ export default function ShopDetails() {
                     </span>
                   )}
                 </div>
-              </Card>
+              </Card>}
             </div>
 
             {/* Week */}
@@ -402,7 +423,7 @@ export default function ShopDetails() {
               <Card title="This Week's Sales" className="border-l-4 border-l-blue-500 !p-5">
                 <span className="text-xl font-black">{salesSummary ? formatCurrency(salesSummary.week) : '...'}</span>
               </Card>
-              <Card title="This Week's Gross Profit" className={`border-l-4 !p-5 border-l-green-500`}>
+              {user?.role === 'admin' && <Card title="This Week's Gross Profit" className={`border-l-4 !p-5 border-l-green-500`}>
                 <div className="flex flex-col">
                   <span className="text-xl font-black text-green-600 dark:text-green-400">
                     {pnlSummary.week ? formatCurrency(pnlSummary.week.gross_profit) : '...'}
@@ -413,7 +434,7 @@ export default function ShopDetails() {
                     </span>
                   )}
                 </div>
-              </Card>
+              </Card>}
             </div>
 
             {/* Month */}
@@ -421,7 +442,7 @@ export default function ShopDetails() {
               <Card title="This Month's Sales" className="border-l-4 border-l-blue-500 !p-5">
                 <span className="text-xl font-black">{salesSummary ? formatCurrency(salesSummary.month) : '...'}</span>
               </Card>
-              <Card title="This Month's Gross Profit" className={`border-l-4 !p-5 border-l-green-500`}>
+              {user?.role === 'admin' && <Card title="This Month's Gross Profit" className={`border-l-4 !p-5 border-l-green-500`}>
                 <div className="flex flex-col">
                   <span className="text-xl font-black text-green-600 dark:text-green-400">
                     {pnlSummary.month ? formatCurrency(pnlSummary.month.gross_profit) : '...'}
@@ -432,7 +453,7 @@ export default function ShopDetails() {
                     </span>
                   )}
                 </div>
-              </Card>
+              </Card>}
             </div>
 
             {/* Year */}
@@ -440,7 +461,7 @@ export default function ShopDetails() {
               <Card title="This Year's Sales" className="border-l-4 border-l-blue-500 !p-5">
                 <span className="text-xl font-black">{salesSummary ? formatCurrency(salesSummary.year) : '...'}</span>
               </Card>
-              <Card title="This Year's Gross Profit" className={`border-l-4 !p-5 border-l-green-500`}>
+              {user?.role === 'admin' && <Card title="This Year's Gross Profit" className={`border-l-4 !p-5 border-l-green-500`}>
                 <div className="flex flex-col">
                   <span className="text-xl font-black text-green-600 dark:text-green-400">
                     {pnlSummary.year ? formatCurrency(pnlSummary.year.gross_profit) : '...'}
@@ -451,7 +472,7 @@ export default function ShopDetails() {
                     </span>
                   )}
                 </div>
-              </Card>
+              </Card>}
             </div>
           </div>
         </div>

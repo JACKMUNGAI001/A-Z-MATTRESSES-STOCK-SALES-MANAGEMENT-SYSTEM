@@ -11,6 +11,7 @@ export default function AdminDashboard(){
   const [shops, setShops] = useState([])
   const [pendingAttendants, setPendingAttendants] = useState([])
   const [allAttendants, setAllAttendants] = useState([])
+  const [managers, setManagers] = useState([])
   const [salesSummary, setSalesSummary] = useState(null)
   const [depositsSummary, setDepositsSummary] = useState(null)
   const [financialOverview, setFinancialOverview] = useState(null)
@@ -22,6 +23,7 @@ export default function AdminDashboard(){
     api.get('/shops').then(res=>setShops(res.data)).catch(()=>{})
     fetchPendingAttendants()
     fetchAllAttendants()
+    fetchManagers()
     
     // Unified dashboard summary call
     api.get('/reports/dashboard-summary').then(res => {
@@ -49,6 +51,28 @@ export default function AdminDashboard(){
       setAllAttendants(res.data)
     } catch (err) {
       console.error('Error fetching all attendants')
+    }
+  }
+
+  const fetchManagers = async () => {
+    try {
+      const response = await api.get('/admin/managers')
+      setManagers(response.data)
+    } catch (err) {
+      console.error('Error fetching managers', err)
+    }
+  }
+
+  const handleGasRestockPermission = async (manager) => {
+    try {
+      await api.patch(`/admin/managers/${manager.id}/gas-restock-permission`, {
+        can_restock_gas: !manager.can_restock_gas,
+      })
+      setManagers(current => current.map(item => (
+        item.id === manager.id ? { ...item, can_restock_gas: !item.can_restock_gas } : item
+      )))
+    } catch (err) {
+      alert(`Error updating permission: ${err.response?.data?.msg || err.message}`)
     }
   }
   
@@ -236,6 +260,39 @@ export default function AdminDashboard(){
 
         {/* TRANSFER HISTORY */}
         <TransferCardLink />
+
+        <div className="mt-10">
+          <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4 tracking-tight border-l-4 border-l-amber-500 pl-3 text-sm uppercase tracking-widest text-gray-400 dark:text-gray-500">
+            Manager Gas Restock Permission
+          </h3>
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+            {managers.length === 0 ? (
+              <div className="p-6 text-center text-gray-400 dark:text-gray-500 italic">No managers registered.</div>
+            ) : (
+              <div className="divide-y divide-gray-50 dark:divide-gray-700">
+                {managers.map(manager => (
+                  <div key={manager.id} className="p-5 flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between">
+                    <div>
+                      <p className="font-bold text-gray-900 dark:text-white">{manager.name}</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">{manager.email} · Gas products only</p>
+                    </div>
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={manager.can_restock_gas}
+                      onClick={() => handleGasRestockPermission(manager)}
+                      className={`relative w-14 h-8 rounded-full transition-colors ${manager.can_restock_gas ? 'bg-green-600' : 'bg-gray-300 dark:bg-gray-600'}`}
+                      title={manager.can_restock_gas ? 'Disable gas restocking' : 'Enable gas restocking'}
+                    >
+                      <span className={`absolute top-1 w-6 h-6 rounded-full bg-white shadow transition-transform ${manager.can_restock_gas ? 'translate-x-7' : 'translate-x-1'}`} />
+                      <span className="sr-only">{manager.can_restock_gas ? 'Disable' : 'Enable'} gas restocking for {manager.name}</span>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 pb-20 mt-10">
           {/* PENDING ATTENDANTS */}
