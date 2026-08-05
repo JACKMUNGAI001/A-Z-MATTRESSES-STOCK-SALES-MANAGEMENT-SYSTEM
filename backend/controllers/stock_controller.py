@@ -6,19 +6,14 @@ from services.stock_service import (
 )
 from models.stock import ShopStock
 from models.user import User
-from models.product import Item, Category
+from models.product import Item
 from extensions import db
 from flask_jwt_extended import get_jwt_identity
 from utils.auth_utils import get_shop_id_for_attendant
 
-def is_gas_item(item):
-    category = Category.query.get(item.category_id) if item and item.category_id else None
-    text = f"{item.name if item else ''} {category.name if category else ''}".lower()
-    return "gas" in text or "kg" in text
-
-def manager_can_restock_gas(identity):
+def manager_can_restock(identity):
     user = User.query.get(identity.get("id"))
-    return bool(user and user.role == "manager" and user.can_restock_gas)
+    return bool(user and user.role == "manager" and user.can_restock)
 
 def get_shop_stock(shop_id):
     # Show all stock records for the shop, including those with quantity 0
@@ -94,11 +89,8 @@ def adjust_stock_bulk_controller(identity):
     if not items:
         return jsonify({"msg": "No items provided"}), 400
     if identity.get("role") != "admin":
-        if not manager_can_restock_gas(identity):
-            return jsonify({"msg": "Your gas-restock permission is currently disabled"}), 403
-        non_gas_item = next((item for item in items if not is_gas_item(Item.query.get(item.get("item_id")))), None)
-        if non_gas_item:
-            return jsonify({"msg": "Managers can restock gas products only"}), 403
+        if not manager_can_restock(identity):
+            return jsonify({"msg": "Your restock permission is currently disabled"}), 403
         
     adjust_stock_bulk(shop_id, items, user_id=user_id)
     return jsonify({"msg": "Bulk stock adjustment successful"}), 200

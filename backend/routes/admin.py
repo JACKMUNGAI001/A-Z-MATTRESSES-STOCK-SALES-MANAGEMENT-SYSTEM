@@ -1,5 +1,5 @@
 from flask import Blueprint, request
-from controllers.admin_controller import pending_attendants, verify_attendant, list_all_attendants_controller, delete_attendant_controller, list_managers_controller, set_manager_gas_restock_permission, my_gas_restock_permission
+from controllers.admin_controller import pending_attendants, verify_attendant, list_all_attendants_controller, delete_attendant_controller, list_managers_controller, set_manager_restock_permission, my_restock_permission
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
 bp = Blueprint("admin", __name__)
@@ -36,12 +36,12 @@ def delete_attendant(user_id):
 def managers():
     return list_managers_controller(get_jwt_identity())
 
-@bp.route("/managers/<int:user_id>/gas-restock-permission", methods=["PATCH"])
+@bp.route("/managers/<int:user_id>/restock-permission", methods=["PATCH"])
 @jwt_required()
-def update_manager_gas_restock_permission(user_id):
-    return set_manager_gas_restock_permission(user_id, request.get_json() or {}, get_jwt_identity())
+def update_manager_restock_permission(user_id):
+    return set_manager_restock_permission(user_id, request.get_json() or {}, get_jwt_identity())
 
-@bp.route("/my-gas-restock-permission", methods=["GET"])
+@bp.route("/my-restock-permission", methods=["GET"])
 @jwt_required()
-def get_my_gas_restock_permission():
-    return my_gas_restock_permission(get_jwt_identity())
+def get_my_restock_permission():
+    return my_restock_permission(get_jwt_identity())

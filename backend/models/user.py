@@ -11,7 +11,7 @@ class User(db.Model):
     password_hash = db.Column(db.String(255), nullable=False)
     role = db.Column(db.String(50), default="attendant")  # admin | manager | attendant
     is_verified = db.Column(db.Boolean, default=False)
-    can_restock_gas = db.Column(db.Boolean, default=False, nullable=False)
+    can_restock = db.Column(db.Boolean, default=False, nullable=False)
     shop_id = db.Column(db.Integer, db.ForeignKey("shops.id"), nullable=True)
     created_at = db.Column(db.DateTime, default=get_local_time)
 

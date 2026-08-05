@@ -59,19 +59,19 @@ def list_managers_controller(identity):
         "id": manager.id,
         "name": manager.name,
         "email": manager.email,
-        "can_restock_gas": bool(manager.can_restock_gas),
+        "can_restock": bool(manager.can_restock),
     } for manager in managers]), 200
 
-def set_manager_gas_restock_permission(user_id, data, identity):
+def set_manager_restock_permission(user_id, data, identity):
     if identity.get("role") != "admin":
         return jsonify({"msg": "admin only"}), 403
     manager = User.query.filter_by(id=user_id, role="manager").first()
     if not manager:
         return jsonify({"msg": "Manager not found"}), 404
-    manager.can_restock_gas = bool(data.get("can_restock_gas", False))
+    manager.can_restock = bool(data.get("can_restock", False))
     db.session.commit()
-    return jsonify({"msg": "Gas restock permission updated", "can_restock_gas": manager.can_restock_gas}), 200
+    return jsonify({"msg": "Restock permission updated", "can_restock": manager.can_restock}), 200
 
-def my_gas_restock_permission(identity):
+def my_restock_permission(identity):
     user = User.query.get(identity.get("id"))
-    return jsonify({"can_restock_gas": bool(user and user.role == "manager" and user.can_restock_gas)}), 200
+    return jsonify({"can_restock": bool(user and user.role == "manager" and user.can_restock)}), 200

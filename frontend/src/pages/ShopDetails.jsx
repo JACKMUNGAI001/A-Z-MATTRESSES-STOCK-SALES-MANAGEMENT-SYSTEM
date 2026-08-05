@@ -30,9 +30,9 @@ export default function ShopDetails() {
   const [expandedSection, setExpandedSection] = useState('stock');
   const [expandedStockItems, setExpandedStockItems] = useState([]);
   const [salesSummary, setSalesSummary] = useState(null);
-  const [canRestockGas, setCanRestockGas] = useState(false);
+  const [canRestock, setCanRestock] = useState(false);
   const { isSubmitting: isRestocking, run: runRestock } = useSubmissionLock();
-  const canRestock = user?.role === 'admin' || (user?.role === 'manager' && canRestockGas);
+  const canManageRestock = user?.role === 'admin' || (user?.role === 'manager' && canRestock);
 
   const toggleStockItemExpansion = (itemId) => {
     setExpandedStockItems(prev => 
@@ -58,9 +58,9 @@ export default function ShopDetails() {
 
   useEffect(() => {
     if (user?.role !== 'manager') return;
-    api.get('/admin/my-gas-restock-permission')
-      .then(response => setCanRestockGas(response.data.can_restock_gas))
-      .catch(() => setCanRestockGas(false));
+    api.get('/admin/my-restock-permission')
+      .then(response => setCanRestock(response.data.can_restock))
+      .catch(() => setCanRestock(false));
   }, [user?.role]);
 
   const fetchShopSummaries = async () => {
@@ -156,10 +156,6 @@ export default function ShopDetails() {
     }
     
     const selectedItem = availableItems.find(i => i.id === parseInt(stockFormData.itemId));
-    if (user?.role === 'manager' && !isGasLikeItem(selectedItem)) {
-      alert('Managers can restock gas products only.');
-      return;
-    }
     const quantity = parseInt(stockFormData.quantity);
     const buyPrice = stockFormData.buyPrice ? parseFloat(stockFormData.buyPrice) : null;
     const priceUnit = stockFormData.priceUnit || "unit";
@@ -306,7 +302,7 @@ export default function ShopDetails() {
         </div>
 
         {/* ADD STOCK FORM */}
-        {canRestock ? (
+        {canManageRestock ? (
         <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 mb-10 transition-colors">
           <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-6 flex items-center gap-2 transition-colors">
             <Plus size={24} className="text-blue-600 dark:text-blue-400" />
@@ -316,7 +312,7 @@ export default function ShopDetails() {
             <div>
               <label className="block text-sm font-bold text-gray-700 dark:text-gray-400 uppercase mb-1 px-1 transition-colors">Product</label>
               <SearchableSelect
-                options={user?.role === 'manager' ? availableItems.filter(isGasLikeItem) : availableItems}
+                options={availableItems}
                 value={stockFormData.itemId}
                 onChange={(e) => {
                   const id = e.target.value;
@@ -391,7 +387,7 @@ export default function ShopDetails() {
         </div>
         ) : user?.role === 'manager' ? (
           <div className="bg-amber-50 dark:bg-amber-900/20 p-6 rounded-2xl border border-amber-200 dark:border-amber-800 mb-10 text-amber-800 dark:text-amber-200">
-            Gas restocking is currently disabled. Ask an administrator to enable your permission from the Admin Dashboard.
+            Restocking is currently disabled. Ask an administrator to enable your permission from the Admin Dashboard.
           </div>
         ) : null}
 
