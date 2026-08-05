@@ -41,6 +41,12 @@ def managers():
 def update_manager_restock_permission(user_id):
     return set_manager_restock_permission(user_id, request.get_json() or {}, get_jwt_identity())
 
+@bp.route("/managers/<int:user_id>/gas-restock-permission", methods=["PATCH"])
+@jwt_required()
+def update_manager_gas_restock_permission_legacy(user_id):
+    """Compatibility route for dashboard builds cached before the rename."""
+    return set_manager_restock_permission(user_id, request.get_json() or {}, get_jwt_identity())
+
 @bp.route("/my-restock-permission", methods=["GET"])
 @jwt_required()
 def get_my_restock_permission():

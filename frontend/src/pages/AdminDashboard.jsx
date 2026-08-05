@@ -12,6 +12,7 @@ export default function AdminDashboard(){
   const [pendingAttendants, setPendingAttendants] = useState([])
   const [allAttendants, setAllAttendants] = useState([])
   const [managers, setManagers] = useState([])
+  const [updatingManagerId, setUpdatingManagerId] = useState(null)
   const [salesSummary, setSalesSummary] = useState(null)
   const [depositsSummary, setDepositsSummary] = useState(null)
   const [financialOverview, setFinancialOverview] = useState(null)
@@ -64,6 +65,8 @@ export default function AdminDashboard(){
   }
 
   const handleRestockPermission = async (manager) => {
+    if (updatingManagerId !== null) return
+    setUpdatingManagerId(manager.id)
     try {
       await api.patch(`/admin/managers/${manager.id}/restock-permission`, {
         can_restock: !manager.can_restock,
@@ -73,6 +76,8 @@ export default function AdminDashboard(){
       )))
     } catch (err) {
       alert(`Error updating permission: ${err.response?.data?.msg || err.message}`)
+    } finally {
+      setUpdatingManagerId(null)
     }
   }
   
@@ -276,17 +281,25 @@ export default function AdminDashboard(){
                       <p className="font-bold text-gray-900 dark:text-white">{manager.name}</p>
                       <p className="text-sm text-gray-500 dark:text-gray-400">{manager.email} · All products</p>
                     </div>
-                    <button
-                      type="button"
-                      role="switch"
-                      aria-checked={manager.can_restock}
-                      onClick={() => handleRestockPermission(manager)}
-                      className={`relative w-14 h-8 rounded-full transition-colors ${manager.can_restock ? 'bg-green-600' : 'bg-gray-300 dark:bg-gray-600'}`}
-                      title={manager.can_restock ? 'Disable restocking' : 'Enable restocking'}
-                    >
-                      <span className={`absolute top-1 w-6 h-6 rounded-full bg-white shadow transition-transform ${manager.can_restock ? 'translate-x-7' : 'translate-x-1'}`} />
-                      <span className="sr-only">{manager.can_restock ? 'Disable' : 'Enable'} restocking for {manager.name}</span>
-                    </button>
+                    <div className="flex items-center gap-3 self-end sm:self-auto">
+                      <span className={`text-xs font-black uppercase tracking-wider px-3 py-1.5 rounded-full transition-colors ${manager.can_restock ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400'}`}>
+                        {manager.can_restock ? 'Enabled' : 'Disabled'}
+                      </span>
+                      <button
+                        type="button"
+                        role="switch"
+                        aria-checked={manager.can_restock}
+                        disabled={updatingManagerId !== null}
+                        onClick={() => handleRestockPermission(manager)}
+                        className={`relative w-[62px] h-9 rounded-full p-1 shadow-inner transition-all duration-300 ease-out focus:outline-none focus:ring-4 focus:ring-blue-500/30 disabled:cursor-wait disabled:opacity-60 ${manager.can_restock ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500'}`}
+                        title={manager.can_restock ? 'Disable restocking' : 'Enable restocking'}
+                      >
+                        <span className={`flex h-7 w-7 items-center justify-center rounded-full bg-white shadow-md transition-transform duration-300 ease-out ${manager.can_restock ? 'translate-x-[26px]' : 'translate-x-0'}`}>
+                          <span className={`h-2 w-2 rounded-full ${manager.can_restock ? 'bg-green-500' : 'bg-gray-400'}`} />
+                        </span>
+                        <span className="sr-only">{manager.can_restock ? 'Disable' : 'Enable'} restocking for {manager.name}</span>
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>

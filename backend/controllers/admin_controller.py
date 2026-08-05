@@ -68,7 +68,9 @@ def set_manager_restock_permission(user_id, data, identity):
     manager = User.query.filter_by(id=user_id, role="manager").first()
     if not manager:
         return jsonify({"msg": "Manager not found"}), 404
-    manager.can_restock = bool(data.get("can_restock", False))
+    # Accept the former key during rolling deployments, when an older browser
+    # build may still be using the gas-only permission endpoint.
+    manager.can_restock = bool(data.get("can_restock", data.get("can_restock_gas", False)))
     db.session.commit()
     return jsonify({"msg": "Restock permission updated", "can_restock": manager.can_restock}), 200
 
