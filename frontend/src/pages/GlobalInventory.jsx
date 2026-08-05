@@ -56,11 +56,11 @@ export default function GlobalInventory(){
       ) : shops.length === 0 ? (
         <div className="p-10 text-center text-gray-400">No shops found.</div>
       ) : (
-        <div className="flex flex-row-reverse gap-6 overflow-x-auto pb-4 custom-scrollbar">
+        <div className="flex flex-col gap-6">
           {shops.map((shop) => {
             const shopStock = filteredStockForShop(shop.name)
             return (
-              <div key={shop.id} className="min-w-[320px] flex-1 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm overflow-hidden flex flex-col group hover:border-blue-200 dark:hover:border-blue-900/50 transition-all">
+              <div key={shop.id} className="w-full bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm overflow-hidden flex flex-col group hover:border-blue-200 dark:hover:border-blue-900/50 transition-all">
                 <div className="p-4 bg-gray-50/50 dark:bg-gray-900/50 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center group-hover:bg-blue-50/30 dark:group-hover:bg-blue-900/10 transition-colors">
                    <h4 className="font-bold text-gray-800 dark:text-white flex items-center gap-2 uppercase tracking-tighter">
                      <Store size={16} className="text-blue-600 dark:text-blue-400" />
