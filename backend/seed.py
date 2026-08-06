@@ -1,19 +1,36 @@
-from datetime import datetime
-from decimal import Decimal
+import argparse
+
 from app import create_app
 from extensions import db
 from models.user import User
 from models.shop import Shop
 from models.product import Category, Item
-from models.sale import Sale, SaleItem
-from models.expense import Expense
-from models.supplier import Supplier, SupplierInvoice, SupplierInvoiceItem
-from models.deposit import DepositSale, DepositPayment
 
 app = create_app()
 app.app_context().push()
 
-def run():
+def database_has_initial_data():
+    """Return whether this database has already been set up by a user.
+
+    Seed data is only appropriate for a brand-new database.  In particular,
+    checking for each individual shop and recreating it would undo a shop
+    deletion made through the application.
+    """
+    return any((
+        db.session.query(User.id).first(),
+        db.session.query(Shop.id).first(),
+        db.session.query(Category.id).first(),
+    ))
+
+
+def run(force=False):
+    if database_has_initial_data() and not force:
+        print(
+            "Database already contains data; skipping seed data so existing "
+            "shop and user changes are preserved."
+        )
+        return
+
     # Admin and Manager
     admin = User.query.filter_by(email="pius@a-zmattresses.com").first()
     if not admin:
@@ -63,4 +80,11 @@ def run():
     print("Seeded admin, shops, and categories.")
 
 if __name__ == "__main__":
-    run()
+    parser = argparse.ArgumentParser(description="Bootstrap a new development database.")
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Add any missing default records to an existing database.",
+    )
+    args = parser.parse_args()
+    run(force=args.force)
