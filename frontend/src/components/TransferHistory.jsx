@@ -49,7 +49,7 @@ export default function TransferHistory() {
 
   return (
     <div className="mt-2 min-h-[calc(100dvh-7rem)] sm:mt-10 sm:min-h-0">
-      <div className="min-h-[calc(100dvh-7rem)] overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition-colors dark:border-gray-700 dark:bg-gray-800 sm:min-h-0">
+      <div className="flex min-h-[calc(100dvh-7rem)] flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition-colors dark:border-gray-700 dark:bg-gray-800 sm:block sm:min-h-0">
         <div className="w-full flex justify-between items-center p-6 bg-blue-50 dark:bg-blue-900/20 border-b border-gray-100 dark:border-gray-700">
           <div className="flex items-center gap-3">
             <ArrowLeftRight size={20} className="sm:w-6 sm:h-6 text-blue-600 dark:text-blue-400" />
@@ -65,7 +65,7 @@ export default function TransferHistory() {
           )}
         </div>
 
-        <div>
+        <div className="flex-1 min-h-0 sm:block">
           {loading ? (
               <div className="p-10 text-center text-gray-400 font-bold uppercase tracking-widest animate-pulse">
                 Loading transfers...
@@ -86,7 +86,7 @@ export default function TransferHistory() {
                 )}
               </div>
             ) : (
-              <div className="overflow-x-auto max-h-96 overflow-y-auto custom-scrollbar">
+              <div className="h-full max-h-none overflow-x-auto overflow-y-auto custom-scrollbar sm:h-auto sm:max-h-96">
                 <table className="min-w-[800px] md:min-w-full relative border-collapse">
                   <thead className="bg-gray-50/90 dark:bg-gray-900/90 sticky top-0 z-10 backdrop-blur-sm transition-colors">
                     <tr className="transition-colors">
