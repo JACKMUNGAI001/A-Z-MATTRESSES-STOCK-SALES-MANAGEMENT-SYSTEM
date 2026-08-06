@@ -480,7 +480,7 @@ export default function ShopDetails() {
             <div className="flex items-center gap-3">
               <Package size={28} className="text-purple-600" />
               <div>
-                <h3 className="text-lg font-black">Full Product List</h3>
+                <h3 className="text-lg font-black">Full Stock List</h3>
                 <p className="text-sm text-gray-500">{filteredStock.length} items</p>
               </div>
             </div>

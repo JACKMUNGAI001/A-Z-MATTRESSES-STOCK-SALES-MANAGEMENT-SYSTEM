@@ -66,6 +66,13 @@ export default function AdminShopStock() {
       })
     : shopStock;
 
+  const stockByCategory = shopStock.reduce((totals, stock) => {
+    const item = availableItems.find(item => item.id === parseInt(stock.item_id));
+    const category = item?.category_name || "Uncategorised";
+    totals[category] = (totals[category] || 0) + (Number(stock.qty) || 0);
+    return totals;
+  }, {});
+
   const handleEditStock = (stock) => {
     setEditingStock(stock);
     setEditFormData({ qty: stock.qty, buy_price: stock.buy_price || 0 });
@@ -120,10 +127,25 @@ export default function AdminShopStock() {
           </div>
         </div>
 
+        <section className="mb-6">
+          <h2 className="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-3">Stock by Category</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+            {Object.entries(stockByCategory).sort(([first], [second]) => first.localeCompare(second)).map(([category, quantity]) => (
+              <div key={category} className="bg-white dark:bg-gray-800 rounded-xl border border-green-100 dark:border-gray-700 p-4 flex items-center justify-between gap-3 transition-colors">
+                <span className="text-sm font-bold text-gray-700 dark:text-gray-300 truncate">{category}</span>
+                <span className="shrink-0 bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-400 px-2.5 py-1 rounded-lg font-black">{quantity}</span>
+              </div>
+            ))}
+            {Object.keys(stockByCategory).length === 0 && (
+              <p className="col-span-full text-sm text-gray-400 dark:text-gray-500 italic">No stock available by category.</p>
+            )}
+          </div>
+        </section>
+
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden transition-colors">
           <div className="bg-gray-50 dark:bg-gray-900/50 px-8 py-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center transition-colors">
             <h2 className="text-lg font-bold text-gray-800 dark:text-white transition-colors flex items-center gap-2">
-                Current Inventory {searchQuery && <span className="text-xs font-medium text-blue-500 bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded-full ml-2 transition-all">{searchType === 'date' ? `Date: ${searchQuery}` : `Searching: "${searchQuery}"`}</span>}
+                Current Stock {searchQuery && <span className="text-xs font-medium text-blue-500 bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded-full ml-2 transition-all">{searchType === 'date' ? `Date: ${searchQuery}` : `Searching: "${searchQuery}"`}</span>}
             </h2>
             <span className="bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-400 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest transition-colors">
               {filteredStock.length} Products
