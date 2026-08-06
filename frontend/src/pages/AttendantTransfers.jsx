@@ -3,7 +3,7 @@ import TransferHistory from '../components/TransferHistory'
 
 export default function AttendantTransfers(){
   return (
-    <div className="p-6">
+    <div className="p-0 sm:p-6">
       <TransferHistory />
     </div>
   )
