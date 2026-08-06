@@ -12,6 +12,7 @@ export default function AdminShopStock() {
   const { searchQuery, searchType } = useContext(SearchContext);
   const [shopName, setShopName] = useState("");
   const [shopStock, setShopStock] = useState([]);
+  const [isStockLoading, setIsStockLoading] = useState(true);
   const [availableItems, setAvailableItems] = useState([]);
   const [editingStock, setEditingStock] = useState(null);
   const [expandedStockItems, setExpandedStockItems] = useState([]);
@@ -39,11 +40,14 @@ export default function AdminShopStock() {
   };
 
   const fetchShopStock = async () => {
+    setIsStockLoading(true);
     try {
       const response = await api.get(`/stocks/${shopId}`);
       setShopStock(response.data);
     } catch (err) {
       console.error("Error fetching shop stock");
+    } finally {
+      setIsStockLoading(false);
     }
   };
 
@@ -130,13 +134,15 @@ export default function AdminShopStock() {
         <section className="mb-6">
           <h2 className="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-3">Stock by Category</h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-            {Object.entries(stockByCategory).sort(([first], [second]) => first.localeCompare(second)).map(([category, quantity]) => (
+            {isStockLoading ? (
+              <p className="col-span-full text-sm text-blue-600 dark:text-blue-400 font-medium animate-pulse">Loading stock by category...</p>
+            ) : Object.entries(stockByCategory).sort(([first], [second]) => first.localeCompare(second)).map(([category, quantity]) => (
               <div key={category} className="bg-white dark:bg-gray-800 rounded-xl border border-green-100 dark:border-gray-700 p-4 flex items-center justify-between gap-3 transition-colors">
                 <span className="text-sm font-bold text-gray-700 dark:text-gray-300 truncate">{category}</span>
                 <span className="shrink-0 bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-400 px-2.5 py-1 rounded-lg font-black">{quantity}</span>
               </div>
             ))}
-            {Object.keys(stockByCategory).length === 0 && (
+            {!isStockLoading && Object.keys(stockByCategory).length === 0 && (
               <p className="col-span-full text-sm text-gray-400 dark:text-gray-500 italic">No stock available by category.</p>
             )}
           </div>
@@ -153,7 +159,9 @@ export default function AdminShopStock() {
           </div>
           
           <div className="overflow-x-auto max-h-[calc(100vh-300px)] overflow-y-auto custom-scrollbar">
-            {filteredStock.length === 0 ? (
+            {isStockLoading ? (
+              <div className="p-20 text-center text-blue-600 dark:text-blue-400 font-bold uppercase tracking-widest animate-pulse transition-colors">Loading stock...</div>
+            ) : filteredStock.length === 0 ? (
               <div className="p-20 text-center text-gray-400 dark:text-gray-500 transition-colors">
                 {searchQuery ? <CalendarX className="mx-auto mb-4 opacity-20" size={48} /> : <AlertCircle className="mx-auto mb-4 opacity-20" size={48} />}
                 <p className="italic font-medium">{searchQuery ? 'No matching products found' : 'No stock records found for this location.'}</p>

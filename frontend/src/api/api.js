@@ -6,15 +6,46 @@ const api = axios.create({
   baseURL: API_BASE,
 })
 
+let activeGetRequests = 0
+const loadingListeners = new Set()
+
+const notifyLoadingListeners = () => {
+  loadingListeners.forEach((listener) => listener(activeGetRequests > 0))
+}
+
+const stopGlobalLoading = (config) => {
+  if (!config?.__globalLoadingTracked) return
+  config.__globalLoadingTracked = false
+  activeGetRequests = Math.max(0, activeGetRequests - 1)
+  notifyLoadingListeners()
+}
+
+export const subscribeToGlobalLoading = (listener) => {
+  loadingListeners.add(listener)
+  listener(activeGetRequests > 0)
+  return () => loadingListeners.delete(listener)
+}
+
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token')
   if (token) config.headers.Authorization = `Bearer ${token}`
+
+  if ((config.method || 'get').toLowerCase() === 'get' && config.showGlobalLoading !== false) {
+    config.__globalLoadingTracked = true
+    activeGetRequests += 1
+    notifyLoadingListeners()
+  }
+
   return config
 })
 
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    stopGlobalLoading(response.config)
+    return response
+  },
   (error) => {
+    stopGlobalLoading(error.config)
     // If the low_stock_items endpoint returns 500, return an empty list so UI can continue
     if (error.response && error.response.status === 500 && error.config && error.config.url && error.config.url.includes('low_stock_items')) {
       return Promise.resolve({ data: [] })
