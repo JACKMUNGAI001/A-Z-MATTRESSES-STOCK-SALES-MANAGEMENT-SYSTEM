@@ -3,6 +3,7 @@ import api, { API_BASE } from '../api/api'
 import { Wallet, FileText, Edit, Trash2 } from 'lucide-react'
 import { AuthContext } from '../context/AuthContext'
 import EditSaleModal from '../components/EditSaleModal'
+import MobileSaleCard from '../components/MobileSaleCard'
 
 export default function CreditSales(){
   const [sales, setSales] = useState([])
@@ -89,7 +90,26 @@ export default function CreditSales(){
         ) : displayedSales.length === 0 ? (
           <div className="p-8 text-center">No {activeSection} credit sales found.</div>
         ) : (
-          <table className="w-full text-sm">
+          <>
+          <div className="space-y-3 md:hidden">
+            {displayedSales.map((sale) => (
+              <MobileSaleCard
+                key={sale.id}
+                sale={sale}
+                additionalDetails={<>
+                  <div className="grid grid-cols-[auto_1fr] gap-x-3"><span className="font-medium text-gray-500 dark:text-gray-400">Customer:</span><span className="text-right font-semibold text-gray-800 dark:text-gray-100">{sale.customer_name || '—'}</span></div>
+                  <div className="grid grid-cols-[auto_1fr] gap-x-3"><span className="font-medium text-gray-500 dark:text-gray-400">Contact:</span><span className="text-right font-semibold text-gray-800 dark:text-gray-100">{sale.customer_phone || '—'}</span></div>
+                  <div className="grid grid-cols-[auto_1fr] gap-x-3"><span className="font-medium text-gray-500 dark:text-gray-400">Status:</span><span className="text-right font-bold uppercase text-gray-800 dark:text-gray-100">{sale.status || '—'}</span></div>
+                </>}
+                actions={<>
+                  {sale.status !== 'paid' && <button onClick={() => handlePay(sale)} className="flex flex-1 items-center justify-center gap-1 rounded-lg border border-green-300 px-3 py-2 text-xs font-bold text-green-600"><Wallet size={14} /> PAY</button>}
+                  {user?.role === 'admin' && <><button onClick={() => setEditingSale(sale)} className="rounded-lg border border-amber-300 p-2 text-amber-600" title="Edit credit sale"><Edit size={16} /></button><button onClick={() => handleDelete(sale)} className="rounded-lg border border-red-300 p-2 text-red-600" title="Delete credit sale"><Trash2 size={16} /></button></>}
+                  {sale.receipt_uuid && <a href={`${API_BASE}/receipts/${sale.receipt_uuid}`} target="_blank" rel="noreferrer" className="rounded-lg border border-blue-300 p-2 text-blue-600" title="View receipt"><FileText size={16} /></a>}
+                </>}
+              />
+            ))}
+          </div>
+          <table className="hidden w-full text-sm md:table">
             <thead className="text-xs text-gray-500 uppercase">
               <tr>
                 <th className="px-4 py-2 text-left">ID</th>
@@ -154,6 +174,7 @@ export default function CreditSales(){
               ))}
             </tbody>
           </table>
+          </>
         )}
       </div>
       {editingSale && (

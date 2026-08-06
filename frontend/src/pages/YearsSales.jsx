@@ -4,6 +4,7 @@ import { FileText, Trophy, Clock, Receipt, SearchX, Store } from "lucide-react";
 import { formatDate } from "../utils/helpers";
 import { SearchContext } from '../context/SearchContext';
 import { AuthContext } from '../context/AuthContext';
+import MobileSaleCard from '../components/MobileSaleCard';
 
 export default function YearsSales() {
   const [sales, setSales] = useState([]);
@@ -82,7 +83,15 @@ export default function YearsSales() {
                 <p className="text-gray-500 dark:text-gray-400 font-bold uppercase tracking-widest text-sm transition-colors">{searchQuery ? `No matches found for "${searchQuery}"` : 'No sales recorded for this year yet.'}</p>
               </div>
             ) : (
-              <table className="w-full relative border-collapse">
+              <>
+              <div className="space-y-3 p-3 md:hidden">
+                {filteredSales.map((sale) => (
+                  <MobileSaleCard key={sale.id} sale={sale} searchQuery={searchQuery} showShop={user?.role === 'manager' || user?.role === 'admin'} actions={sale.receipt_uuid && (
+                    <a href={`${API_BASE}/receipts/${sale.receipt_uuid}`} target="_blank" rel="noopener noreferrer" className="flex flex-1 items-center justify-center gap-1 rounded-lg border border-green-300 px-3 py-2 text-xs font-bold text-green-600 dark:border-green-700 dark:text-green-400"><FileText size={16} /> VIEW</a>
+                  )} />
+                ))}
+              </div>
+              <table className="hidden w-full relative border-collapse md:table">
                 <thead className="bg-gray-50/90 dark:bg-gray-900/90 transition-colors sticky top-0 z-10 backdrop-blur-sm">
                   <tr>
                     <th className="px-8 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest border-b border-gray-100 dark:border-gray-700">ID</th>
@@ -140,6 +149,7 @@ export default function YearsSales() {
                   ))}
                 </tbody>
               </table>
+              </>
             )}
           </div>
         </div>

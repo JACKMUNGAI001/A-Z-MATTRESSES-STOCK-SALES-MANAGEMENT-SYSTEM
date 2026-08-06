@@ -5,6 +5,7 @@ import { formatDate, formatPaymentMethod, formatSaleType } from "../utils/helper
 import { AuthContext } from "../context/AuthContext";
 import { SearchContext } from "../context/SearchContext";
 import EditSaleModal from "../components/EditSaleModal";
+import MobileSaleCard from "../components/MobileSaleCard";
 
 export default function AllSales() {
   const [sales, setSales] = useState([]);
@@ -108,7 +109,31 @@ export default function AllSales() {
                 {searchQuery && <p className="text-xs text-gray-400 mt-2 transition-colors">Try searching for a different product name</p>}
               </div>
             ) : (
-              <table className="w-full relative border-collapse">
+              <>
+              <div className="space-y-3 p-3 md:hidden">
+                {filteredSales.map((sale) => (
+                  <MobileSaleCard
+                    key={sale.id}
+                    sale={sale}
+                    searchQuery={searchQuery}
+                    actions={<>
+                      {sale.receipt_uuid && (
+                        <a href={`${API_BASE}/receipts/${sale.receipt_uuid}`} target="_blank" rel="noopener noreferrer" className="flex flex-1 items-center justify-center gap-1 rounded-lg border border-blue-300 px-3 py-2 text-xs font-bold text-blue-600 dark:border-blue-700 dark:text-blue-400">
+                          <FileText size={16} /> VIEW
+                        </a>
+                      )}
+                      {user?.role === 'admin' && <>
+                        <button onClick={() => setEditingSale(sale)} className="rounded-lg border border-amber-300 p-2 text-amber-600 dark:border-amber-700 dark:text-amber-400" title="Edit Sale"><Edit size={16} /></button>
+                        <button onClick={() => handleDelete(sale.id)} className="rounded-lg border border-red-300 p-2 text-red-600 dark:border-red-700 dark:text-red-400" title="Delete Sale"><Trash2 size={16} /></button>
+                        {sale.sale_type === 'credit' && (sale.paid_amount || 0) < (sale.total_amount || 0) && (
+                          <button onClick={() => handlePay(sale)} className="rounded-lg border border-green-300 p-2 text-green-600 dark:border-green-700 dark:text-green-400" title="Record Payment"><Wallet size={16} /></button>
+                        )}
+                      </>}
+                    </>}
+                  />
+                ))}
+              </div>
+              <table className="hidden w-full relative border-collapse md:table">
                 <thead className="bg-gray-50/90 dark:bg-gray-900/90 transition-colors sticky top-0 z-10 backdrop-blur-sm">
                   <tr>
                     <th className="px-8 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest border-b border-gray-100 dark:border-gray-700">Date & Time</th>
@@ -196,6 +221,7 @@ export default function AllSales() {
                   ))}
                 </tbody>
               </table>
+              </>
             )}
           </div>
         </div>
