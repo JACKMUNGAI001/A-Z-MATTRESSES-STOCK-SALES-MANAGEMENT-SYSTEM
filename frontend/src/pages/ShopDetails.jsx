@@ -391,8 +391,9 @@ export default function ShopDetails() {
           </div>
         ) : null}
 
+        <div className="flex flex-col">
         {/* SHOP SUMMARIES */}
-        <div className="mb-10">
+        <div className="order-2">
           <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-6 tracking-tight border-l-4 border-l-blue-600 pl-3 text-sm uppercase tracking-widest text-gray-400 dark:text-gray-500 transition-colors">Performance Overview</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {/* Today */}
@@ -474,7 +475,17 @@ export default function ShopDetails() {
         </div>
 
         {/* QUICK NAV CARDS */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="order-1 grid grid-cols-1 md:grid-cols-2 gap-4 mb-10">
+          <Link to={`/admin/shops/${shopId}/stock`} className="block bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 hover:shadow-lg transition-all">
+            <div className="flex items-center gap-3">
+              <Package size={28} className="text-purple-600" />
+              <div>
+                <h3 className="text-lg font-black">Full Product List</h3>
+                <p className="text-sm text-gray-500">{filteredStock.length} items</p>
+              </div>
+            </div>
+          </Link>
+
           <Link to={`/admin/shops/${shopId}/sales`} className="block bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 hover:shadow-lg transition-all">
             <div className="flex items-center gap-3">
               <TrendingUp size={28} className="text-blue-600" />
@@ -495,16 +506,6 @@ export default function ShopDetails() {
             </div>
           </Link>
 
-          <Link to={`/admin/shops/${shopId}/stock`} className="block bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 hover:shadow-lg transition-all">
-            <div className="flex items-center gap-3">
-              <Package size={28} className="text-purple-600" />
-              <div>
-                <h3 className="text-lg font-black">Full Product List</h3>
-                <p className="text-sm text-gray-500">{filteredStock.length} items</p>
-              </div>
-            </div>
-          </Link>
-
           <Link to={`/admin/shops/${shopId}/low-stock`} className="block bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 hover:shadow-lg transition-all">
             <div className="flex items-center gap-3">
               <AlertTriangle size={28} className="text-orange-500" />
@@ -514,6 +515,7 @@ export default function ShopDetails() {
               </div>
             </div>
           </Link>
+        </div>
         </div>
 
         {/* EDIT MODAL */}

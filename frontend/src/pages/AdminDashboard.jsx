@@ -176,6 +176,46 @@ export default function AdminDashboard(){
           </div>
         </div>
 
+        {/* STOCK SUMMARY BY CATEGORY */}
+        <div className="mb-10">
+          <h3 className="text-xl font-bold text-gray-800 dark:text-white tracking-tight border-l-4 border-l-green-600 pl-3 transition-colors text-sm uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-4">
+            Stock Summary by Category
+          </h3>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {stockSummary && Object.entries(stockSummary).map(([shopName, categories]) => (
+                <div key={shopName} className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-green-100 dark:border-gray-700 bg-gradient-to-br from-white to-green-50/30 dark:from-gray-800 dark:to-green-900/10 transition-all">
+                  <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                    <Store size={18} className="text-green-600 dark:text-green-400" />
+                    {shopName}
+                  </h4>
+                  <div className="space-y-3">
+                    {Object.entries(categories).map(([category, quantity]) => (
+                      <div key={category} className="flex justify-between items-center p-3 bg-white/50 dark:bg-gray-900/50 rounded-xl border border-gray-50 dark:border-gray-700">
+                        <span className="text-gray-600 dark:text-gray-400 font-medium">{category}</span>
+                        <span className="text-lg font-bold text-gray-900 dark:text-white bg-green-100 dark:bg-green-900/50 px-3 py-1 rounded-lg text-green-700 dark:text-green-400">{quantity}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+          </div>
+        </div>
+
+        {/* SHOPS SECTION */}
+        <div className="mb-10">
+          <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4 tracking-tight transition-colors text-sm uppercase tracking-widest text-gray-400 dark:text-gray-500 border-l-4 border-l-blue-600 pl-3">Shops Management</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+            {shops.map(s => (
+              <div key={s.id} onClick={() => handleShopClick(s.id)} className="bg-white dark:bg-gray-800 p-5 sm:p-6 rounded-2xl shadow-sm border border-blue-100 dark:border-gray-700 bg-gradient-to-br from-white to-blue-50/30 dark:from-gray-800 dark:to-green-900/10 hover:border-blue-400 dark:hover:border-blue-500 hover:shadow-xl hover:-translate-y-1.5 transition-all cursor-pointer group relative">
+                <div className="absolute top-4 right-4 bg-blue-100 dark:bg-blue-900/50 p-1 rounded-lg text-blue-600 dark:text-blue-400"><Store size={14} strokeWidth={3} /></div>
+                <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-1 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{s.name}</h4>
+                <div className="flex items-start gap-2 text-gray-500 dark:text-gray-400 text-sm transition-colors"><MapPin size={16} className="mt-0.5 shrink-0" /><span>{s.address}</span></div>
+              </div>
+            ))}
+          </div>
+        </div>
+
         {/* OVERVIEW SECTION */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-10">
           <Card title="Total Sales" interactive={true} onClick={() => navigate('/admin/all-sales')}>
@@ -220,46 +260,6 @@ export default function AdminDashboard(){
             <Link to="/attendant/deposits/week" className="no-underline"><Card title="This Week's" interactive={true} className="!p-4 sm:!p-6">{depositsSummary ? formatCurrency(depositsSummary.week) : '...'}</Card></Link>
             <Link to="/attendant/deposits/month" className="no-underline"><Card title="This Month's" interactive={true} className="!p-4 sm:!p-6">{depositsSummary ? formatCurrency(depositsSummary.month) : '...'}</Card></Link>
             <Link to="/attendant/deposits/year" className="no-underline"><Card title="This Year's" interactive={true} className="!p-4 sm:!p-6">{depositsSummary ? formatCurrency(depositsSummary.year) : '...'}</Card></Link>
-          </div>
-        </div>
-
-        {/* SHOPS SECTION */}
-        <div className="mb-10">
-          <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4 tracking-tight transition-colors text-sm uppercase tracking-widest text-gray-400 dark:text-gray-500 border-l-4 border-l-blue-600 pl-3">Shops Management</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-            {shops.map(s => (
-              <div key={s.id} onClick={() => handleShopClick(s.id)} className="bg-white dark:bg-gray-800 p-5 sm:p-6 rounded-2xl shadow-sm border border-blue-100 dark:border-gray-700 bg-gradient-to-br from-white to-blue-50/30 dark:from-gray-800 dark:to-green-900/10 hover:border-blue-400 dark:hover:border-blue-500 hover:shadow-xl hover:-translate-y-1.5 transition-all cursor-pointer group relative">
-                <div className="absolute top-4 right-4 bg-blue-100 dark:bg-blue-900/50 p-1 rounded-lg text-blue-600 dark:text-blue-400"><Store size={14} strokeWidth={3} /></div>
-                <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-1 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{s.name}</h4>
-                <div className="flex items-start gap-2 text-gray-500 dark:text-gray-400 text-sm transition-colors"><MapPin size={16} className="mt-0.5 shrink-0" /><span>{s.address}</span></div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* STOCK SUMMARY BY CATEGORY */}
-        <div className="mb-10">
-          <h3 className="text-xl font-bold text-gray-800 dark:text-white tracking-tight border-l-4 border-l-green-600 pl-3 transition-colors text-sm uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-4">
-            Stock Summary by Category
-          </h3>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {stockSummary && Object.entries(stockSummary).map(([shopName, categories]) => (
-                <div key={shopName} className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-green-100 dark:border-gray-700 bg-gradient-to-br from-white to-green-50/30 dark:from-gray-800 dark:to-green-900/10 transition-all">
-                  <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                    <Store size={18} className="text-green-600 dark:text-green-400" />
-                    {shopName}
-                  </h4>
-                  <div className="space-y-3">
-                    {Object.entries(categories).map(([category, quantity]) => (
-                      <div key={category} className="flex justify-between items-center p-3 bg-white/50 dark:bg-gray-900/50 rounded-xl border border-gray-50 dark:border-gray-700">
-                        <span className="text-gray-600 dark:text-gray-400 font-medium">{category}</span>
-                        <span className="text-lg font-bold text-gray-900 dark:text-white bg-green-100 dark:bg-green-900/50 px-3 py-1 rounded-lg text-green-700 dark:text-green-400">{quantity}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
           </div>
         </div>
 
