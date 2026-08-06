@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import api from '../api/api'
-import { formatCurrency } from '../utils/helpers'
 
 export default function ShopLowStock(){
   const { shopId } = useParams()
@@ -29,14 +28,13 @@ export default function ShopLowStock(){
           {items.length === 0 ? <div className="p-10 text-center text-gray-400">No low stock items.</div> : (
             <table className="w-full text-left">
               <thead className="text-xs text-gray-500 uppercase font-black">
-                <tr><th className="px-4 py-2">Item</th><th className="px-4 py-2">Qty</th><th className="px-4 py-2">Cost</th></tr>
+                <tr><th className="px-4 py-2">Item</th><th className="px-4 py-2">Qty</th></tr>
               </thead>
               <tbody>
                 {items.map(s => (
                   <tr key={s.item_id} className="border-t border-gray-100 dark:border-gray-700">
                     <td className="px-4 py-2 font-bold">{s.item_name || s.item_id}</td>
                     <td className="px-4 py-2 font-black">{s.qty}</td>
-                    <td className="px-4 py-2">{formatCurrency(s.buy_price)}</td>
                   </tr>
                 ))}
               </tbody>
