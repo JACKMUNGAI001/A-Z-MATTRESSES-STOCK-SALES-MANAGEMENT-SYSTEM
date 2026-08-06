@@ -48,8 +48,8 @@ export default function TransferHistory() {
     : transfers;
 
   return (
-    <div className="mt-10">
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden transition-colors">
+    <div className="mt-2 min-h-[calc(100dvh-7rem)] sm:mt-10 sm:min-h-0">
+      <div className="min-h-[calc(100dvh-7rem)] overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition-colors dark:border-gray-700 dark:bg-gray-800 sm:min-h-0">
         <div className="w-full flex justify-between items-center p-6 bg-blue-50 dark:bg-blue-900/20 border-b border-gray-100 dark:border-gray-700">
           <div className="flex items-center gap-3">
             <ArrowLeftRight size={20} className="sm:w-6 sm:h-6 text-blue-600 dark:text-blue-400" />
