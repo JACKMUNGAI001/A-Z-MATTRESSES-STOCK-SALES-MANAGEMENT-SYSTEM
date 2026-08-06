@@ -27,7 +27,7 @@ export default function AdminSupplierInvoices() {
     received_date: new Date().toISOString().split('T')[0],
     due_date: '',
     notes: '',
-    items: [{ item_id: '', unit_cost: 0, price_unit: 'unit', distributions: [{ shop_id: '', quantity: 0 }] }]
+    items: [{ item_id: '', unit_cost: '', price_unit: 'unit', distributions: [{ shop_id: '', quantity: '' }] }]
   })
 
   useEffect(() => {
@@ -58,7 +58,7 @@ export default function AdminSupplierInvoices() {
       if (shopRes.data.length > 0) {
           setFormData(prev => ({
               ...prev,
-              items: [{ ...prev.items[0], price_unit: prev.items[0]?.price_unit || 'unit', distributions: [{ shop_id: shopRes.data[0].id, quantity: 0 }] }]
+              items: [{ ...prev.items[0], price_unit: prev.items[0]?.price_unit || 'unit', distributions: [{ shop_id: shopRes.data[0].id, quantity: '' }] }]
           }))
       }
     } catch (err) {
@@ -80,7 +80,7 @@ export default function AdminSupplierInvoices() {
   const handleAddItem = () => {
     setFormData({
       ...formData,
-      items: [...formData.items, { item_id: '', unit_cost: 0, price_unit: 'unit', distributions: [{ shop_id: shops[0]?.id || '', quantity: 0 }] }]
+      items: [...formData.items, { item_id: '', unit_cost: '', price_unit: 'unit', distributions: [{ shop_id: shops[0]?.id || '', quantity: '' }] }]
     })
   }
 
@@ -112,7 +112,7 @@ export default function AdminSupplierInvoices() {
 
   const handleAddDistribution = (itemIdx) => {
     const newItems = [...formData.items]
-    newItems[itemIdx].distributions.push({ shop_id: shops[0]?.id || '', quantity: 0 })
+    newItems[itemIdx].distributions.push({ shop_id: shops[0]?.id || '', quantity: '' })
     setFormData({ ...formData, items: newItems })
   }
 
@@ -162,7 +162,7 @@ export default function AdminSupplierInvoices() {
         received_date: new Date().toISOString().split('T')[0],
         due_date: '',
         notes: '',
-        items: [{ item_id: '', unit_cost: 0, price_unit: 'unit', distributions: [{ shop_id: shops[0]?.id || '', quantity: 0 }] }]
+        items: [{ item_id: '', unit_cost: '', price_unit: 'unit', distributions: [{ shop_id: shops[0]?.id || '', quantity: '' }] }]
       })
       loadData()
     } catch (err) {
@@ -363,7 +363,6 @@ export default function AdminSupplierInvoices() {
                   className="w-full border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-white rounded-xl p-4 text-2xl font-black focus:ring-2 focus:ring-green-500 outline-none transition-all"
                   value={paymentAmount}
                   onChange={e => setPaymentAmount(e.target.value)}
-                  placeholder="0.00"
                 />
               </div>
               <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl text-blue-700 dark:text-blue-400 font-bold flex items-center gap-2">
@@ -532,7 +531,7 @@ export default function AdminSupplierInvoices() {
                                 <input 
                                     required
                                     type="number" 
-                                    min="0"
+                                    min="1"
                                     placeholder="Qty"
                                     className="w-full border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg p-2 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                                     value={dist.quantity}

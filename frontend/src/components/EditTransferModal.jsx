@@ -10,7 +10,7 @@ export default function EditTransferModal({ transfer, onClose, onUpdate }) {
   const [toShopId, setToShopId] = useState(transfer.to_shop_id || "");
   const [items, setItems] = useState([]);
   const [selectedItem, setSelectedItem] = useState("");
-  const [quantity, setQuantity] = useState(0);
+  const [quantity, setQuantity] = useState("");
   const [notes, setNotes] = useState(transfer.notes || "");
   const [loading, setLoading] = useState(false);
 
@@ -64,7 +64,7 @@ export default function EditTransferModal({ transfer, onClose, onUpdate }) {
         qty: qty
       }]);
     }
-    setQuantity(0);
+    setQuantity("");
     setSelectedItem("");
   };
 

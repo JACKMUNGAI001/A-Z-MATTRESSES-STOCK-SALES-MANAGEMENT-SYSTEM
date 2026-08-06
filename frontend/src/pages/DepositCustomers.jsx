@@ -192,7 +192,6 @@ export default function DepositCustomers() {
                                 className="w-full border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-white rounded-xl p-4 text-2xl font-black focus:ring-2 focus:ring-green-500 outline-none transition-all"
                                 value={paymentAmount}
                                 onChange={e => setPaymentAmount(e.target.value)}
-                                placeholder="0.00"
                             />
                         </div>
                         <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl text-blue-700 dark:text-blue-400 font-bold flex items-center gap-2">

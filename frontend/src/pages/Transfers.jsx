@@ -8,7 +8,7 @@ export default function Transfers() {
   const [fromShop, setFromShop] = useState("");
   const [toShop, setToShop] = useState("");
   const [itemId, setItemId] = useState("");
-  const [quantity, setQuantity] = useState(0);
+  const [quantity, setQuantity] = useState("");
   const [notes, setNotes] = useState("");
   const [shops, setShops] = useState([]);
   const [items, setItems] = useState([]);
@@ -54,7 +54,7 @@ export default function Transfers() {
     }
 
     setItemId("");
-    setQuantity(0);
+    setQuantity("");
   };
 
   const handleRemoveItem = (index) => {
@@ -169,7 +169,7 @@ export default function Transfers() {
                     className="w-full p-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900 focus:ring-2 focus:ring-blue-500 outline-none font-bold text-gray-800 dark:text-white transition-all"
                     type="number"
                     value={quantity}
-                    min="0"
+                    min="1"
                     onChange={(e) => setQuantity(e.target.value)}
                   />
                 </div>

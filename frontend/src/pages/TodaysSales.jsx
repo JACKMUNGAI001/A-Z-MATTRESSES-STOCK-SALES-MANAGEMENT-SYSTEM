@@ -27,7 +27,7 @@ export default function TodaysSales() {
 
   const handlePay = async (sale) => {
     const remaining = (sale.total_amount || 0) - (sale.paid_amount || 0);
-    const input = window.prompt(`Enter payment amount (remaining KES ${remaining}):`, remaining);
+    const input = window.prompt(`Enter payment amount (remaining KES ${remaining}):`, "");
     if (!input) return;
     const amount = parseFloat(input);
     if (isNaN(amount) || amount <= 0) {

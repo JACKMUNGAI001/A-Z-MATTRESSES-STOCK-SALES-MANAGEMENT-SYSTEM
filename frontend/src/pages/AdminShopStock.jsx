@@ -16,7 +16,7 @@ export default function AdminShopStock() {
   const [availableItems, setAvailableItems] = useState([]);
   const [editingStock, setEditingStock] = useState(null);
   const [expandedStockItems, setExpandedStockItems] = useState([]);
-  const [editFormData, setEditFormData] = useState({ qty: 0, buy_price: 0 });
+  const [editFormData, setEditFormData] = useState({ qty: "", buy_price: "" });
 
   const toggleStockItemExpansion = (itemId) => {
     setExpandedStockItems(prev => 
@@ -79,7 +79,7 @@ export default function AdminShopStock() {
 
   const handleEditStock = (stock) => {
     setEditingStock(stock);
-    setEditFormData({ qty: stock.qty, buy_price: stock.buy_price || 0 });
+    setEditFormData({ qty: stock.qty ?? "", buy_price: stock.buy_price ?? "" });
   };
 
   const handleUpdateStock = async (e) => {

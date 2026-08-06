@@ -23,7 +23,7 @@ export default function ShopDetails() {
   });
   const [itemsToRestock, setItemsToRestock] = useState([]);
   const [editingStock, setEditingStock] = useState(null);
-  const [editFormData, setEditFormData] = useState({ qty: 0, buy_price: 0 });
+  const [editFormData, setEditFormData] = useState({ qty: "", buy_price: "" });
   const [selectedDeposit, setSelectedDeposit] = useState(null);
   const [showHistory, setShowHistory] = useState(false);
 
@@ -222,7 +222,7 @@ export default function ShopDetails() {
   const handleEditStock = (stock) => {
     const item = availableItems.find(i => i.id === stock.item_id);
     setEditingStock({ ...stock, item_name: item?.name });
-    setEditFormData({ qty: stock.qty, buy_price: stock.buy_price || 0 });
+    setEditFormData({ qty: stock.qty ?? "", buy_price: stock.buy_price ?? "" });
   };
 
   const handleUpdateStock = async (e) => {
@@ -328,7 +328,7 @@ export default function ShopDetails() {
             </div>
             <div>
               <label className="block text-sm font-bold text-gray-700 dark:text-gray-400 uppercase mb-1 px-1 transition-colors">Quantity</label>
-              <input name="quantity" type="number" className="w-full p-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-blue-600 dark:text-blue-400 focus:ring-2 focus:ring-blue-500 outline-none font-bold transition-all" value={stockFormData.quantity} onChange={handleStockInputChange} min="0" placeholder="0" />
+              <input name="quantity" type="number" className="w-full p-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-blue-600 dark:text-blue-400 focus:ring-2 focus:ring-blue-500 outline-none font-bold transition-all" value={stockFormData.quantity} onChange={handleStockInputChange} min="1" />
             </div>
             {(user?.role === 'admin' || user?.role === 'manager') && (
               <div>
