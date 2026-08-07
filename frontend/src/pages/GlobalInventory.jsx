@@ -46,7 +46,7 @@ export default function GlobalInventory(){
     <div className="p-6">
       <div className="mb-6 flex items-center gap-3">
         <TrendingUp size={28} className="text-blue-600" />
-        <h1 className="text-2xl font-black">Global Inventory Overview</h1>
+        <h1 className="text-2xl font-black">Global Stock Overview</h1>
       </div>
 
       {loading ? (

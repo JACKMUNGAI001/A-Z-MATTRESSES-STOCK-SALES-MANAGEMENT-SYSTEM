@@ -310,8 +310,8 @@ export default function ManagerDashboard(){
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
           <Link to="/attendant/deposits" className="no-underline group">
-              <Card title="Global Active Accounts" interactive={true} className="border-l-4 border-l-indigo-500 flex justify-between items-center">
-                <span>{depositCustomersCount} Active Accounts</span>
+              <Card title="Global Active Deposit Accounts" interactive={true} className="border-l-4 border-l-indigo-500 flex justify-between items-center">
+                <span>{depositCustomersCount} Active Deposit Accounts</span>
                 <Users className="text-indigo-200 dark:text-indigo-900/30 group-hover:text-indigo-400 dark:group-hover:text-indigo-500 transition-colors" size={40} />
               </Card>
           </Link>
@@ -327,7 +327,7 @@ export default function ManagerDashboard(){
                 <div className="flex items-center gap-3">
                   <TrendingUp size={24} className="text-blue-600 dark:text-blue-400" />
                   <div className="text-left">
-                    <h2 className="text-xl font-bold text-gray-800 dark:text-white tracking-tight">Global Product Overview</h2>
+                    <h2 className="text-xl font-bold text-gray-800 dark:text-white tracking-tight">Global Stock Overview</h2>
                     <p className="text-xs text-gray-500 dark:text-gray-400 font-medium italic">Stock distribution across all shop locations</p>
                   </div>
                 </div>
