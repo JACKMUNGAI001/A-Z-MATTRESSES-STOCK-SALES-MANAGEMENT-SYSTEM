@@ -274,13 +274,13 @@ def _serialize_sale(sale):
     }
 
 def get_all_sales():
-    query = Sale.query.filter(or_(Sale.sale_type != 'credit', Sale.status == 'paid')).order_by(Sale.created_at.desc())
+    query = Sale.query.filter(or_(Sale.sale_type != 'credit', Sale.status == 'paid')).order_by(Sale.created_at.desc(), Sale.id.desc())
     sales = query.all()
     return [_serialize_sale(sale) for sale in sales]
 
 
 def get_sales_by_shop(shop_id):
-    query = Sale.query.filter_by(shop_id=shop_id).filter(or_(Sale.sale_type != 'credit', Sale.status == 'paid')).order_by(Sale.created_at.desc())
+    query = Sale.query.filter_by(shop_id=shop_id).filter(or_(Sale.sale_type != 'credit', Sale.status == 'paid')).order_by(Sale.created_at.desc(), Sale.id.desc())
     sales = query.all()
     return [_serialize_sale(sale) for sale in sales]
 
@@ -294,7 +294,7 @@ def get_todays_sales(shop_id=None):
     if shop_id:
         query = query.filter(Sale.shop_id == shop_id)
         
-    sales = query.all()
+    sales = query.order_by(Sale.created_at.desc(), Sale.id.desc()).all()
     return [_serialize_sale(sale) for sale in sales]
 
 def get_current_weeks_sales(shop_id=None):
@@ -308,7 +308,7 @@ def get_current_weeks_sales(shop_id=None):
     if shop_id:
         query = query.filter(Sale.shop_id == shop_id)
         
-    sales = query.all()
+    sales = query.order_by(Sale.created_at.desc(), Sale.id.desc()).all()
     return [_serialize_sale(sale) for sale in sales]
 
 def get_current_months_sales(shop_id=None):
@@ -325,7 +325,7 @@ def get_current_months_sales(shop_id=None):
     if shop_id:
         query = query.filter(Sale.shop_id == shop_id)
         
-    sales = query.all()
+    sales = query.order_by(Sale.created_at.desc(), Sale.id.desc()).all()
     return [_serialize_sale(sale) for sale in sales]
 
 def get_current_years_sales(shop_id=None):
@@ -338,7 +338,7 @@ def get_current_years_sales(shop_id=None):
     if shop_id:
         query = query.filter(Sale.shop_id == shop_id)
         
-    sales = query.all()
+    sales = query.order_by(Sale.created_at.desc(), Sale.id.desc()).all()
     return [_serialize_sale(sale) for sale in sales]
 
 def delete_sale(sale_id, user_id):

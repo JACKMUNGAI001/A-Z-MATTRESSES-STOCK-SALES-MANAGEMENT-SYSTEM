@@ -297,7 +297,7 @@ def get_all_credit_sales(shop_id=None):
     """Return all credit sales (paid and unpaid) serialized for UI."""
     from models.shop import Shop
     from models.user import User
-    query = Sale.query.filter(Sale.sale_type == 'credit').order_by(Sale.created_at.desc())
+    query = Sale.query.filter(Sale.sale_type == 'credit').order_by(Sale.created_at.desc(), Sale.id.desc())
     if shop_id:
         query = query.filter(Sale.shop_id == shop_id)
     results = []

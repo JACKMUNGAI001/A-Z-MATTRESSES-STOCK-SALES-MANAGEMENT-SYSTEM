@@ -283,7 +283,7 @@ def update_transfer(transfer_id, user_id, from_shop_id, to_shop_id, items, notes
         raise e
 
 def get_transfers(shop_id=None):
-    query = Transfer.query.order_by(Transfer.created_at.desc())
+    query = Transfer.query.order_by(Transfer.created_at.desc(), Transfer.id.desc())
     if shop_id:
         query = query.filter((Transfer.from_shop_id == shop_id) | (Transfer.to_shop_id == shop_id))
     
