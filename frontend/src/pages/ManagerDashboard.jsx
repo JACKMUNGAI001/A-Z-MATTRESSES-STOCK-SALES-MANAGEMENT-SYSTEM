@@ -4,7 +4,7 @@ import Card from '../components/Card'
 import { AuthContext } from '../context/AuthContext'
 import { SearchContext } from '../context/SearchContext'
 import api from '../api/api'
-import { Store, Package, TrendingUp, Users, SearchX, MapPin, CreditCard } from 'lucide-react'
+import { Store, TrendingUp, Users, SearchX, MapPin, CreditCard } from 'lucide-react'
 import TransferCardLink from '../components/TransferCardLink'
 
 export default function ManagerDashboard(){
@@ -13,7 +13,6 @@ export default function ManagerDashboard(){
   const [globalStock, setGlobalStock] = useState([]);
   const [salesSummary, setSalesSummary] = useState(null);
   const [depositsSummary, setDepositsSummary] = useState(null);
-  const [lowStockCount, setLowStockCount] = useState(0);
   const [depositCustomersCount, setDepositCustomersCount] = useState(0);
   const [shops, setShops] = useState([]);
   const [stockSummary, setStockSummary] = useState(null);
@@ -36,10 +35,6 @@ export default function ManagerDashboard(){
             // Fetch Deposits Summary (Global for Manager)
             const depositsRes = await api.get('/reports/deposits-summary');
             setDepositsSummary(depositsRes.data);
-
-            // Fetch Low Stock Count (Global for Manager)
-            const lowStockResponse = await api.get('/stocks/low_stock_count');
-            setLowStockCount(lowStockResponse.data.count);
 
             // Fetch Deposit Customers Count (Global for Manager)
             const depositCustomersResponse = await api.get('/deposits/customers_count');
@@ -314,12 +309,6 @@ export default function ManagerDashboard(){
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
-          <Link to="/attendant/low-stock" className="no-underline group">
-              <Card title="Low Stock Alerts" interactive={true} className="border-l-4 border-l-orange-500 flex justify-between items-center">
-                <span>{lowStockCount} Items Low</span>
-                <Package className="text-orange-200 dark:text-orange-900/30 group-hover:text-orange-400 dark:group-hover:text-orange-500 transition-colors" size={40} />
-              </Card>
-          </Link>
           <Link to="/attendant/deposits" className="no-underline group">
               <Card title="Global Active Accounts" interactive={true} className="border-l-4 border-l-indigo-500 flex justify-between items-center">
                 <span>{depositCustomersCount} Active Accounts</span>
