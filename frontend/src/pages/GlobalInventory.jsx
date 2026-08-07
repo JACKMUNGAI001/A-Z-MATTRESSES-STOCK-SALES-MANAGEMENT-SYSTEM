@@ -5,6 +5,7 @@ import { Store, SearchX, TrendingUp } from 'lucide-react'
 export default function GlobalInventory(){
   const [globalStock, setGlobalStock] = useState([])
   const [shops, setShops] = useState([])
+  const [stockSummary, setStockSummary] = useState(null)
   const [loading, setLoading] = useState(true)
   const [errorMessage, setErrorMessage] = useState(null)
 
@@ -12,9 +13,13 @@ export default function GlobalInventory(){
     const fetchData = async () => {
       setErrorMessage(null)
       try {
-        const shopsRes = await api.get('/shops')
+        const [shopsRes, stockSummaryRes] = await Promise.all([
+          api.get('/shops'),
+          api.get('/reports/stock-summary'),
+        ])
         const shopsData = shopsRes.data || []
         setShops(shopsData)
+        setStockSummary(stockSummaryRes.data || {})
 
         // Fetch stocks per shop to avoid relying on single heavy endpoint
         const allStocks = []
@@ -57,6 +62,31 @@ export default function GlobalInventory(){
         <div className="p-10 text-center text-gray-400">No shops found.</div>
       ) : (
         <div className="flex flex-col gap-6">
+          <section>
+            <h2 className="mb-4 border-l-4 border-l-green-600 pl-3 text-sm font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400">
+              Global Stock Summary by Category
+            </h2>
+            {Object.keys(stockSummary || {}).length === 0 ? (
+              <div className="rounded-2xl border border-gray-100 bg-white p-6 text-sm text-gray-400 shadow-sm dark:border-gray-700 dark:bg-gray-800">No category stock summary is available.</div>
+            ) : (
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                {Object.entries(stockSummary).map(([shopName, categories]) => (
+                  <div key={shopName} className="rounded-2xl border border-green-100 bg-gradient-to-br from-white to-green-50/30 p-5 shadow-sm dark:border-gray-700 dark:from-gray-800 dark:to-green-900/10">
+                    <h3 className="mb-3 flex items-center gap-2 font-bold text-gray-900 dark:text-white"><Store size={17} className="text-green-600 dark:text-green-400" />{shopName}</h3>
+                    <div className="space-y-2">
+                      {Object.entries(categories).map(([category, quantity]) => (
+                        <div key={category} className="flex items-center justify-between rounded-lg border border-gray-100 bg-white/60 px-3 py-2 dark:border-gray-700 dark:bg-gray-900/40">
+                          <span className="text-sm font-semibold text-gray-600 dark:text-gray-300">{category}</span>
+                          <span className="rounded-md bg-green-100 px-2 py-0.5 text-sm font-black text-green-700 dark:bg-green-900/50 dark:text-green-400">{quantity}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+
           {shops.map((shop) => {
             const shopStock = filteredStockForShop(shop.id)
             return (
