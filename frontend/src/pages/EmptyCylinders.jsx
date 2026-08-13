@@ -149,6 +149,14 @@ export default function EmptyCylinders() {
             <div className="flex items-center gap-3">
               <Store size={22} className="text-amber-600 dark:text-amber-400" />
               <h2 className="text-lg font-bold text-gray-800 dark:text-white tracking-tight">{shopName} <span className="ml-2 text-sm text-gray-400 font-medium">({shopRows.length} Records)</span></h2>
+              <div className="flex flex-wrap items-center gap-2 mt-1">
+                <span className="text-[10px] font-black uppercase tracking-widest text-gray-500 dark:text-gray-400">Total:</span>
+                {Array.from(shopRows.reduce((map, row) => { const regex = /(\d+(?:\.\d+)?)\s*kg/i; const match = row.item_name.match(regex); const size = match ? `${match[1]}kg` : 'Other'; map.set(size, (map.get(size) || 0) + (row.empty_qty || 0)); return map }, new Map()).entries()).sort((a, b) => { const numA = parseFloat(a[0]); const numB = parseFloat(b[0]); if (!isNaN(numA) && !isNaN(numB)) return numB - numA; return a[0].localeCompare(b[0]) }).map(([size, total]) => (
+                  <span key={size} className="inline-flex items-center rounded-md border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-black text-amber-700 dark:border-amber-700 dark:bg-amber-900/40 dark:text-amber-300">
+                    {size} = {total}
+                  </span>
+                ))}
+              </div>
             </div>
             {expandedShops[shopName] ? <ChevronUp size={22} className="text-gray-400" /> : <ChevronDown size={22} className="text-gray-400" />}
           </button>
