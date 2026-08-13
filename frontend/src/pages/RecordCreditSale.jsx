@@ -4,6 +4,7 @@ import { AuthContext } from "../context/AuthContext";
 import { ShoppingCart, Plus, Trash2, CreditCard, Store } from "lucide-react";
 import SearchableSelect from "../components/SearchableSelect";
 import useSubmissionLock from "../hooks/useSubmissionLock";
+import MobileCartItem from "../components/MobileCartItem";
 
 export default function RecordCreditSale() {
   const { user } = useContext(AuthContext);
@@ -205,44 +206,60 @@ export default function RecordCreditSale() {
                 {cartItems.length} Items
               </span>
             </div>
-            <div className="p-0 overflow-x-auto max-h-80 custom-scrollbar">
+            <div className="max-h-80 custom-scrollbar">
               {cartItems.length === 0 ? (
                 <div className="p-10 text-center text-gray-400 dark:text-gray-500 italic">Your cart is empty</div>
               ) : (
-                <table className="w-full relative border-collapse min-w-[500px]">
-                  <thead className="bg-gray-50/90 dark:bg-gray-900/90 sticky top-0 z-10 backdrop-blur-sm transition-colors">
-                    <tr>
-                      <th className="px-4 sm:px-8 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase border-b border-gray-100 dark:border-gray-700">Item</th>
-                      <th className="px-4 sm:px-8 py-4 text-center text-xs font-bold text-gray-500 dark:text-gray-400 uppercase border-b border-gray-100 dark:border-gray-700">Qty</th>
-                      <th className="px-4 sm:px-8 py-4 text-right text-xs font-bold text-gray-500 dark:text-gray-400 uppercase border-b border-gray-100 dark:border-gray-700">Unit Price</th>
-                      <th className="px-4 sm:px-8 py-4 text-right text-xs font-bold text-gray-500 dark:text-gray-400 uppercase border-b border-gray-100 dark:border-gray-700">Total</th>
-                      <th className="px-4 sm:px-8 py-4 text-center text-xs font-bold text-gray-500 dark:text-gray-400 uppercase border-b border-gray-100 dark:border-gray-700">Empty Returned</th>
-                      <th className="px-4 sm:px-8 py-4 text-center text-xs font-bold text-gray-500 dark:text-gray-400 uppercase border-b border-gray-100 dark:border-gray-700">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-50 dark:divide-gray-700">
+                <>
+                  <div className="md:hidden space-y-3 p-3">
                     {cartItems.map((item, index) => (
-                      <tr key={index} className="hover:bg-gray-50/50 dark:hover:bg-gray-900/50 transition-colors">
-                        <td className="px-4 sm:px-8 py-4 font-bold text-gray-900 dark:text-white text-sm sm:text-base">{item.name}</td>
-                        <td className="px-4 sm:px-8 py-4 text-center text-gray-600 dark:text-gray-400 font-medium">{item.qty}</td>
-                        <td className="px-4 sm:px-8 py-4 text-right font-medium text-gray-600 dark:text-gray-400 text-sm sm:text-base">
-                          KES {item.unit_price.toLocaleString()}
-                        </td>
-                        <td className="px-4 sm:px-8 py-4 text-right font-bold text-blue-600 dark:text-blue-400 text-sm sm:text-base">
-                          KES {(item.qty * item.unit_price).toLocaleString()}
-                        </td>
-                        <td className="px-4 sm:px-8 py-4 text-center">
-                          {item.tracksEmptyCylinder ? <input type="number" min="0" max={item.qty} value={item.empty_qty} onChange={(e) => setCartItems(cartItems.map((cartItem, i) => i === index ? { ...cartItem, empty_qty: Math.min(item.qty, Math.max(0, Number(e.target.value) || 0)) } : cartItem))} className="w-16 rounded border border-gray-200 bg-gray-50 p-1 text-center text-sm dark:border-gray-700 dark:bg-gray-900" /> : <span className="text-gray-400">—</span>}
-                        </td>
-                        <td className="px-4 sm:px-8 py-4 text-center">
-                          <button onClick={() => handleRemoveFromCart(index)} className="text-red-400 hover:text-red-600 transition-colors">
-                            <Trash2 size={18} />
-                          </button>
-                        </td>
-                      </tr>
+                      <MobileCartItem
+                        key={index}
+                        item={item}
+                        index={index}
+                        cartItems={cartItems}
+                        setCartItems={setCartItems}
+                        onRemove={handleRemoveFromCart}
+                      />
                     ))}
-                  </tbody>
-                </table>
+                  </div>
+                  <div className="hidden md:block overflow-x-auto">
+                    <table className="w-full relative border-collapse min-w-[500px]">
+                      <thead className="bg-gray-50/90 dark:bg-gray-900/90 sticky top-0 z-10 backdrop-blur-sm transition-colors">
+                        <tr>
+                          <th className="px-4 sm:px-8 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase border-b border-gray-100 dark:border-gray-700">Item</th>
+                          <th className="px-4 sm:px-8 py-4 text-center text-xs font-bold text-gray-500 dark:text-gray-400 uppercase border-b border-gray-100 dark:border-gray-700">Qty</th>
+                          <th className="px-4 sm:px-8 py-4 text-right text-xs font-bold text-gray-500 dark:text-gray-400 uppercase border-b border-gray-100 dark:border-gray-700">Unit Price</th>
+                          <th className="px-4 sm:px-8 py-4 text-right text-xs font-bold text-gray-500 dark:text-gray-400 uppercase border-b border-gray-100 dark:border-gray-700">Total</th>
+                          <th className="px-4 sm:px-8 py-4 text-center text-xs font-bold text-gray-500 dark:text-gray-400 uppercase border-b border-gray-100 dark:border-gray-700">Empty Returned</th>
+                          <th className="px-4 sm:px-8 py-4 text-center text-xs font-bold text-gray-500 dark:text-gray-400 uppercase border-b border-gray-100 dark:border-gray-700">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-50 dark:divide-gray-700">
+                        {cartItems.map((item, index) => (
+                          <tr key={index} className="hover:bg-gray-50/50 dark:hover:bg-gray-900/50 transition-colors">
+                            <td className="px-4 sm:px-8 py-4 font-bold text-gray-900 dark:text-white text-sm sm:text-base">{item.name}</td>
+                            <td className="px-4 sm:px-8 py-4 text-center text-gray-600 dark:text-gray-400 font-medium">{item.qty}</td>
+                            <td className="px-4 sm:px-8 py-4 text-right font-medium text-gray-600 dark:text-gray-400 text-sm sm:text-base">
+                              KES {item.unit_price.toLocaleString()}
+                            </td>
+                            <td className="px-4 sm:px-8 py-4 text-right font-bold text-blue-600 dark:text-blue-400 text-sm sm:text-base">
+                              KES {(item.qty * item.unit_price).toLocaleString()}
+                            </td>
+                            <td className="px-4 sm:px-8 py-4 text-center">
+                              {item.tracksEmptyCylinder ? <input type="number" min="0" max={item.qty} value={item.empty_qty} onChange={(e) => setCartItems(cartItems.map((cartItem, i) => i === index ? { ...cartItem, empty_qty: Math.min(item.qty, Math.max(0, Number(e.target.value) || 0)) } : cartItem))} className="w-16 rounded border border-gray-200 bg-gray-50 p-1 text-center text-sm dark:border-gray-700 dark:bg-gray-900" /> : <span className="text-gray-400">—</span>}
+                            </td>
+                            <td className="px-4 sm:px-8 py-4 text-center">
+                              <button onClick={() => handleRemoveFromCart(index)} className="text-red-400 hover:text-red-600 transition-colors">
+                                <Trash2 size={18} />
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </>
               )}
             </div>
           </div>
