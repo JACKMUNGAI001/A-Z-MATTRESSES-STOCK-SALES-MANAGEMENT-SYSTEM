@@ -5,8 +5,8 @@ export default function MobileCartItem({ item, index, cartItems, setCartItems, o
   const isGas = item.tracksEmptyCylinder;
 
   const handleEmptyQtyChange = (e) => {
-    const value = Math.min(item.qty, Math.max(0, Number(e.target.value) || 0));
-    setCartItems(cartItems.map((cartItem, i) => i === index ? { ...cartItem, empty_qty: value } : cartItem));
+    const val = e.target.value;
+    setCartItems(cartItems.map((cartItem, i) => i === index ? { ...cartItem, empty_qty: val } : cartItem));
   };
 
   return (
@@ -33,7 +33,7 @@ export default function MobileCartItem({ item, index, cartItems, setCartItems, o
             type="number"
             min="0"
             max={item.qty}
-            value={item.empty_qty}
+            value={item.empty_qty || ''}
             onChange={handleEmptyQtyChange}
             className="w-full rounded border p-2 text-center text-sm font-bold"
           />

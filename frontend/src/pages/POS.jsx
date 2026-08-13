@@ -77,7 +77,7 @@ export default function POS() {
         item_id: itemToAdd.id,
         name: itemToAdd.name,
         tracksEmptyCylinder: itemToAdd.category_name?.toLowerCase().includes('gas'),
-        empty_qty: 0,
+        empty_qty: '',
         qty: qty,
         unit_price: price,
       }]);
@@ -105,7 +105,7 @@ export default function POS() {
       const response = await api.post("/sales", {
         shop_id: selectedShop,
         items: cartItems.map(({ item_id, qty, unit_price }) => ({ item_id, qty, unit_price })),
-        empty_cylinders: cartItems.filter(item => item.tracksEmptyCylinder && item.empty_qty > 0).map(item => ({ item_id: item.item_id, qty: item.empty_qty })),
+        empty_cylinders: cartItems.filter(item => item.tracksEmptyCylinder && item.empty_qty).map(item => ({ item_id: item.item_id, qty: Number(item.empty_qty) })),
         payment_type: paymentType,
         sale_type: saleType,
         saleType: saleType,
@@ -239,7 +239,7 @@ export default function POS() {
                                 KES {(item.qty * item.unit_price).toLocaleString()}
                               </td>
                               <td className="px-4 sm:px-8 py-4 text-center">
-                                {item.tracksEmptyCylinder ? <input type="number" min="0" max={item.qty} value={item.empty_qty} onChange={(e) => setCartItems(cartItems.map((cartItem, i) => i === index ? { ...cartItem, empty_qty: Math.min(item.qty, Math.max(0, Number(e.target.value) || 0)) } : cartItem))} className="w-16 rounded border border-gray-200 bg-gray-50 p-1 text-center text-sm dark:border-gray-700 dark:bg-gray-900" /> : <span className="text-gray-400">—</span>}
+                                {item.tracksEmptyCylinder ? <input type="number" min="0" max={item.qty} value={item.empty_qty || ''} onChange={(e) => { const val = e.target.value; setCartItems(cartItems.map((cartItem, i) => i === index ? { ...cartItem, empty_qty: val } : cartItem)) }} className="w-16 rounded border border-gray-200 bg-gray-50 p-1 text-center text-sm dark:border-gray-700 dark:bg-gray-900" /> : <span className="text-gray-400">—</span>}
                               </td>
                               <td className="px-4 sm:px-8 py-4 text-center">
                                 <button onClick={() => handleRemoveFromCart(index)} className="text-red-400 hover:text-red-600 transition-colors">
