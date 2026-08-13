@@ -393,20 +393,26 @@ def delete_sale(sale_id, user_id):
             raise ValueError("Sale not found")
 
         with db.session.begin_nested():
-            # Revert stock levels
+            cylinder_returns = SaleCylinderReturn.query.filter_by(sale_id=sale_id).all()
+            for ret in cylinder_returns:
+                if ret.returned_qty:
+                    empty_stock = EmptyCylinderStock.query.filter_by(shop_id=sale.shop_id, item_id=ret.item_id).first()
+                    if empty_stock and empty_stock.quantity >= ret.returned_qty:
+                        empty_stock.quantity -= ret.returned_qty
+                        empty_stock.updated_at = get_local_time()
+                db.session.delete(ret)
+
             for item in sale.items:
                 stock = ShopStock.query.filter_by(shop_id=sale.shop_id, item_id=item.item_id).first()
                 if stock:
                     stock.quantity += item.qty
                     stock.updated_at = get_local_time()
                 
-                # Restore to batch if linked
                 if item.batch_id:
                     batch = StockBatch.query.get(item.batch_id)
                     if batch:
                         batch.remaining_qty += item.qty
                     
-                    # Record adjustment movement
                     mv = StockMovement(
                         shop_id=sale.shop_id, 
                         item_id=item.item_id, 
@@ -418,12 +424,8 @@ def delete_sale(sale_id, user_id):
                     )
                     db.session.add(mv)
 
-            # Delete sale items first
             SaleItem.query.filter_by(sale_id=sale_id).delete()
-            # Payment records reference the sale, so remove them before the
-            # parent sale to keep the delete valid on PostgreSQL as well.
             SalePayment.query.filter_by(sale_id=sale_id).delete()
-            # Delete the sale
             db.session.delete(sale)
 
         db.session.commit()
