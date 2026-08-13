@@ -210,6 +210,12 @@ def refill_empty_cylinders_controller():
     identity, data = get_jwt_identity(), request.get_json() or {}
     shop_id = get_shop_id_for_attendant() if identity.get("role") == "attendant" else data.get("shop_id")
     item_id, qty = data.get("item_id"), int(data.get("qty", 0))
+    buy_price = data.get("buy_price")
+    if buy_price is not None:
+        try:
+            buy_price = float(buy_price)
+        except (TypeError, ValueError):
+            buy_price = None
     if not shop_id or not item_id or qty <= 0: return jsonify({"msg": "Shop, product and a positive quantity are required"}), 400
     empty = EmptyCylinderStock.query.filter_by(shop_id=shop_id, item_id=item_id).first()
     if not empty or empty.quantity < qty: return jsonify({"msg": "Not enough empty cylinders available"}), 400
@@ -217,7 +223,8 @@ def refill_empty_cylinders_controller():
     if not stock:
         stock = ShopStock(shop_id=shop_id, item_id=item_id, quantity=0, buy_price=0); db.session.add(stock)
     empty.quantity -= qty; stock.quantity += qty; stock.updated_at = get_local_time()
-    db.session.add(StockBatch(shop_id=shop_id, item_id=item_id, initial_qty=qty, remaining_qty=qty, buy_price=stock.buy_price or 0, source_type="cylinder_refill", created_at=get_local_time()))
+    batch_buy_price = buy_price if buy_price is not None else (stock.buy_price or 0)
+    db.session.add(StockBatch(shop_id=shop_id, item_id=item_id, initial_qty=qty, remaining_qty=qty, buy_price=batch_buy_price, source_type="cylinder_refill", created_at=get_local_time()))
     db.session.add(StockMovement(shop_id=shop_id, item_id=item_id, movement_type="cylinder_refill", qty=qty, user_id=identity.get("id"), created_at=get_local_time()))
     db.session.commit()
     return jsonify({"msg": "Empty cylinders converted to filled stock"}), 200
@@ -272,3 +279,35 @@ def update_restock_controller(movement_id):
         return jsonify({"msg": str(e)}), 400
     except Exception as e:
         return jsonify({"msg": "Internal Server Error"}), 500
+
+def update_empty_cylinder_controller(shop_id, item_id):
+    user_identity = get_jwt_identity()
+    if user_identity.get("role") != "admin":
+        return jsonify({"msg": "Only administrators can update empty cylinder records"}), 403
+    data = request.get_json() or {}
+    try:
+        qty = int(data.get("qty", 0))
+    except (TypeError, ValueError):
+        return jsonify({"msg": "Valid quantity is required"}), 400
+    if qty < 0:
+        return jsonify({"msg": "Quantity cannot be negative"}), 400
+    record = EmptyCylinderStock.query.filter_by(shop_id=shop_id, item_id=item_id).first()
+    if not record:
+        return jsonify({"msg": "Empty cylinder record not found"}), 404
+    record.quantity = qty
+    record.updated_at = get_local_time()
+    db.session.add(StockMovement(shop_id=shop_id, item_id=item_id, movement_type="empty_cylinder_adjustment", qty=qty, user_id=user_identity.get("id"), reference=data.get("note") or "Empty cylinder quantity adjusted", created_at=get_local_time()))
+    db.session.commit()
+    return jsonify({"msg": "Empty cylinder record updated", "qty": qty}), 200
+
+def delete_empty_cylinder_controller(shop_id, item_id):
+    user_identity = get_jwt_identity()
+    if user_identity.get("role") != "admin":
+        return jsonify({"msg": "Only administrators can delete empty cylinder records"}), 403
+    record = EmptyCylinderStock.query.filter_by(shop_id=shop_id, item_id=item_id).first()
+    if not record:
+        return jsonify({"msg": "Empty cylinder record not found"}), 404
+    db.session.delete(record)
+    db.session.add(StockMovement(shop_id=shop_id, item_id=item_id, movement_type="empty_cylinder_deletion", qty=record.quantity, user_id=user_identity.get("id"), reference=f"Empty cylinder record deleted (had {record.quantity} units)", created_at=get_local_time()))
+    db.session.commit()
+    return jsonify({"msg": "Empty cylinder record deleted successfully"}), 200
