@@ -1,6 +1,6 @@
 import { useContext, useEffect, useMemo, useState } from 'react'
 import api from '../api/api'
-import { RefreshCw, Cylinder, Plus, Edit, Trash2, Save, X } from 'lucide-react'
+import { RefreshCw, Cylinder, Plus, Edit, Trash2, Save, X, ChevronDown, ChevronUp, Store } from 'lucide-react'
 import { AuthContext } from '../context/AuthContext'
 import SearchableSelect from '../components/SearchableSelect'
 
@@ -84,6 +84,7 @@ export default function EmptyCylinders() {
   const [buyPrices, setBuyPrices] = useState({})
   const [editingRow, setEditingRow] = useState(null)
   const [editQty, setEditQty] = useState('')
+  const [expandedShops, setExpandedShops] = useState({})
   const gasItems = useMemo(() => items.filter(item => item.category_name?.toLowerCase().includes('gas')), [items])
   const load = async () => { setLoading(true); setError(''); try { const r = await api.get('/stocks/empty-cylinders'); setRows(r.data) } catch (e) { setError(e.response?.data?.msg || 'Unable to load empty cylinders. Please refresh the page.') } finally { setLoading(false) } }
   useEffect(() => { load() }, [])
@@ -95,87 +96,140 @@ export default function EmptyCylinders() {
   const handleUpdate = async () => { if (!editingRow) return; const qty = Number(editQty); if (!Number.isInteger(qty) || qty < 0) return alert('Enter a whole number quantity.'); try { await api.put(`/stocks/empty-cylinders/${editingRow.shop_id}/${editingRow.item_id}`, { qty }); setEditingRow(null); await load() } catch (e) { alert(e.response?.data?.msg || 'Unable to update empty cylinders') } }
   const handleDelete = async (row) => { if (!window.confirm(`Delete empty cylinder record for ${row.item_name} at ${row.shop_name}? This cannot be undone.`)) return; try { await api.delete(`/stocks/empty-cylinders/${row.shop_id}/${row.item_id}`); await load() } catch (e) { alert(e.response?.data?.msg || 'Unable to delete empty cylinder record') } }
   const isAdmin = user?.role === 'admin'
+  const sizeSummary = useMemo(() => {
+    const map = new Map()
+    const regex = /(\d+(?:\.\d+)?)\s*kg/i
+    rows.forEach(row => {
+      const match = row.item_name.match(regex)
+      const size = match ? `${match[1]}kg` : 'Other'
+      map.set(size, (map.get(size) || 0) + (row.empty_qty || 0))
+    })
+    return Array.from(map.entries()).sort((a, b) => {
+      const numA = parseFloat(a[0])
+      const numB = parseFloat(b[0])
+      if (!isNaN(numA) && !isNaN(numB)) return numB - numA
+      return a[0].localeCompare(b[0])
+    })
+  }, [rows])
+  const groupedRows = useMemo(() => {
+    const groups = rows.reduce((acc, row) => {
+      const shopName = row.shop_name || 'Unknown Shop'
+      if (!acc[shopName]) acc[shopName] = []
+      acc[shopName].push(row)
+      return acc
+    }, {})
+    Object.keys(groups).forEach(shopName => {
+      if (!expandedShops[shopName]) {
+        expandedShops[shopName] = true
+      }
+    })
+    return groups
+  }, [rows, expandedShops])
+  const toggleShop = (shopName) => {
+    setExpandedShops(prev => ({ ...prev, [shopName]: !prev[shopName] }))
+  }
   return <div>
     <div className="mb-6 flex items-center gap-3"><Cylinder className="text-amber-600" size={30}/><div><h1 className="text-2xl font-black">Empty Cylinders</h1><p className="text-sm text-gray-500">Add starting or newly acquired empties, then refill them into gas stock.</p></div></div>
+    <div className="mb-6 flex flex-wrap items-center gap-3 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+      <span className="text-xs font-black uppercase tracking-widest text-gray-500 dark:text-gray-400">Total Empties:</span>
+      {sizeSummary.map(([size, total]) => (
+        <span key={size} className="inline-flex items-center rounded-lg border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs font-black text-amber-700 dark:border-amber-700 dark:bg-amber-900/40 dark:text-amber-300">
+          {size} = {total}
+        </span>
+      ))}
+    </div>
     <form onSubmit={addEmpties} className="mb-6 rounded-2xl border border-gray-100 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-gray-800"><h2 className="mb-4 flex items-center gap-2 font-black"><Plus size={18} className="text-amber-600"/> Add empty cylinders</h2><div className="grid gap-3 md:grid-cols-4">{user?.role !== 'attendant' && <SearchableSelect options={shops} value={form.shop_id} onChange={e=>setForm({...form,shop_id:e.target.value})} placeholder="Choose shop..."/>}<SearchableSelect options={gasItems} value={form.item_id} onChange={e=>setForm({...form,item_id:e.target.value})} placeholder="Choose gas cylinder..."/><input className="rounded border p-3" type="number" min="1" step="1" value={form.qty} onChange={e=>setForm({...form,qty:e.target.value})} placeholder="Quantity"/><input className="rounded border p-3" value={form.note} onChange={e=>setForm({...form,note:e.target.value})} placeholder="Optional note"/></div><button className="mt-3 rounded-lg bg-amber-600 px-4 py-2 text-sm font-bold text-white">Add empties</button></form>
-    <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
-      {loading ? <div className="p-10 text-center text-gray-400">Loading empty cylinders...</div> : error ? <div className="p-10 text-center text-red-600">{error}</div> : rows.length === 0 ? <div className="p-10 text-center text-gray-400">No empty-cylinder records yet. Use the form above to enter each shop's current balance.</div> : (
-        <>
-          <div className="md:hidden space-y-3 p-3">
-            {rows.map(row => {
-              const key = `${row.shop_id}-${row.item_id}`
-              return (
-                <MobileCylinderCard
-                  key={key}
-                  row={row}
-                  buyPrice={buyPrices[key]}
-                  onBuyPriceChange={handleBuyPriceChange}
-                  onRefill={refill}
-                  quantities={quantities}
-                  setQuantities={setQuantities}
-                  isAdmin={isAdmin}
-                  onEdit={handleEdit}
-                  onDelete={handleDelete}
-                />
-              )
-            })}
-          </div>
-          <div className="hidden md:block overflow-x-auto">
-            <table className="w-full min-w-[650px]">
-              <thead className="bg-gray-50 dark:bg-gray-900">
-                <tr>
-                  <th className="p-4 text-left text-xs uppercase text-gray-500">Shop</th>
-                  <th className="p-4 text-left text-xs uppercase text-gray-500">Cylinder</th>
-                  <th className="p-4 text-center text-xs uppercase text-gray-500">Empties</th>
-                  <th className="p-4 text-center text-xs uppercase text-gray-500">Filled Stock</th>
-                  <th className="p-4 text-center text-xs uppercase text-gray-500">Refill</th>
-                  {isAdmin && <th className="p-4 text-center text-xs uppercase text-gray-500">Actions</th>}
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map(row => {
+    <div className="space-y-6">
+      {loading ? <div className="p-10 text-center text-gray-400">Loading empty cylinders...</div> : error ? <div className="p-10 text-center text-red-600">{error}</div> : Object.keys(groupedRows).length === 0 ? <div className="p-10 text-center text-gray-400">No empty-cylinder records yet. Use the form above to enter each shop's current balance.</div> : Object.entries(groupedRows).map(([shopName, shopRows]) => (
+        <div key={shopName} className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
+          <button 
+            onClick={() => toggleShop(shopName)}
+            className="w-full flex justify-between items-center p-4 bg-gray-50 dark:bg-gray-900 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all border-b border-gray-100 dark:border-gray-700"
+          >
+            <div className="flex items-center gap-3">
+              <Store size={22} className="text-amber-600 dark:text-amber-400" />
+              <h2 className="text-lg font-bold text-gray-800 dark:text-white tracking-tight">{shopName} <span className="ml-2 text-sm text-gray-400 font-medium">({shopRows.length} Records)</span></h2>
+            </div>
+            {expandedShops[shopName] ? <ChevronUp size={22} className="text-gray-400" /> : <ChevronDown size={22} className="text-gray-400" />}
+          </button>
+          
+          {expandedShops[shopName] && (
+            <>
+              <div className="md:hidden space-y-3 p-3">
+                {shopRows.map(row => {
                   const key = `${row.shop_id}-${row.item_id}`
                   return (
-                    <tr key={key} className="border-t dark:border-gray-700">
-                      <td className="p-4 font-semibold">{row.shop_name}</td>
-                      <td className="p-4">{row.item_name}</td>
-                      <td className="p-4 text-center font-black text-amber-600">{row.empty_qty}</td>
-                      <td className="p-4 text-center font-bold">{row.filled_qty}</td>
-                      <td className="p-4">
-                        {row.empty_qty > 0 && (
-                          <div className="flex flex-col items-center gap-2">
-                            <div className="flex justify-center gap-2">
-                              <input className="w-20 rounded border p-2 text-center" type="number" min="1" max={row.empty_qty} value={quantities[key] || ''} onChange={e => setQuantities({ ...quantities, [key]: e.target.value })} />
-                              <button onClick={() => refill(row)} className="inline-flex items-center gap-1 rounded-lg bg-green-600 px-3 py-2 text-xs font-bold text-white"><RefreshCw size={14} /> Refill</button>
-                            </div>
-                            <input
-                              className="w-32 rounded border p-2 text-center text-xs"
-                              type="number"
-                              min="0"
-                              step="0.01"
-                              placeholder="Buy price / kg"
-                              value={buyPrices[key] || ''}
-                              onChange={e => handleBuyPriceChange(key, e.target.value)}
-                            />
-                          </div>
-                        )}
-                      </td>
-                      {isAdmin && (
-                        <td className="p-4">
-                          <div className="flex items-center justify-center gap-2">
-                            <button onClick={() => handleEdit(row)} className="rounded-lg border border-amber-300 p-2 text-amber-600 dark:border-amber-700 dark:text-amber-400" title="Edit"><Edit size={16} /></button>
-                            <button onClick={() => handleDelete(row)} className="rounded-lg border border-red-300 p-2 text-red-600 dark:border-red-700 dark:text-red-400" title="Delete"><Trash2 size={16} /></button>
-                          </div>
-                        </td>
-                      )}
-                    </tr>
+                    <MobileCylinderCard
+                      key={key}
+                      row={row}
+                      buyPrice={buyPrices[key]}
+                      onBuyPriceChange={handleBuyPriceChange}
+                      onRefill={refill}
+                      quantities={quantities}
+                      setQuantities={setQuantities}
+                      isAdmin={isAdmin}
+                      onEdit={handleEdit}
+                      onDelete={handleDelete}
+                    />
                   )
                 })}
-              </tbody>
-            </table>
-          </div>
-        </>
-      )}
+              </div>
+              <div className="hidden md:block overflow-x-auto">
+                <table className="w-full min-w-[650px]">
+                  <thead className="bg-gray-50 dark:bg-gray-900">
+                    <tr>
+                      <th className="p-4 text-left text-xs uppercase text-gray-500">Cylinder</th>
+                      <th className="p-4 text-center text-xs uppercase text-gray-500">Empties</th>
+                      <th className="p-4 text-center text-xs uppercase text-gray-500">Filled Stock</th>
+                      <th className="p-4 text-center text-xs uppercase text-gray-500">Refill</th>
+                      {isAdmin && <th className="p-4 text-center text-xs uppercase text-gray-500">Actions</th>}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {shopRows.map(row => {
+                      const key = `${row.shop_id}-${row.item_id}`
+                      return (
+                        <tr key={key} className="border-t dark:border-gray-700">
+                          <td className="p-4 font-semibold">{row.item_name}</td>
+                          <td className="p-4 text-center font-black text-amber-600">{row.empty_qty}</td>
+                          <td className="p-4 text-center font-bold">{row.filled_qty}</td>
+                          <td className="p-4">
+                            {row.empty_qty > 0 && (
+                              <div className="flex flex-col items-center gap-2">
+                                <div className="flex justify-center gap-2">
+                                  <input className="w-20 rounded border p-2 text-center" type="number" min="1" max={row.empty_qty} value={quantities[key] || ''} onChange={e => setQuantities({ ...quantities, [key]: e.target.value })} />
+                                  <button onClick={() => refill(row)} className="inline-flex items-center gap-1 rounded-lg bg-green-600 px-3 py-2 text-xs font-bold text-white"><RefreshCw size={14} /> Refill</button>
+                                </div>
+                                <input
+                                  className="w-32 rounded border p-2 text-center text-xs"
+                                  type="number"
+                                  min="0"
+                                  step="0.01"
+                                  placeholder="Buy price / kg"
+                                  value={buyPrices[key] || ''}
+                                  onChange={e => handleBuyPriceChange(key, e.target.value)}
+                                />
+                              </div>
+                            )}
+                          </td>
+                          {isAdmin && (
+                            <td className="p-4">
+                              <div className="flex items-center justify-center gap-2">
+                                <button onClick={() => handleEdit(row)} className="rounded-lg border border-amber-300 p-2 text-amber-600 dark:border-amber-700 dark:text-amber-400" title="Edit"><Edit size={16} /></button>
+                                <button onClick={() => handleDelete(row)} className="rounded-lg border border-red-300 p-2 text-red-600 dark:border-red-700 dark:text-red-400" title="Delete"><Trash2 size={16} /></button>
+                              </div>
+                            </td>
+                          )}
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
+        </div>
+      ))}
     </div>
 
     {editingRow && (
