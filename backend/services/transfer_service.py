@@ -288,17 +288,34 @@ def get_transfers(shop_id=None):
         query = query.filter((Transfer.from_shop_id == shop_id) | (Transfer.to_shop_id == shop_id))
     
     transfers = query.all()
+    
+    shop_ids = {t.from_shop_id for t in transfers if t.from_shop_id} | {t.to_shop_id for t in transfers if t.to_shop_id}
+    user_ids = {t.created_by for t in transfers if t.created_by}
+    transfer_ids = [t.id for t in transfers]
+    
+    shops = {s.id: s for s in Shop.query.filter(Shop.id.in_(shop_ids)).all()} if shop_ids else {}
+    users = {u.id: u for u in User.query.filter(User.id.in_(user_ids)).all()} if user_ids else {}
+    
+    t_items = TransferItem.query.filter(TransferItem.transfer_id.in_(transfer_ids)).all()
+    items_by_transfer = {}
+    item_ids = set()
+    for ti in t_items:
+        items_by_transfer.setdefault(ti.transfer_id, []).append(ti)
+        if ti.item_id:
+            item_ids.add(ti.item_id)
+    
+    items = {i.id: i for i in Item.query.filter(Item.id.in_(item_ids)).all()} if item_ids else {}
+    
     out = []
     for t in transfers:
-        from_shop = Shop.query.get(t.from_shop_id)
-        to_shop = Shop.query.get(t.to_shop_id)
-        user = User.query.get(t.created_by)
+        from_shop = shops.get(t.from_shop_id)
+        to_shop = shops.get(t.to_shop_id)
+        user = users.get(t.created_by)
         
-        items = []
-        t_items = TransferItem.query.filter_by(transfer_id=t.id).all()
-        for ti in t_items:
-            item = Item.query.get(ti.item_id)
-            items.append({
+        items_list = []
+        for ti in items_by_transfer.get(t.id, []):
+            item = items.get(ti.item_id)
+            items_list.append({
                 "item_id": ti.item_id,
                 "item_name": item.name if item else "N/A",
                 "qty": ti.qty
@@ -315,6 +332,6 @@ def get_transfers(shop_id=None):
             "status": t.status,
             "notes": t.notes,
             "created_at": t.created_at.isoformat(),
-            "items": items
+            "items": items_list
         })
     return out

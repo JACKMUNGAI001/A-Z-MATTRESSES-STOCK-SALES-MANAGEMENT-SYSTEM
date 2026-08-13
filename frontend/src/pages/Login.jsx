@@ -13,18 +13,6 @@ export default function Login(){
   const navigate = useNavigate()
   const { setUser } = useContext(AuthContext)
 
-  // Wake up backend on mount
-  useEffect(() => {
-    const wakeup = async () => {
-      try {
-        await api.get('/health')
-      } catch (e) {
-        console.log("Waking up backend...")
-      }
-    }
-    wakeup()
-  }, [])
-
   const submit = async (e) => {
     e.preventDefault()
     setLoading(true)

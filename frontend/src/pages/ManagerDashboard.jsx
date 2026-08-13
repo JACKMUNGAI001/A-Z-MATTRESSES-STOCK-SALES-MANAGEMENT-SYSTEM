@@ -28,20 +28,15 @@ export default function ManagerDashboard(){
 
     const fetchDashboardData = async () => {
         try {
-            // Fetch Sales Summary (Global for Manager)
-            const salesRes = await api.get('/reports/sales-summary');
+            const [salesRes, depositsRes, depositCustomersResponse, stockSummaryRes] = await Promise.all([
+              api.get('/reports/sales-summary'),
+              api.get('/reports/deposits-summary'),
+              api.get('/deposits/customers_count'),
+              api.get('/reports/stock-summary'),
+            ]);
             setSalesSummary(salesRes.data);
-
-            // Fetch Deposits Summary (Global for Manager)
-            const depositsRes = await api.get('/reports/deposits-summary');
             setDepositsSummary(depositsRes.data);
-
-            // Fetch Deposit Customers Count (Global for Manager)
-            const depositCustomersResponse = await api.get('/deposits/customers_count');
             setDepositCustomersCount(depositCustomersResponse.data.count);
-
-            // Fetch Stock Summary
-            const stockSummaryRes = await api.get('/reports/stock-summary');
             setStockSummary(stockSummaryRes.data);
 
         } catch (err) {
@@ -54,20 +49,8 @@ export default function ManagerDashboard(){
 
   const fetchGlobalStock = async () => {
     try {
-      // Fetch shops first then aggregate each shop's stocks to avoid heavy server endpoint
-      const shopsRes = await api.get('/shops')
-      const shopsData = shopsRes.data || []
-      const aggregated = []
-      await Promise.all(shopsData.map(async (s) => {
-        try {
-          const res = await api.get(`/stocks/${s.id}`)
-          (res.data || []).forEach(item => item.shop_name = s.name)
-          aggregated.push(...(res.data || []))
-        } catch (err) {
-          console.warn('Failed to fetch stocks for shop', s.id, err)
-        }
-      }))
-      setGlobalStock(aggregated)
+      const response = await api.get('/reports/global-inventory')
+      setGlobalStock(response.data || [])
     } catch (err) {
       console.error('Error fetching global stock', err);
     }

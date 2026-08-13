@@ -37,3 +37,22 @@ class StockMovement(db.Model):
     user_id = db.Column(db.Integer)
     reference = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=get_local_time)
+
+class EmptyCylinderStock(db.Model):
+    __tablename__ = "empty_cylinder_stocks"
+    id = db.Column(db.Integer, primary_key=True)
+    shop_id = db.Column(db.Integer, db.ForeignKey("shops.id"), nullable=False)
+    item_id = db.Column(db.Integer, db.ForeignKey("items.id"), nullable=False)
+    quantity = db.Column(db.Integer, nullable=False, default=0)
+    updated_at = db.Column(db.DateTime, default=get_local_time)
+    __table_args__ = (db.UniqueConstraint("shop_id", "item_id", name="uq_empty_cylinder_shop_item"),)
+
+class SaleCylinderReturn(db.Model):
+    """The cylinder exchange recorded for each gas item on a sale."""
+    __tablename__ = "sale_cylinder_returns"
+    id = db.Column(db.Integer, primary_key=True)
+    sale_id = db.Column(db.Integer, db.ForeignKey("sales.id"), nullable=False, index=True)
+    item_id = db.Column(db.Integer, db.ForeignKey("items.id"), nullable=False, index=True)
+    sold_qty = db.Column(db.Integer, nullable=False)
+    returned_qty = db.Column(db.Integer, nullable=False, default=0)
+    created_at = db.Column(db.DateTime, default=get_local_time, nullable=False)

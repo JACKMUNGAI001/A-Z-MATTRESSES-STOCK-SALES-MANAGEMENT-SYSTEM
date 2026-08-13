@@ -71,6 +71,17 @@ def ensure_sale_type_column():
         logger.exception("Unable to verify credit-sale database schema")
         raise
 
+
+def ensure_cylinder_schema():
+    """Create cylinder tables for live installs that have not run migrations yet."""
+    try:
+        from models.stock import EmptyCylinderStock, SaleCylinderReturn
+        EmptyCylinderStock.__table__.create(bind=db.engine, checkfirst=True)
+        SaleCylinderReturn.__table__.create(bind=db.engine, checkfirst=True)
+    except Exception:
+        logger.exception("Unable to verify cylinder database schema")
+        raise
+
 class SaleItem(db.Model):
     __tablename__ = "sale_items"
     id = db.Column(db.Integer, primary_key=True)

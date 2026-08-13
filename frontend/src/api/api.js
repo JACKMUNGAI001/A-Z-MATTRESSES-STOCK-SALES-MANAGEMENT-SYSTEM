@@ -8,6 +8,17 @@ const api = axios.create({
 
 let activeGetRequests = 0
 const loadingListeners = new Set()
+const referenceCache = new Map()
+const REFERENCE_CACHE_TTL = 5 * 60 * 1000
+
+// These values change infrequently but are requested by many pages and modals.
+// Serving them from memory removes repeat round trips while mutations clear the
+// cache immediately, so stock and sales data are never served stale.
+const isReferenceRequest = (config) => {
+  const url = (config.url || '').replace(/\/$/, '')
+  return url === '/items' || url === '/shops'
+}
+const cacheKey = (config) => `${config.url}?${JSON.stringify(config.params || {})}`
 
 const notifyLoadingListeners = () => {
   loadingListeners.forEach((listener) => listener(activeGetRequests > 0))
@@ -36,11 +47,21 @@ api.interceptors.request.use((config) => {
     notifyLoadingListeners()
   }
 
+  if ((config.method || 'get').toLowerCase() === 'get' && isReferenceRequest(config)) {
+    const cached = referenceCache.get(cacheKey(config))
+    if (cached && Date.now() - cached.savedAt < REFERENCE_CACHE_TTL) {
+      config.adapter = () => Promise.resolve({ data: cached.data, status: 200, statusText: 'OK', headers: {}, config })
+    }
+  }
+
+  if ((config.method || 'get').toLowerCase() !== 'get') referenceCache.clear()
+
   return config
 })
 
 api.interceptors.response.use(
   (response) => {
+    if (isReferenceRequest(response.config)) referenceCache.set(cacheKey(response.config), { data: response.data, savedAt: Date.now() })
     stopGlobalLoading(response.config)
     return response
   },

@@ -248,10 +248,17 @@ def get_low_stock_items(threshold=2, shop_id=None):
         query = query.filter(ShopStock.shop_id == shop_id)
     
     low_stock = query.order_by(Item.name.asc()).all()
+    
+    item_ids = {s.item_id for s in low_stock}
+    shop_ids = {s.shop_id for s in low_stock}
+    
+    items = {i.id: i for i in Item.query.filter(Item.id.in_(item_ids)).all()} if item_ids else {}
+    shops = {s.id: s for s in Shop.query.filter(Shop.id.in_(shop_ids)).all()} if shop_ids else {}
+    
     out = []
     for s in low_stock:
-        item = Item.query.get(s.item_id)
-        shop = Shop.query.get(s.shop_id)
+        item = items.get(s.item_id)
+        shop = shops.get(s.shop_id)
         out.append({
             "item_id":s.item_id,
             "item_name": item.name if item else "N/A",
@@ -281,11 +288,20 @@ def get_restock_history(shop_id=None):
         query = query.filter_by(shop_id=shop_id)
     
     movements = query.order_by(StockMovement.created_at.desc()).all()
+    
+    item_ids = {m.item_id for m in movements if m.item_id}
+    shop_ids = {m.shop_id for m in movements if m.shop_id}
+    user_ids = {m.user_id for m in movements if m.user_id}
+    
+    items = {i.id: i for i in Item.query.filter(Item.id.in_(item_ids)).all()} if item_ids else {}
+    shops = {s.id: s for s in Shop.query.filter(Shop.id.in_(shop_ids)).all()} if shop_ids else {}
+    users = {u.id: u for u in User.query.filter(User.id.in_(user_ids)).all()} if user_ids else {}
+    
     out = []
     for m in movements:
-        item = Item.query.get(m.item_id)
-        shop = Shop.query.get(m.shop_id)
-        user = User.query.get(m.user_id)
+        item = items.get(m.item_id)
+        shop = shops.get(m.shop_id)
+        user = users.get(m.user_id)
         out.append({
             "id": m.id,
             "shop_name": shop.name if shop else "N/A",

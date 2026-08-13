@@ -151,11 +151,22 @@ def get_deposit_customers(shop_id=None):
         query = query.filter_by(shop_id=shop_id)
     
     customers = query.all()
+    
+    deposit_ids = [c.id for c in customers]
+    shop_ids = {c.shop_id for c in customers if c.shop_id}
+    
+    payments = DepositPayment.query.filter(DepositPayment.deposit_id.in_(deposit_ids)).all()
+    payments_by_deposit = {}
+    for p in payments:
+        payments_by_deposit.setdefault(p.deposit_id, []).append(p)
+    
+    shops = {s.id: s for s in Shop.query.filter(Shop.id.in_(shop_ids)).all()} if shop_ids else {}
+    
     out = []
     for c in customers:
-        all_payments = DepositPayment.query.filter_by(deposit_id=c.id).all()
+        all_payments = payments_by_deposit.get(c.id, [])
         total_paid = sum(float(p.amount) for p in all_payments)
-        shop = Shop.query.get(c.shop_id)
+        shop = shops.get(c.shop_id)
         out.append({
             "id": c.id,
             "buyer_name": c.buyer_name,
@@ -183,9 +194,11 @@ def _serialize_payment(p):
         "paid_on": p.paid_on.isoformat()
     }
 
-def _serialize_deposit(dep):
-    shop = Shop.query.get(dep.shop_id)
-    all_payments = DepositPayment.query.filter_by(deposit_id=dep.id).all()
+def _serialize_deposit(dep, shop=None, all_payments=None):
+    if shop is None:
+        shop = Shop.query.get(dep.shop_id)
+    if all_payments is None:
+        all_payments = DepositPayment.query.filter_by(deposit_id=dep.id).all()
     total_paid = sum(float(p.amount) for p in all_payments)
     
     payments_summary = []
@@ -212,13 +225,25 @@ def _serialize_deposit(dep):
         "payments": payments_summary
     }
 
+def _serialize_deposits_bulk(deposits):
+    shop_ids = {d.shop_id for d in deposits if d.shop_id}
+    deposit_ids = [d.id for d in deposits]
+    
+    shops = {s.id: s for s in Shop.query.filter(Shop.id.in_(shop_ids)).all()} if shop_ids else {}
+    payments = DepositPayment.query.filter(DepositPayment.deposit_id.in_(deposit_ids)).all()
+    payments_by_deposit = {}
+    for p in payments:
+        payments_by_deposit.setdefault(p.deposit_id, []).append(p)
+    
+    return [_serialize_deposit(d, shop=shops.get(d.shop_id), all_payments=payments_by_deposit.get(d.id)) for d in deposits]
+
 def get_all_deposits():
     deposits = DepositSale.query.order_by(DepositSale.created_at.desc()).all()
-    return [_serialize_deposit(d) for d in deposits]
+    return _serialize_deposits_bulk(deposits)
 
 def get_deposits_by_shop_id(shop_id):
     deposits = DepositSale.query.filter_by(shop_id=shop_id).order_by(DepositSale.created_at.desc()).all()
-    return [_serialize_deposit(d) for d in deposits]
+    return _serialize_deposits_bulk(deposits)
 
 def get_todays_deposit_payments(shop_id=None):
     today = get_local_time().date()
@@ -230,7 +255,7 @@ def get_todays_deposit_payments(shop_id=None):
         query = query.filter(DepositSale.shop_id == shop_id)
     
     deposits = query.all()
-    return [_serialize_deposit(d) for d in deposits]
+    return _serialize_deposits_bulk(deposits)
 
 def get_weeks_deposit_payments(shop_id=None):
     now = get_local_time()
@@ -242,7 +267,7 @@ def get_weeks_deposit_payments(shop_id=None):
         query = query.filter(DepositSale.shop_id == shop_id)
         
     deposits = query.all()
-    return [_serialize_deposit(d) for d in deposits]
+    return _serialize_deposits_bulk(deposits)
 
 def get_months_deposit_payments(shop_id=None):
     now = get_local_time()
@@ -257,7 +282,7 @@ def get_months_deposit_payments(shop_id=None):
         query = query.filter(DepositSale.shop_id == shop_id)
         
     deposits = query.all()
-    return [_serialize_deposit(d) for d in deposits]
+    return _serialize_deposits_bulk(deposits)
 
 def get_years_deposit_payments(shop_id=None):
     now = get_local_time()
@@ -269,7 +294,7 @@ def get_years_deposit_payments(shop_id=None):
         query = query.filter(DepositSale.shop_id == shop_id)
         
     deposits = query.all()
-    return [_serialize_deposit(d) for d in deposits]
+    return _serialize_deposits_bulk(deposits)
 
 def delete_deposit(deposit_id):
     dep = DepositSale.query.get(deposit_id)

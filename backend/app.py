@@ -1,7 +1,7 @@
 from flask import Flask, jsonify, request
 from config import Config
 from extensions import db, migrate, jwt, cors
-from models.sale import ensure_sale_type_column
+from models.sale import ensure_sale_type_column, ensure_cylinder_schema
 
 def create_app():
     app = Flask(__name__, static_folder=None)
@@ -13,6 +13,7 @@ def create_app():
     jwt.init_app(app)
     with app.app_context():
         ensure_sale_type_column()
+        ensure_cylinder_schema()
     cors.init_app(app, resources={r"/*": {"origins": "*"}})
 
     # Register routes

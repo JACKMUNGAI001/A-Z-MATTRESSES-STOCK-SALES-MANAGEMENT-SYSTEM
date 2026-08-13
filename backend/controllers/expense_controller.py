@@ -17,9 +17,11 @@ def list_expenses_controller():
     shop_id = request.args.get("shop_id")
     es = list_expenses(shop_id)
     from models.shop import Shop
+    shop_ids = {e.shop_id for e in es if e.shop_id}
+    shops = {s.id: s for s in Shop.query.filter(Shop.id.in_(shop_ids)).all()} if shop_ids else {}
     out = []
     for e in es:
-        shop = Shop.query.get(e.shop_id) if e.shop_id else None
+        shop = shops.get(e.shop_id) if e.shop_id else None
         out.append({
             "id": e.id,
             "title": e.title,

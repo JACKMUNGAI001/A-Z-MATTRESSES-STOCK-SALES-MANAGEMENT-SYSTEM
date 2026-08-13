@@ -6,6 +6,7 @@ from controllers.report_controller import (
     sales_summary_controller, 
     deposits_summary_controller, 
     stock_summary_by_category_controller, 
+    global_inventory_controller,
     dashboard_summary_controller,
     product_sales_analysis_controller,
     outstanding_credits_controller,
@@ -23,6 +24,7 @@ bp.add_url_rule("/daily_sales", "daily_sales_report", jwt_required()(daily_sales
 bp.add_url_rule("/sales-summary", "sales_summary", jwt_required()(sales_summary_controller), methods=["GET"])
 bp.add_url_rule("/deposits-summary", "deposits_summary", jwt_required()(deposits_summary_controller), methods=["GET"])
 bp.add_url_rule("/stock-summary", "stock_summary", jwt_required()(stock_summary_by_category_controller), methods=["GET"])
+bp.add_url_rule("/global-inventory", "global_inventory", jwt_required()(global_inventory_controller), methods=["GET"])
 bp.add_url_rule("/product-analysis", "product_analysis", jwt_required()(product_sales_analysis_controller), methods=["GET"])
 bp.add_url_rule("/outstanding-credits", "outstanding_credits", jwt_required()(outstanding_credits_controller), methods=["GET"])
 bp.add_url_rule("/credits-summary", "credits_summary", jwt_required()(credits_summary_controller), methods=["GET"])

@@ -13,28 +13,16 @@ export default function GlobalInventory(){
     const fetchData = async () => {
       setErrorMessage(null)
       try {
-        const [shopsRes, stockSummaryRes] = await Promise.all([
+        const [shopsRes, stockSummaryRes, inventoryRes] = await Promise.all([
           api.get('/shops'),
           api.get('/reports/stock-summary'),
+          api.get('/reports/global-inventory'),
         ])
         const shopsData = shopsRes.data || []
         setShops(shopsData)
         setStockSummary(stockSummaryRes.data || {})
 
-        // Fetch stocks per shop to avoid relying on single heavy endpoint
-        const allStocks = []
-        await Promise.all(shopsData.map(async (s) => {
-          try {
-            const res = await api.get(`/stocks/${s.id}`)
-            // Match stock to its shop by ID, not its display name. Shop names can
-            // be edited or formatted differently, while IDs remain stable.
-            allStocks.push(...(res.data || []).map(item => ({ ...item, shop_id: s.id })))
-          } catch (err) {
-            console.warn('Failed to fetch stocks for shop', s.id, err)
-          }
-        }))
-
-        setGlobalStock(allStocks)
+        setGlobalStock(inventoryRes.data || [])
       } catch (err) {
         console.error('Error fetching shops or stock', err)
         setErrorMessage('Failed to load inventory. Please check your connection or permissions.')

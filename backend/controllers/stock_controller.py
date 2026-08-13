@@ -4,12 +4,15 @@ from services.stock_service import (
     get_low_stock_items, delete_stock, get_restock_history, 
     delete_restock_movement, update_restock_movement
 )
-from models.stock import ShopStock
+from models.stock import ShopStock, StockBatch, StockMovement, EmptyCylinderStock, SaleCylinderReturn
+from models.sale import Sale
 from models.user import User
-from models.product import Item
+from models.product import Item, Category
+from models.shop import Shop
 from extensions import db
 from flask_jwt_extended import get_jwt_identity
 from utils.auth_utils import get_shop_id_for_attendant
+from utils.timezone_utils import get_local_time
 
 def manager_can_restock(identity):
     user = User.query.get(identity.get("id"))
@@ -30,18 +33,18 @@ def get_shop_stock(shop_id):
         func.max(ShopStock.buy_price).label('buy_price')
     ).join(Item, ShopStock.item_id == Item.id).filter(ShopStock.shop_id == shop_id).group_by(ShopStock.item_id, Item.name).order_by(Item.name.asc()).all()
 
+    batches = StockBatch.query.filter_by(shop_id=shop_id).filter(StockBatch.remaining_qty > 0).order_by(StockBatch.created_at.asc()).all()
+    batches_by_item = {}
+    for b in batches:
+        batches_by_item.setdefault(b.item_id, []).append(b)
+
     out = []
     user_identity = get_jwt_identity()
     user_role = user_identity.get("role")
 
     for s in q:
-        # Fetch batches for this item in this shop
-        batches = StockBatch.query.filter_by(shop_id=shop_id, item_id=s.item_id)\
-            .filter(StockBatch.remaining_qty > 0)\
-            .order_by(StockBatch.created_at.asc()).all()
-        
         batch_list = []
-        for b in batches:
+        for b in batches_by_item.get(s.item_id, []):
             b_data = {
                 "id": b.id,
                 "qty": int(b.remaining_qty),
@@ -121,6 +124,103 @@ def low_stock_items_controller(threshold=2):
             item.pop("buy_price", None)
             
     return jsonify(items), 200
+
+def empty_cylinders_controller():
+    identity = get_jwt_identity()
+    shop_id = get_shop_id_for_attendant() if identity.get("role") == "attendant" else request.args.get("shop_id", type=int)
+    query = db.session.query(EmptyCylinderStock, Item, ShopStock).join(Item, EmptyCylinderStock.item_id == Item.id).outerjoin(ShopStock, (ShopStock.shop_id == EmptyCylinderStock.shop_id) & (ShopStock.item_id == EmptyCylinderStock.item_id))
+    if shop_id:
+        query = query.filter(EmptyCylinderStock.shop_id == shop_id)
+    records = query.order_by(EmptyCylinderStock.updated_at.desc()).all()
+    
+    shop_ids = {empty.shop_id for empty, item, filled in records if empty.shop_id}
+    shops = {s.id: s for s in Shop.query.filter(Shop.id.in_(shop_ids)).all()} if shop_ids else {}
+    
+    out = []
+    for empty, item, filled in records:
+        shop = shops.get(empty.shop_id)
+        out.append({"shop_id": empty.shop_id, "shop_name": shop.name if shop else "N/A", "item_id": item.id, "item_name": item.name, "empty_qty": empty.quantity, "filled_qty": filled.quantity if filled else 0})
+    return jsonify(out), 200
+
+def add_empty_cylinders_controller():
+    identity, data = get_jwt_identity(), request.get_json() or {}
+    shop_id = get_shop_id_for_attendant() if identity.get("role") == "attendant" else data.get("shop_id")
+    try:
+        item_id, qty = int(data.get("item_id")), int(data.get("qty", 0))
+    except (TypeError, ValueError):
+        return jsonify({"msg": "Product and a positive quantity are required"}), 400
+    if not shop_id or qty <= 0:
+        return jsonify({"msg": "Shop, product and a positive quantity are required"}), 400
+    item = Item.query.get(item_id)
+    category = Category.query.get(item.category_id) if item else None
+    if not category or "gas" not in category.name.lower():
+        return jsonify({"msg": "Empty cylinders can only be added for gas products"}), 400
+    empty = EmptyCylinderStock.query.filter_by(shop_id=shop_id, item_id=item_id).first()
+    if not empty:
+        empty = EmptyCylinderStock(shop_id=shop_id, item_id=item_id, quantity=0)
+        db.session.add(empty)
+    empty.quantity += qty
+    empty.updated_at = get_local_time()
+    db.session.add(StockMovement(shop_id=shop_id, item_id=item_id, movement_type="empty_cylinder_addition", qty=qty, user_id=identity.get("id"), reference=data.get("note") or "Empty cylinders added", created_at=get_local_time()))
+    db.session.commit()
+    return jsonify({"msg": "Empty cylinders added", "qty": empty.quantity}), 201
+
+def outstanding_empty_cylinders_controller():
+    identity = get_jwt_identity()
+    shop_id = get_shop_id_for_attendant() if identity.get("role") == "attendant" else request.args.get("shop_id", type=int)
+    query = db.session.query(SaleCylinderReturn, Sale, Item, Shop).join(Sale, SaleCylinderReturn.sale_id == Sale.id).join(Item, SaleCylinderReturn.item_id == Item.id).join(Shop, Sale.shop_id == Shop.id).filter(SaleCylinderReturn.returned_qty < SaleCylinderReturn.sold_qty)
+    if shop_id:
+        query = query.filter(Sale.shop_id == shop_id)
+    records = query.order_by(SaleCylinderReturn.created_at.desc()).all()
+    return jsonify([{
+        "id": record.id, "sale_id": sale.id, "shop_id": sale.shop_id, "shop_name": shop.name,
+        "item_id": item.id, "item_name": item.name, "sold_qty": record.sold_qty,
+        "returned_qty": record.returned_qty, "outstanding_qty": record.sold_qty - record.returned_qty,
+        "customer_name": sale.customer_name or "Walk-in customer", "customer_phone": sale.customer_phone,
+        "created_at": record.created_at.isoformat(),
+    } for record, sale, item, shop in records]), 200
+
+def receive_outstanding_empty_cylinder_controller(record_id):
+    identity, data = get_jwt_identity(), request.get_json() or {}
+    try:
+        qty = int(data.get("qty", 0))
+    except (TypeError, ValueError):
+        qty = 0
+    record = SaleCylinderReturn.query.get(record_id)
+    if not record or qty <= 0:
+        return jsonify({"msg": "A valid outstanding record and positive quantity are required"}), 400
+    sale = Sale.query.get(record.sale_id)
+    if identity.get("role") == "attendant" and get_shop_id_for_attendant() != sale.shop_id:
+        return jsonify({"msg": "You can only receive cylinders for your shop"}), 403
+    outstanding = record.sold_qty - record.returned_qty
+    if qty > outstanding:
+        return jsonify({"msg": "Received cylinders cannot exceed the outstanding quantity"}), 400
+    empty = EmptyCylinderStock.query.filter_by(shop_id=sale.shop_id, item_id=record.item_id).first()
+    if not empty:
+        empty = EmptyCylinderStock(shop_id=sale.shop_id, item_id=record.item_id, quantity=0)
+        db.session.add(empty)
+    record.returned_qty += qty
+    empty.quantity += qty
+    empty.updated_at = get_local_time()
+    db.session.add(StockMovement(shop_id=sale.shop_id, item_id=record.item_id, movement_type="empty_cylinder_return", qty=qty, user_id=identity.get("id"), reference=f"Outstanding cylinder return for sale {sale.id}", created_at=get_local_time()))
+    db.session.commit()
+    return jsonify({"msg": "Returned empty cylinders received", "outstanding_qty": record.sold_qty - record.returned_qty}), 200
+
+def refill_empty_cylinders_controller():
+    identity, data = get_jwt_identity(), request.get_json() or {}
+    shop_id = get_shop_id_for_attendant() if identity.get("role") == "attendant" else data.get("shop_id")
+    item_id, qty = data.get("item_id"), int(data.get("qty", 0))
+    if not shop_id or not item_id or qty <= 0: return jsonify({"msg": "Shop, product and a positive quantity are required"}), 400
+    empty = EmptyCylinderStock.query.filter_by(shop_id=shop_id, item_id=item_id).first()
+    if not empty or empty.quantity < qty: return jsonify({"msg": "Not enough empty cylinders available"}), 400
+    stock = ShopStock.query.filter_by(shop_id=shop_id, item_id=item_id).first()
+    if not stock:
+        stock = ShopStock(shop_id=shop_id, item_id=item_id, quantity=0, buy_price=0); db.session.add(stock)
+    empty.quantity -= qty; stock.quantity += qty; stock.updated_at = get_local_time()
+    db.session.add(StockBatch(shop_id=shop_id, item_id=item_id, initial_qty=qty, remaining_qty=qty, buy_price=stock.buy_price or 0, source_type="cylinder_refill", created_at=get_local_time()))
+    db.session.add(StockMovement(shop_id=shop_id, item_id=item_id, movement_type="cylinder_refill", qty=qty, user_id=identity.get("id"), created_at=get_local_time()))
+    db.session.commit()
+    return jsonify({"msg": "Empty cylinders converted to filled stock"}), 200
 
 def delete_stock_controller(shop_id, item_id):
     user_identity = get_jwt_identity()

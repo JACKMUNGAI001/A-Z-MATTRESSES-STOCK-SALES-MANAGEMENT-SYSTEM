@@ -9,9 +9,12 @@ def list_items_controller():
     user_identity = get_jwt_identity()
     user_role = user_identity.get("role")
     
+    category_ids = {it.category_id for it in items if it.category_id}
+    categories = {c.id: c for c in Category.query.filter(Category.id.in_(category_ids)).all()} if category_ids else {}
+    
     out = []
     for it in items:
-        category = Category.query.get(it.category_id)
+        category = categories.get(it.category_id)
         item_data = {
             "id":it.id,
             "sku": it.sku,
@@ -87,7 +90,7 @@ def delete_item_controller(item_id):
         return jsonify({"msg": "Item not found"}), 404
     
     # Cleanup related records to prevent "N/A" orphans and foreign key violations
-    from models.stock import ShopStock, StockMovement, StockBatch
+    from models.stock import ShopStock, StockMovement, StockBatch, EmptyCylinderStock, SaleCylinderReturn
     from models.deposit import DepositSale, DepositPayment
     from models.supplier import SupplierInvoiceItem, supplier_items
     from models.sale import SaleItem
@@ -117,6 +120,8 @@ def delete_item_controller(item_id):
     SaleItem.query.filter_by(item_id=item_id).delete()
     StockBatch.query.filter_by(item_id=item_id).delete()
     StockMovement.query.filter_by(item_id=item_id).delete()
+    EmptyCylinderStock.query.filter_by(item_id=item_id).delete()
+    SaleCylinderReturn.query.filter_by(item_id=item_id).delete()
     TransferItem.query.filter_by(item_id=item_id).delete()
 
     db.session.delete(item)

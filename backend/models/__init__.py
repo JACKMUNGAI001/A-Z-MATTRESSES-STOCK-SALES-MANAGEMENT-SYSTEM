@@ -2,7 +2,7 @@
 from .user import User
 from .shop import Shop
 from .product import Category, Item
-from .stock import ShopStock, StockMovement
+from .stock import ShopStock, StockMovement, EmptyCylinderStock, SaleCylinderReturn
 from .sale import Sale, SaleItem
 from .deposit import DepositSale, DepositPayment
 from .transfer import Transfer, TransferItem

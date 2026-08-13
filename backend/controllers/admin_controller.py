@@ -2,6 +2,7 @@ from flask import jsonify, request
 from models.user import User
 from models.shop import Shop
 from extensions import db
+from sqlalchemy.orm import joinedload
 
 def pending_attendants(identity):
     if identity.get("role") != "admin":
@@ -22,14 +23,12 @@ def verify_attendant(user_id, data):
 def list_all_attendants_controller(identity):
     if identity.get("role") != "admin":
         return jsonify({"msg":"admin only"}), 403
-    attendants = User.query.filter_by(role="attendant").order_by(User.name.asc()).all()
+    attendants = User.query.filter_by(role="attendant").options(joinedload(User.shop)).order_by(User.name.asc()).all()
     out = []
     for att in attendants:
         shop_name = None
-        if att.shop_id:
-            shop = Shop.query.get(att.shop_id)
-            if shop:
-                shop_name = shop.name
+        if att.shop:
+            shop_name = att.shop.name
         out.append({
             "id": att.id,
             "name": att.name,

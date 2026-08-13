@@ -1,13 +1,14 @@
 from extensions import db
 from models.sale import Sale, SaleItem, SalePayment, ensure_sale_type_column
-from models.stock import ShopStock, StockMovement, StockBatch
+from models.stock import ShopStock, StockMovement, StockBatch, EmptyCylinderStock, SaleCylinderReturn
 from models.shop import Shop
 from models.user import User
-from models.product import Item
+from models.product import Item, Category
 from services.receipt_service import create_receipt
 from datetime import datetime
 from models.notification import Notification
 from sqlalchemy import func, or_
+from sqlalchemy.orm import selectinload
 from datetime import datetime, timedelta
 from utils.timezone_utils import get_local_time
 import logging
@@ -126,7 +127,7 @@ def _generate_sale_receipt_html(sale, shop, attendant, sale_items):
     """
     return html
 
-def create_sale(shop_id, user_id, items, payment_type="mobile_money", sale_type="standard", customer_name=None, customer_phone=None):
+def create_sale(shop_id, user_id, items, payment_type="mobile_money", sale_type="standard", customer_name=None, customer_phone=None, empty_cylinders=None):
     try:
         ensure_sale_type_column()
         normalized_sale_type = normalize_sale_type(sale_type)
@@ -221,6 +222,36 @@ def create_sale(shop_id, user_id, items, payment_type="mobile_money", sale_type=
                         db.session.add(n_admin)
                     db.session.add(n_attendant)
 
+            sold_quantities = {int(it.get("item_id")): int(it.get("qty", 0)) for it in items}
+            returned_quantities = {}
+            for empty in (empty_cylinders or []):
+                item_id, returned = int(empty.get("item_id")), int(empty.get("qty", 0))
+                if returned < 0:
+                    raise ValueError("Returned empty cylinders must be between zero and the quantity sold")
+                returned_quantities[item_id] = returned_quantities.get(item_id, 0) + returned
+
+            for item_id, returned in returned_quantities.items():
+                if returned > sold_quantities.get(item_id, 0):
+                    raise ValueError("Returned empty cylinders must be between zero and the quantity sold")
+
+            for item_id, sold_qty in sold_quantities.items():
+                item = Item.query.get(item_id)
+                category = Category.query.get(item.category_id) if item else None
+                if not category or "gas" not in category.name.lower():
+                    if returned_quantities.get(item_id, 0):
+                        raise ValueError("Empty cylinders can only be recorded for gas products")
+                    continue
+                returned = returned_quantities.get(item_id, 0)
+                db.session.add(SaleCylinderReturn(sale_id=sale.id, item_id=item_id, sold_qty=sold_qty, returned_qty=returned))
+                if not returned:
+                    continue
+                empty_stock = EmptyCylinderStock.query.filter_by(shop_id=shop_id, item_id=item_id).first()
+                if not empty_stock:
+                    empty_stock = EmptyCylinderStock(shop_id=shop_id, item_id=item_id, quantity=0)
+                    db.session.add(empty_stock)
+                empty_stock.quantity += returned
+                empty_stock.updated_at = get_local_time()
+
             sale.total_amount = total
             db.session.add_all(sale_items)
 
@@ -240,15 +271,20 @@ def create_sale(shop_id, user_id, items, payment_type="mobile_money", sale_type=
         db.session.rollback()
         raise e
 
-def _serialize_sale(sale):
-    shop = Shop.query.get(sale.shop_id)
-    attendant = User.query.get(sale.user_id)
+def _serialize_sale(sale, shop=None, attendant=None, items_map=None):
+    if shop is None:
+        shop = Shop.query.get(sale.shop_id)
+    if attendant is None:
+        attendant = User.query.get(sale.user_id)
+    if items_map is None:
+        items_map = {}
     items_summary = []
     for item in sale.items:
-        product = Item.query.get(item.item_id)
+        product = items_map.get(item.item_id)
+        product_name = product.name if product else "N/A"
         items_summary.append({
             "item_id": item.item_id,
-            "item_name": product.name if product else "N/A",
+            "item_name": product_name,
             "qty": item.qty,
             "unit_price": float(item.unit_price) if item.unit_price is not None else 0.0,
             "unit_cost": float(item.unit_cost) if item.unit_cost is not None else 0.0
@@ -273,33 +309,43 @@ def _serialize_sale(sale):
         "items": items_summary
     }
 
+def _serialize_sales_bulk(sales):
+    shop_ids = {s.shop_id for s in sales if s.shop_id}
+    user_ids = {s.user_id for s in sales if s.user_id}
+    item_ids = {si.item_id for s in sales for si in s.items if si.item_id}
+    
+    shops = {s.id: s for s in Shop.query.filter(Shop.id.in_(shop_ids)).all()} if shop_ids else {}
+    users = {u.id: u for u in User.query.filter(User.id.in_(user_ids)).all()} if user_ids else {}
+    items = {i.id: i for i in Item.query.filter(Item.id.in_(item_ids)).all()} if item_ids else {}
+    
+    return [_serialize_sale(s, shop=shops.get(s.shop_id), attendant=users.get(s.user_id), items_map=items) for s in sales]
+
 def get_all_sales():
-    query = Sale.query.filter(or_(Sale.sale_type != 'credit', Sale.status == 'paid')).order_by(Sale.created_at.desc(), Sale.id.desc())
+    query = Sale.query.filter(or_(Sale.sale_type != 'credit', Sale.status == 'paid')).options(selectinload(Sale.items)).order_by(Sale.created_at.desc(), Sale.id.desc())
     sales = query.all()
-    return [_serialize_sale(sale) for sale in sales]
+    return _serialize_sales_bulk(sales)
 
 
 def get_sales_by_shop(shop_id):
-    query = Sale.query.filter_by(shop_id=shop_id).filter(or_(Sale.sale_type != 'credit', Sale.status == 'paid')).order_by(Sale.created_at.desc(), Sale.id.desc())
+    query = Sale.query.filter_by(shop_id=shop_id).filter(or_(Sale.sale_type != 'credit', Sale.status == 'paid')).options(selectinload(Sale.items)).order_by(Sale.created_at.desc(), Sale.id.desc())
     sales = query.all()
-    return [_serialize_sale(sale) for sale in sales]
+    return _serialize_sales_bulk(sales)
 
 def get_todays_sales(shop_id=None):
     today = get_local_time().date()
-    start_of_day = datetime(today.year, today.month, today.day)
-    end_of_day = start_of_day + timedelta(days=1, microseconds=-1)
+    start_of_day = datetime.combine(today, datetime.min.time())
+    end_of_day = datetime.combine(today, datetime.max.time())
     
     query = Sale.query.filter(Sale.created_at.between(start_of_day, end_of_day))
     query = query.filter(or_(Sale.sale_type != 'credit', Sale.status == 'paid'))
     if shop_id:
         query = query.filter(Sale.shop_id == shop_id)
         
-    sales = query.order_by(Sale.created_at.desc(), Sale.id.desc()).all()
-    return [_serialize_sale(sale) for sale in sales]
+    sales = query.options(selectinload(Sale.items)).order_by(Sale.created_at.desc(), Sale.id.desc()).all()
+    return _serialize_sales_bulk(sales)
 
 def get_current_weeks_sales(shop_id=None):
     now = get_local_time()
-    # Find the start of the current week (Monday)
     start_of_week = datetime.combine(now.date() - timedelta(days=now.weekday()), datetime.min.time())
     end_of_week = start_of_week + timedelta(days=7, microseconds=-1)
 
@@ -308,13 +354,12 @@ def get_current_weeks_sales(shop_id=None):
     if shop_id:
         query = query.filter(Sale.shop_id == shop_id)
         
-    sales = query.order_by(Sale.created_at.desc(), Sale.id.desc()).all()
-    return [_serialize_sale(sale) for sale in sales]
+    sales = query.options(selectinload(Sale.items)).order_by(Sale.created_at.desc(), Sale.id.desc()).all()
+    return _serialize_sales_bulk(sales)
 
 def get_current_months_sales(shop_id=None):
     now = get_local_time()
     start_of_month = datetime(now.year, now.month, 1)
-    # Calculate end of month
     if now.month == 12:
         end_of_month = datetime(now.year + 1, 1, 1) - timedelta(microseconds=1)
     else:
@@ -325,8 +370,8 @@ def get_current_months_sales(shop_id=None):
     if shop_id:
         query = query.filter(Sale.shop_id == shop_id)
         
-    sales = query.order_by(Sale.created_at.desc(), Sale.id.desc()).all()
-    return [_serialize_sale(sale) for sale in sales]
+    sales = query.options(selectinload(Sale.items)).order_by(Sale.created_at.desc(), Sale.id.desc()).all()
+    return _serialize_sales_bulk(sales)
 
 def get_current_years_sales(shop_id=None):
     now = get_local_time()
@@ -338,8 +383,8 @@ def get_current_years_sales(shop_id=None):
     if shop_id:
         query = query.filter(Sale.shop_id == shop_id)
         
-    sales = query.order_by(Sale.created_at.desc(), Sale.id.desc()).all()
-    return [_serialize_sale(sale) for sale in sales]
+    sales = query.options(selectinload(Sale.items)).order_by(Sale.created_at.desc(), Sale.id.desc()).all()
+    return _serialize_sales_bulk(sales)
 
 def delete_sale(sale_id, user_id):
     try:

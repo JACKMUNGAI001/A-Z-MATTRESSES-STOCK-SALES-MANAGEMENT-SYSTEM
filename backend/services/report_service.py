@@ -8,6 +8,7 @@ from models.deposit import DepositSale
 from models.supplier import SupplierInvoice
 from sqlalchemy import func
 from sqlalchemy import or_
+from sqlalchemy.orm import selectinload
 from datetime import datetime, timedelta
 from utils.timezone_utils import get_local_time
 
@@ -239,20 +240,52 @@ def get_stock_summary_by_category(shop_id=None):
     return summary
 
 
+def get_global_inventory():
+    """Return all shop stock in one grouped query (instead of one request per shop)."""
+    from models.product import Item
+    from models.shop import Shop
+    rows = db.session.query(
+        Shop.id.label("shop_id"), Shop.name.label("shop_name"),
+        Item.id.label("item_id"), Item.name.label("item_name"),
+        func.sum(ShopStock.quantity).label("qty")
+    ).join(Shop, ShopStock.shop_id == Shop.id) \
+     .join(Item, ShopStock.item_id == Item.id) \
+     .group_by(Shop.id, Shop.name, Item.id, Item.name) \
+     .order_by(Shop.name.asc(), Item.name.asc()).all()
+    return [{
+        "shop_id": row.shop_id,
+        "shop_name": row.shop_name,
+        "item_id": row.item_id,
+        "item_name": row.item_name,
+        "qty": int(row.qty or 0),
+    } for row in rows]
+
+
 def get_outstanding_credits(shop_id=None):
     """Return list of credit sales not fully paid with remaining balance."""
-    from models.sale import Sale
+    from models.shop import Shop
+    from models.user import User
     query = Sale.query.filter(Sale.sale_type == 'credit').filter(Sale.status != 'paid')
     if shop_id:
         query = query.filter(Sale.shop_id == shop_id)
+    sales = query.order_by(Sale.created_at.desc()).all()
+    
+    shop_ids = {s.shop_id for s in sales if s.shop_id}
+    user_ids = {s.user_id for s in sales if s.user_id}
+    
+    shops = {s.id: s for s in Shop.query.filter(Shop.id.in_(shop_ids)).all()} if shop_ids else {}
+    users = {u.id: u for u in User.query.filter(User.id.in_(user_ids)).all()} if user_ids else {}
+    
     results = []
-    for s in query.order_by(Sale.created_at.desc()).all():
+    for s in sales:
         rem = float(s.total_amount or 0) - float(s.paid_amount or 0)
+        shop = shops.get(s.shop_id)
+        user = users.get(s.user_id)
         results.append({
             "id": s.id,
             "shop_id": s.shop_id,
-            "shop_name": (Shop.query.get(s.shop_id).name if Shop.query.get(s.shop_id) else 'N/A'),
-            "attendant_name": (User.query.get(s.user_id).name if User.query.get(s.user_id) else 'N/A'),
+            "shop_name": shop.name if shop else 'N/A',
+            "attendant_name": user.name if user else 'N/A',
             "total_amount": float(s.total_amount or 0),
             "paid_amount": float(s.paid_amount or 0),
             "remaining": rem,
@@ -297,21 +330,28 @@ def get_all_credit_sales(shop_id=None):
     """Return all credit sales (paid and unpaid) serialized for UI."""
     from models.shop import Shop
     from models.user import User
-    query = Sale.query.filter(Sale.sale_type == 'credit').order_by(Sale.created_at.desc(), Sale.id.desc())
+    query = Sale.query.filter(Sale.sale_type == 'credit').options(selectinload(Sale.items)).order_by(Sale.created_at.desc(), Sale.id.desc())
     if shop_id:
         query = query.filter(Sale.shop_id == shop_id)
+    sales = query.all()
+    
+    shop_ids = {s.shop_id for s in sales if s.shop_id}
+    user_ids = {s.user_id for s in sales if s.user_id}
+    item_ids = {si.item_id for s in sales for si in s.items if si.item_id}
+    
+    shops = {s.id: s for s in Shop.query.filter(Shop.id.in_(shop_ids)).all()} if shop_ids else {}
+    users = {u.id: u for u in User.query.filter(User.id.in_(user_ids)).all()} if user_ids else {}
+    items = {i.id: i for i in Item.query.filter(Item.id.in_(item_ids)).all()} if item_ids else {}
+    
     results = []
-    for s in query.all():
+    for s in sales:
         rem = float(s.total_amount or 0) - float(s.paid_amount or 0)
-        shop = Shop.query.get(s.shop_id)
-        user = User.query.get(s.user_id)
-        # A sale can have more than one SaleItem (and FIFO can split one
-        # product across batches).  Combine those rows so the credit-sales
-        # list has one clear entry per product.
+        shop = shops.get(s.shop_id)
+        user = users.get(s.user_id)
         products_by_id = {}
         serialized_items = []
         for sale_item in s.items:
-            item = Item.query.get(sale_item.item_id)
+            item = items.get(sale_item.item_id)
             item_name = item.name if item else "N/A"
             serialized_items.append({
                 "item_id": sale_item.item_id,

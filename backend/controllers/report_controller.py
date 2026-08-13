@@ -6,6 +6,7 @@ from services.report_service import (
     get_sales_summary, 
     get_deposits_summary, 
     get_stock_summary_by_category, 
+    get_global_inventory,
     get_dashboard_summary,
     get_product_sales_analysis
 )
@@ -76,6 +77,9 @@ def stock_summary_by_category_controller():
     
     summary = get_stock_summary_by_category(shop_id)
     return jsonify(summary), 200
+
+def global_inventory_controller():
+    return jsonify(get_global_inventory()), 200
 
 def product_sales_analysis_controller():
     shop_id = request.args.get('shop_id', type=int)

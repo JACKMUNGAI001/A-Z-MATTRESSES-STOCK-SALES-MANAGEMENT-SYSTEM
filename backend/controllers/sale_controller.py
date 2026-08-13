@@ -20,7 +20,7 @@ def create_sale_controller():
     customer_phone = data.get("customer_phone")
     user = get_jwt_identity()
     try:
-        sale = create_sale(shop_id=shop_id, user_id=user.get("id"), items=items, payment_type=payment_type, sale_type=sale_type, customer_name=customer_name, customer_phone=customer_phone)
+        sale = create_sale(shop_id=shop_id, user_id=user.get("id"), items=items, payment_type=payment_type, sale_type=sale_type, customer_name=customer_name, customer_phone=customer_phone, empty_cylinders=data.get("empty_cylinders", []))
         return jsonify({"msg":"sale recorded","sale_id":sale.id, "receipt_uuid": sale.receipt_uuid, "sale_type": sale.sale_type}), 201
     except ValueError as e:
         return jsonify({"msg":str(e)}), 400
