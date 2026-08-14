@@ -70,14 +70,15 @@ export default function POS() {
 
     if (existingCartItemIndex > -1) {
       setCartItems(cartItems.map((item, index) =>
-        index === existingCartItemIndex ? { ...item, qty: item.qty + qty } : item
+        index === existingCartItemIndex ? { ...item, qty: item.qty + qty, empty_qty: item.noEmptyReturned ? 0 : Number(item.empty_qty || 0) + qty } : item
       ));
     } else {
       setCartItems([...cartItems, {
         item_id: itemToAdd.id,
         name: itemToAdd.name,
         tracksEmptyCylinder: itemToAdd.category_name?.toLowerCase().includes('gas'),
-        empty_qty: '',
+        empty_qty: itemToAdd.category_name?.toLowerCase().includes('gas') ? qty : '',
+        noEmptyReturned: false,
         qty: qty,
         unit_price: price,
       }]);
@@ -89,6 +90,18 @@ export default function POS() {
 
   const handleRemoveFromCart = (indexToRemove) => {
     setCartItems(cartItems.filter((_, index) => index !== indexToRemove));
+  };
+
+  const toggleNoEmptyReturned = (index) => {
+    setCartItems(cartItems.map((cartItem, i) => {
+      if (i !== index) return cartItem;
+      const nextNoEmpty = !cartItem.noEmptyReturned;
+      return {
+        ...cartItem,
+        noEmptyReturned: nextNoEmpty,
+        empty_qty: nextNoEmpty ? 0 : cartItem.qty,
+      };
+    }));
   };
 
   const handleSale = async () => {
@@ -239,7 +252,31 @@ export default function POS() {
                                 KES {(item.qty * item.unit_price).toLocaleString()}
                               </td>
                               <td className="px-4 sm:px-8 py-4 text-center">
-                                {item.tracksEmptyCylinder ? <input type="number" min="0" max={item.qty} value={item.empty_qty || ''} onChange={(e) => { const val = e.target.value; setCartItems(cartItems.map((cartItem, i) => i === index ? { ...cartItem, empty_qty: val } : cartItem)) }} className="w-16 rounded border border-gray-200 bg-gray-50 p-1 text-center text-sm dark:border-gray-700 dark:bg-gray-900" /> : <span className="text-gray-400">—</span>}
+                                {item.tracksEmptyCylinder ? (
+                                  <div className="flex flex-col items-center gap-1">
+                                    <label className="flex items-center gap-1 text-[10px] font-medium text-gray-500 cursor-pointer">
+                                      <input 
+                                        type="checkbox" 
+                                        checked={item.noEmptyReturned || false} 
+                                        onChange={() => toggleNoEmptyReturned(index)}
+                                        className="rounded border-gray-300"
+                                      />
+                                      Not returned
+                                    </label>
+                                    <input
+                                      type="number"
+                                      min="0"
+                                      max={item.qty}
+                                      value={item.empty_qty || ''}
+                                      onChange={(e) => {
+                                        const val = e.target.value;
+                                        setCartItems(cartItems.map((cartItem, i) => i === index ? { ...cartItem, empty_qty: val } : cartItem))
+                                      }}
+                                      disabled={item.noEmptyReturned}
+                                      className="w-16 rounded border border-gray-200 bg-gray-50 p-1 text-center text-sm dark:border-gray-700 dark:bg-gray-900 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    />
+                                  </div>
+                                ) : <span className="text-gray-400">—</span>}
                               </td>
                               <td className="px-4 sm:px-8 py-4 text-center">
                                 <button onClick={() => handleRemoveFromCart(index)} className="text-red-400 hover:text-red-600 transition-colors">

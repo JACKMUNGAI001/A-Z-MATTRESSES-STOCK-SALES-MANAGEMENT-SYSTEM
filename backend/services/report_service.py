@@ -423,8 +423,7 @@ def get_dashboard_summary(shop_id=None):
         "stock_summary": stock_summary,
         "financial_overview": financial,
         "low_stock_count": int(low_stock_count),
-        "deposit_customers_count": int(deposit_customers_count),
-        "credits_summary": credits_summary
+        "deposit_customers_count": int(deposit_customers_count)
     }
 
 def get_product_sales_analysis(year=None, month=None, shop_id=None, period=None):
