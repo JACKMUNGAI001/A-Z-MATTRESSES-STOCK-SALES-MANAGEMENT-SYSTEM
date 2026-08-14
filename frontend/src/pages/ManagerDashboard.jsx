@@ -20,31 +20,18 @@ export default function ManagerDashboard(){
   const [isInventoryExpanded, setIsInventoryExpanded] = useState(false);
 
   useEffect(() => {
-    // Remove eager global stock fetch to avoid triggering failing endpoint calls in some environments.
     fetchShops();
     api.get('/admin/my-restock-permission')
       .then(response => setCanRestock(response.data.can_restock))
       .catch(() => setCanRestock(false));
 
-    const fetchDashboardData = async () => {
-        try {
-            const [salesRes, depositsRes, depositCustomersResponse, stockSummaryRes] = await Promise.all([
-              api.get('/reports/sales-summary'),
-              api.get('/reports/deposits-summary'),
-              api.get('/deposits/customers_count'),
-              api.get('/reports/stock-summary'),
-            ]);
-            setSalesSummary(salesRes.data);
-            setDepositsSummary(depositsRes.data);
-            setDepositCustomersCount(depositCustomersResponse.data.count);
-            setStockSummary(stockSummaryRes.data);
-
-        } catch (err) {
-            console.error('Error fetching dashboard data:', err);
-        }
-    };
-
-    fetchDashboardData();
+    api.get('/reports/dashboard-summary').then(res => {
+      const data = res.data;
+      setSalesSummary(data.sales);
+      setDepositsSummary(data.deposits);
+      setDepositCustomersCount(data.deposit_customers_count || 0);
+      setStockSummary(data.stock_summary);
+    }).catch(err => console.error("Error fetching dashboard summary", err));
   }, []);
 
   const fetchGlobalStock = async () => {

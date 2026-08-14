@@ -395,21 +395,15 @@ def get_dashboard_summary(shop_id=None):
     """
     from models.deposit import DepositSale
     
-    # Run all summaries in parallel/batch if possible
-    # For now, just call existing optimized services
     sales = get_sales_summary(shop_id)
     deposits = get_deposits_summary(shop_id)
     stock_summary = get_stock_summary_by_category(shop_id)
     
     financial = None
-    if not shop_id: # Only for Admin (Global)
+    if not shop_id:
         financial = get_global_financial_overview()
 
-    # Get additional metrics usually requested
     low_stock_count = 0
-    from models.stock import ShopStock
-    from config import Config
-    
     low_stock_query = db.session.query(func.count(ShopStock.id)).filter(ShopStock.quantity <= 2)
     if shop_id:
         low_stock_query = low_stock_query.filter(ShopStock.shop_id == shop_id)
@@ -421,13 +415,16 @@ def get_dashboard_summary(shop_id=None):
         cust_query = cust_query.filter(DepositSale.shop_id == shop_id)
     deposit_customers_count = cust_query.scalar() or 0
 
+    credits_summary = get_credits_summary(shop_id)
+
     return {
         "sales": sales,
         "deposits": deposits,
         "stock_summary": stock_summary,
         "financial_overview": financial,
         "low_stock_count": int(low_stock_count),
-        "deposit_customers_count": int(deposit_customers_count)
+        "deposit_customers_count": int(deposit_customers_count),
+        "credits_summary": credits_summary
     }
 
 def get_product_sales_analysis(year=None, month=None, shop_id=None, period=None):

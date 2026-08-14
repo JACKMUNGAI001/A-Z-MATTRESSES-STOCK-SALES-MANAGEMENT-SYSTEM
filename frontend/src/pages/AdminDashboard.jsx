@@ -26,15 +26,14 @@ export default function AdminDashboard(){
     fetchAllAttendants()
     fetchManagers()
     
-    // Unified dashboard summary call
     api.get('/reports/dashboard-summary').then(res => {
         const data = res.data;
         setSalesSummary(data.sales);
         setDepositsSummary(data.deposits);
         setFinancialOverview(data.financial_overview);
         setStockSummary(data.stock_summary);
+        setCreditsSummary(data.credits_summary);
     }).catch(err => console.error("Error fetching summary", err));
-      fetchCreditsSummary()
   },[])
 
   const fetchPendingAttendants = async () => {
@@ -81,13 +80,6 @@ export default function AdminDashboard(){
     }
   }
   
-    const fetchCreditsSummary = async () => {
-      try{
-        const res = await api.get('/reports/credits-summary')
-        setCreditsSummary(res.data)
-      }catch(err){ console.error('Error fetching credits summary', err) }
-    }
-
   const handleVerifyAttendant = async (userId, shopId) => {
     if(!shopId) return;
     try {
