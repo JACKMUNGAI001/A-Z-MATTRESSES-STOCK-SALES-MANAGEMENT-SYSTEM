@@ -4,6 +4,54 @@ import { Truck, Store, Calendar, Package, User, SearchX, ChevronDown, ChevronUp,
 import { AuthContext } from '../context/AuthContext';
 import { formatDate } from '../utils/helpers';
 
+function MobileRestockCard({ movement, onEdit, onDelete, isAdmin }) {
+  return (
+    <article className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h3 className="font-black text-orange-600 dark:text-orange-400">{movement.item_name}</h3>
+          <p className="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
+            <span className="font-bold">Qty:</span> +{movement.qty}
+          </p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            <span className="font-bold">Cost:</span> {new Intl.NumberFormat('en-KE', { style: 'currency', currency: 'KES', minimumFractionDigits: 0 }).format(movement.buy_price || 0)}
+          </p>
+        </div>
+        <div className="shrink-0 text-right">
+          <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-md border ${
+            movement.movement_type === 'purchase_in' ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border-blue-100 dark:border-blue-800' :
+            movement.movement_type === 'transfer_in' ? 'bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 border-purple-100 dark:border-purple-800' :
+            'bg-gray-50 dark:bg-gray-900/20 text-gray-600 dark:text-gray-400 border-gray-100 dark:border-gray-800'
+          }`}>
+            {movement.movement_type.replace('_', ' ')}
+          </span>
+          <p className="text-[10px] font-bold text-gray-500 dark:text-gray-400 mt-1">
+            {formatDate(movement.created_at)}
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-4 flex items-center justify-between text-sm text-gray-600 dark:text-gray-300">
+        <div className="flex items-center gap-1">
+          <User size={14} className="text-gray-400" />
+          {movement.user_name}
+        </div>
+      </div>
+
+      {isAdmin && (
+        <div className="mt-4 flex flex-wrap gap-2 border-t border-gray-100 pt-3 dark:border-gray-700">
+          <button onClick={() => onEdit(movement)} className="flex flex-1 items-center justify-center gap-1 rounded-lg border border-blue-300 px-3 py-2 text-xs font-bold text-blue-600 dark:border-blue-700 dark:text-blue-400">
+            <Edit size={14} /> Edit
+          </button>
+          <button onClick={() => onDelete(movement.id)} className="flex flex-1 items-center justify-center gap-1 rounded-lg border border-red-300 px-3 py-2 text-xs font-bold text-red-600 dark:border-red-700 dark:text-red-400">
+            <Trash2 size={14} /> Delete
+          </button>
+        </div>
+      )}
+    </article>
+  );
+}
+
 export default function RestockHistory() {
   const { user } = useContext(AuthContext);
   const [history, setHistory] = useState([]);
@@ -12,6 +60,7 @@ export default function RestockHistory() {
   const [expandedShops, setExpandedShops] = useState({});
   const [editingMovement, setEditingMovement] = useState(null);
   const [editForm, setEditForm] = useState({ qty: '', buy_price: '' });
+  const isAdmin = user?.role === 'admin';
 
   useEffect(() => {
     fetchShops();
@@ -128,82 +177,95 @@ export default function RestockHistory() {
               </button>
               
               {expandedShops[shopName] && (
-                <div className="overflow-x-auto custom-scrollbar">
-                  <table className="w-full border-collapse min-w-[800px]">
-                    <thead className="bg-gray-50/50 dark:bg-gray-900/50 text-xs font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest transition-colors">
-                      <tr>
-                        <th className="px-6 py-4 text-left border-b border-gray-100 dark:border-gray-700">Product</th>
-                        <th className="px-6 py-4 text-center border-b border-gray-100 dark:border-gray-700">Quantity</th>
-                        <th className="px-6 py-4 text-right border-b border-gray-100 dark:border-gray-700">Cost Price</th>
-                        <th className="px-6 py-4 text-left border-b border-gray-100 dark:border-gray-700">Restocked By</th>
-                        <th className="px-6 py-4 text-left border-b border-gray-100 dark:border-gray-700">Date & Time</th>
-                        <th className="px-6 py-4 text-left border-b border-gray-100 dark:border-gray-700">Type</th>
-                        {user?.role === 'admin' && <th className="px-6 py-4 text-right border-b border-gray-100 dark:border-gray-700">Action</th>}
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-50 dark:divide-gray-700 transition-colors">
-                      {movements.map((m) => (
-                        <tr key={m.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-900/50 transition-colors">
-                          <td className="px-6 py-4">
-                            <div className="flex items-center gap-2">
-                              <Package size={16} className="text-blue-500" />
-                              <span className="font-bold text-gray-900 dark:text-white">{m.item_name}</span>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 text-center">
-                            <span className="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-3 py-1 rounded-lg font-black text-sm">
-                              +{m.qty}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 text-right font-mono font-bold text-gray-600 dark:text-gray-400">
-                            {formatCurrency(m.buy_price)}
-                          </td>
-                          <td className="px-6 py-4">
-                            <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
-                              <User size={14} className="text-gray-400" />
-                              {m.user_name}
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
-                            <div className="flex items-center gap-2">
-                              <Calendar size={14} />
-                              {formatDate(m.created_at)}
-                            </div>
-                          </td>
-                          <td className="px-6 py-4">
-                            <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-md border ${
-                              m.movement_type === 'purchase_in' ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border-blue-100 dark:border-blue-800' :
-                              m.movement_type === 'transfer_in' ? 'bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 border-purple-100 dark:border-purple-800' :
-                              'bg-gray-50 dark:bg-gray-900/20 text-gray-600 dark:text-gray-400 border-gray-100 dark:border-gray-800'
-                            }`}>
-                              {m.movement_type.replace('_', ' ')}
-                            </span>
-                          </td>
-                          {user?.role === 'admin' && (
-                            <td className="px-6 py-4 text-right">
-                              <div className="flex justify-end gap-2">
-                                <button 
-                                  onClick={() => handleEdit(m)}
-                                  className="text-blue-500 hover:text-blue-700 transition-colors p-2 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20"
-                                  title="Edit Restock"
-                                >
-                                  <Edit size={18} />
-                                </button>
-                                <button 
-                                  onClick={() => handleDelete(m.id)}
-                                  className="text-red-500 hover:text-red-700 transition-colors p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20"
-                                  title="Delete Restock"
-                                >
-                                  <Trash2 size={18} />
-                                </button>
+                <>
+                  <div className="md:hidden space-y-3 p-3">
+                    {movements.map((m) => (
+                      <MobileRestockCard
+                        key={m.id}
+                        movement={m}
+                        onEdit={handleEdit}
+                        onDelete={handleDelete}
+                        isAdmin={isAdmin}
+                      />
+                    ))}
+                  </div>
+                  <div className="hidden md:block overflow-x-auto custom-scrollbar">
+                    <table className="w-full border-collapse min-w-[800px]">
+                      <thead className="bg-gray-50/50 dark:bg-gray-900/50 text-xs font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest transition-colors">
+                        <tr>
+                          <th className="px-6 py-4 text-left border-b border-gray-100 dark:border-gray-700">Product</th>
+                          <th className="px-6 py-4 text-center border-b border-gray-100 dark:border-gray-700">Quantity</th>
+                          <th className="px-6 py-4 text-right border-b border-gray-100 dark:border-gray-700">Cost Price</th>
+                          <th className="px-6 py-4 text-left border-b border-gray-100 dark:border-gray-700">Restocked By</th>
+                          <th className="px-6 py-4 text-left border-b border-gray-100 dark:border-gray-700">Date & Time</th>
+                          <th className="px-6 py-4 text-left border-b border-gray-100 dark:border-gray-700">Type</th>
+                          {user?.role === 'admin' && <th className="px-6 py-4 text-right border-b border-gray-100 dark:border-gray-700">Action</th>}
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-50 dark:divide-gray-700 transition-colors">
+                        {movements.map((m) => (
+                          <tr key={m.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-900/50 transition-colors">
+                            <td className="px-6 py-4">
+                              <div className="flex items-center gap-2">
+                                <Package size={16} className="text-blue-500" />
+                                <span className="font-bold text-gray-900 dark:text-white">{m.item_name}</span>
                               </div>
                             </td>
-                          )}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                            <td className="px-6 py-4 text-center">
+                              <span className="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-3 py-1 rounded-lg font-black text-sm">
+                                +{m.qty}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 text-right font-mono font-bold text-gray-600 dark:text-gray-400">
+                              {formatCurrency(m.buy_price)}
+                            </td>
+                            <td className="px-6 py-4">
+                              <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
+                                <User size={14} className="text-gray-400" />
+                                {m.user_name}
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
+                              <div className="flex items-center gap-2">
+                                <Calendar size={14} />
+                                {formatDate(m.created_at)}
+                              </div>
+                            </td>
+                            <td className="px-6 py-4">
+                              <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-md border ${
+                                m.movement_type === 'purchase_in' ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border-blue-100 dark:border-blue-800' :
+                                m.movement_type === 'transfer_in' ? 'bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 border-purple-100 dark:border-purple-800' :
+                                'bg-gray-50 dark:bg-gray-900/20 text-gray-600 dark:text-gray-400 border-gray-100 dark:border-gray-800'
+                              }`}>
+                                {m.movement_type.replace('_', ' ')}
+                              </span>
+                            </td>
+                            {user?.role === 'admin' && (
+                              <td className="px-6 py-4 text-right">
+                                <div className="flex justify-end gap-2">
+                                  <button 
+                                    onClick={() => handleEdit(m)}
+                                    className="text-blue-500 hover:text-blue-700 transition-colors p-2 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                                    title="Edit Restock"
+                                  >
+                                    <Edit size={18} />
+                                  </button>
+                                  <button 
+                                    onClick={() => handleDelete(m.id)}
+                                    className="text-red-500 hover:text-red-700 transition-colors p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20"
+                                    title="Delete Restock"
+                                  >
+                                    <Trash2 size={18} />
+                                  </button>
+                                </div>
+                              </td>
+                            )}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </>
               )}
             </div>
           ))}
