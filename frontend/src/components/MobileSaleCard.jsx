@@ -8,7 +8,8 @@ import { formatCurrency, formatDate, formatPaymentMethod, formatSaleType } from 
  */
 export default function MobileSaleCard({ sale, searchQuery, showShop = true, additionalDetails, actions }) {
   const total = Number(sale.total_amount || 0);
-  const paid = sale.paid_amount == null ? total : Number(sale.paid_amount || 0);
+  const isRegularSale = (sale.sale_type || '').toLowerCase() !== 'credit';
+  const paid = isRegularSale ? total : (sale.paid_amount == null ? total : Number(sale.paid_amount || 0));
   const due = Math.max(0, total - paid);
 
   return (
