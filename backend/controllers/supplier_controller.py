@@ -6,8 +6,12 @@ from services.supplier_service import (
     update_invoice_status, record_invoice_payment, get_supplier_products
 )
 from extensions import db
-from models.supplier import Supplier, SupplierInvoice
+from models.supplier import Supplier, SupplierInvoice, SupplierInvoiceItem
 from flask_jwt_extended import get_jwt_identity
+from sqlalchemy import or_
+from models.product import Item
+from utils.pagination import paginate_query, parse_pagination_args
+from datetime import date, datetime, time
 
 def list_suppliers_controller():
     suppliers = list_suppliers()
@@ -54,7 +58,37 @@ def delete_supplier_controller(supplier_id):
     return jsonify({"msg": "Supplier deleted"}), 200
 
 def list_invoices_controller():
-    invoices = list_supplier_invoices()
+    page, per_page = parse_pagination_args(request.args)
+    active_status = request.args.get("status")
+    search = request.args.get("search", "").strip()
+    invoice_date = request.args.get("date")
+
+    query = list_supplier_invoices()
+    if active_status == "Pending":
+        query = query.filter(SupplierInvoice.status.in_(("Pending", "Partial")))
+    elif active_status == "Paid":
+        query = query.filter(SupplierInvoice.status == "Paid")
+    if search:
+        pattern = f"%{search}%"
+        matching_item_invoices = db.session.query(SupplierInvoiceItem.invoice_id).join(
+            Item, SupplierInvoiceItem.item_id == Item.id
+        ).filter(Item.name.ilike(pattern))
+        query = query.join(Supplier).filter(or_(
+            SupplierInvoice.invoice_number.ilike(pattern),
+            Supplier.name.ilike(pattern),
+            SupplierInvoice.id.in_(matching_item_invoices),
+        ))
+    if invoice_date:
+        try:
+            day = date.fromisoformat(invoice_date)
+        except ValueError:
+            return jsonify({"msg": "date must use YYYY-MM-DD format"}), 400
+        query = query.filter(SupplierInvoice.received_date.between(
+            datetime.combine(day, time.min), datetime.combine(day, time.max)
+        ))
+
+    query = query.order_by(SupplierInvoice.received_date.desc(), SupplierInvoice.id.desc())
+    invoices, pagination = paginate_query(query, page, per_page)
     out = []
     for inv in invoices:
         out.append({
@@ -70,7 +104,7 @@ def list_invoices_controller():
             "notes": inv.notes,
             "created_at": inv.created_at.isoformat()
         })
-    return jsonify(out), 200
+    return jsonify({"items": out, "pagination": pagination}), 200
 
 def create_invoice_controller():
     data = request.get_json() or {}

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import api from '../api/api'
 import { Store, SearchX, TrendingUp } from 'lucide-react'
+import Pagination from '../components/Pagination'
 
 export default function GlobalInventory(){
   const [globalStock, setGlobalStock] = useState([])
@@ -8,21 +9,22 @@ export default function GlobalInventory(){
   const [stockSummary, setStockSummary] = useState(null)
   const [loading, setLoading] = useState(true)
   const [errorMessage, setErrorMessage] = useState(null)
+  const [pagination, setPagination] = useState(null)
+  const [page, setPage] = useState(1)
+  const [retryKey, setRetryKey] = useState(0)
 
   useEffect(() => {
     const fetchData = async () => {
       setErrorMessage(null)
       try {
-        const [shopsRes, stockSummaryRes, inventoryRes] = await Promise.all([
+        const [shopsRes, stockSummaryRes] = await Promise.all([
           api.get('/shops'),
           api.get('/reports/stock-summary'),
-          api.get('/reports/global-inventory'),
         ])
         const shopsData = shopsRes.data || []
         setShops(shopsData)
         setStockSummary(stockSummaryRes.data || {})
 
-        setGlobalStock(inventoryRes.data || [])
       } catch (err) {
         console.error('Error fetching shops or stock', err)
         setErrorMessage('Failed to load inventory. Please check your connection or permissions.')
@@ -31,7 +33,54 @@ export default function GlobalInventory(){
       }
     }
     fetchData()
-  }, [])
+  }, [retryKey])
+
+  useEffect(() => {
+    const fetchInventoryPage = async () => {
+      setErrorMessage(null)
+      setLoading(true)
+      try {
+        const response = await api.get('/reports/global-inventory', {
+          params: { page, per_page: 50 },
+        })
+        const items = Array.isArray(response.data) ? response.data : response.data?.items
+        if (!Array.isArray(items)) {
+          throw new Error('The inventory API returned an unsupported response format.')
+        }
+
+        const responsePagination = response.data?.pagination
+        if (
+          responsePagination &&
+          !Array.isArray(responsePagination) &&
+          Number.isInteger(responsePagination.page) &&
+          Number.isInteger(responsePagination.total_pages)
+        ) {
+          setGlobalStock(items)
+          setPagination(responsePagination)
+        } else {
+          const perPage = 50
+          const totalPages = Math.max(Math.ceil(items.length / perPage), 1)
+          const safePage = Math.min(page, totalPages)
+          setGlobalStock(items.slice((safePage - 1) * perPage, safePage * perPage))
+          setPagination({
+            page: safePage,
+            per_page: perPage,
+            total: items.length,
+            total_pages: totalPages,
+          })
+          setPage(safePage)
+        }
+      } catch (err) {
+        console.error('Error fetching global inventory', err)
+        setGlobalStock([])
+        setPagination(null)
+        setErrorMessage('Failed to load inventory. Please check your connection or permissions.')
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchInventoryPage()
+  }, [page, retryKey])
 
   const filteredStockForShop = (shopId) => globalStock.filter(stock => String(stock.shop_id) === String(shopId))
 
@@ -45,7 +94,16 @@ export default function GlobalInventory(){
       {loading ? (
         <div className="p-10 text-center text-gray-400">Loading inventory...</div>
       ) : errorMessage ? (
-        <div className="p-10 text-center text-red-600 dark:text-red-400">{errorMessage}</div>
+        <div className="p-10 text-center text-red-600 dark:text-red-400">
+          <p>{errorMessage}</p>
+          <button
+            type="button"
+            onClick={() => setRetryKey((currentKey) => currentKey + 1)}
+            className="mt-4 rounded-lg bg-blue-600 px-4 py-2 font-bold text-white hover:bg-blue-700"
+          >
+            Retry
+          </button>
+        </div>
       ) : shops.length === 0 ? (
         <div className="p-10 text-center text-gray-400">No shops found.</div>
       ) : (
@@ -84,13 +142,13 @@ export default function GlobalInventory(){
                      <Store size={16} className="text-blue-600 dark:text-blue-400" />
                      {shop.name}
                    </h4>
-                   <span className="bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-400 px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-widest">{shopStock.length} items</span>
+                   <span className="bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-400 px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-widest">{shopStock.length} items on this page</span>
                 </div>
                 <div className="flex-1 overflow-y-auto max-h-[350px] custom-scrollbar">
                    {shopStock.length === 0 ? (
                      <div className="p-10 text-center flex flex-col items-center gap-2">
                        <SearchX size={24} className="text-gray-200 dark:text-gray-700" />
-                       <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">No matching items</p>
+                       <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">No items on this page</p>
                      </div>
                    ) : (
                      <table className="min-w-full divide-y divide-gray-100 dark:divide-gray-700 border-separate border-spacing-0">
@@ -114,6 +172,7 @@ export default function GlobalInventory(){
               </div>
             )
           })}
+          <Pagination pagination={pagination} onPageChange={setPage} />
         </div>
       )}
     </div>

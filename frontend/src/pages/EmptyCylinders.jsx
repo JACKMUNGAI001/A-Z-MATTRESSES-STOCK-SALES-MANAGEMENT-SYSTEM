@@ -81,14 +81,69 @@ export default function EmptyCylinders() {
   const { user } = useContext(AuthContext)
   const [rows, setRows] = useState([]); const [loading, setLoading] = useState(true); const [quantities, setQuantities] = useState({}); const [error, setError] = useState('')
   const [items, setItems] = useState([]); const [shops, setShops] = useState([]); const [form, setForm] = useState({ shop_id: user?.shop_id || '', item_id: '', qty: '', note: '' })
+  const [selectedShopId, setSelectedShopId] = useState(user?.shop_id ? String(user.shop_id) : '')
   const [buyPrices, setBuyPrices] = useState({})
   const [editingRow, setEditingRow] = useState(null)
   const [editQty, setEditQty] = useState('')
   const [expandedShops, setExpandedShops] = useState({})
+  const visibleShops = useMemo(
+    () => user?.role === 'attendant'
+      ? shops.filter(shop => String(shop.id) === String(user.shop_id))
+      : shops,
+    [shops, user?.role, user?.shop_id]
+  )
   const gasItems = useMemo(() => items.filter(item => item.category_name?.toLowerCase().includes('gas')), [items])
-  const load = async () => { setLoading(true); setError(''); try { const r = await api.get('/stocks/empty-cylinders'); setRows(r.data) } catch (e) { setError(e.response?.data?.msg || 'Unable to load empty cylinders. Please refresh the page.') } finally { setLoading(false) } }
-  useEffect(() => { load() }, [])
-  useEffect(() => { (async () => { try { const [itemsResponse, shopsResponse] = await Promise.all([api.get('/items'), api.get('/shops')]); setItems(itemsResponse.data); setShops(shopsResponse.data); if (!form.shop_id && shopsResponse.data.length) setForm(current => ({ ...current, shop_id: shopsResponse.data[0].id })) } catch { setError('Unable to load gas products and shops.') } })() }, [])
+  const load = async (shopId = selectedShopId) => {
+    if (!shopId) return
+    setLoading(true)
+    setError('')
+    try {
+      const response = await api.get('/stocks/empty-cylinders', { params: { shop_id: shopId } })
+      if (!Array.isArray(response.data)) {
+        throw new Error('The empty cylinders API returned an unsupported response format.')
+      }
+      setRows(response.data.filter(row => String(row.shop_id) === String(shopId)))
+    } catch (e) {
+      console.error('Error fetching empty cylinders', e)
+      setRows([])
+      setError(e.response?.data?.msg || e.message || 'Unable to load empty cylinders. Please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
+  useEffect(() => {
+    (async () => {
+      try {
+        const [itemsResponse, shopsResponse] = await Promise.all([api.get('/items'), api.get('/shops')])
+        const shopsData = Array.isArray(shopsResponse.data) ? shopsResponse.data : []
+        setItems(Array.isArray(itemsResponse.data) ? itemsResponse.data : [])
+        setShops(shopsData)
+        const availableShops = user?.role === 'attendant'
+          ? shopsData.filter(shop => String(shop.id) === String(user.shop_id))
+          : shopsData
+        if (availableShops.length) {
+          const initialShopId = user?.shop_id && availableShops.some(shop => String(shop.id) === String(user.shop_id))
+            ? String(user.shop_id)
+            : String(availableShops[0].id)
+          setSelectedShopId(current =>
+            availableShops.some(shop => String(shop.id) === current) ? current : initialShopId
+          )
+          setForm(current => ({
+            ...current,
+            shop_id: current.shop_id || initialShopId,
+          }))
+        } else {
+          setError('No shops are available for empty cylinders.')
+          setLoading(false)
+        }
+      } catch (e) {
+        console.error('Unable to load gas products and shops', e)
+        setError(e.response?.data?.msg || 'Unable to load gas products and shops.')
+        setLoading(false)
+      }
+    })()
+  }, [user?.role, user?.shop_id])
+  useEffect(() => { if (selectedShopId) load(selectedShopId) }, [selectedShopId])
   const refill = async (row) => { const qty = Number(quantities[`${row.shop_id}-${row.item_id}`] || 0); const buyPrice = buyPrices[`${row.shop_id}-${row.item_id}`]; if (!qty || qty > row.empty_qty) return alert('Enter a quantity within the available empty cylinders.'); try { await api.post('/stocks/empty-cylinders/refill', { shop_id: row.shop_id, item_id: row.item_id, qty, buy_price: buyPrice || undefined }); setQuantities(current => { const next = { ...current }; delete next[`${row.shop_id}-${row.item_id}`]; return next }); setBuyPrices(current => { const next = { ...current }; delete next[`${row.shop_id}-${row.item_id}`]; return next }); await load() } catch (e) { alert(e.response?.data?.msg || 'Unable to refill cylinders') } }
   const addEmpties = async (e) => { e.preventDefault(); const qty = Number(form.qty); if (!form.shop_id || !form.item_id || !Number.isInteger(qty) || qty <= 0) return alert('Choose a shop and gas cylinder, then enter a whole positive quantity.'); try { await api.post('/stocks/empty-cylinders/add', { ...form, qty }); setForm(current => ({ ...current, item_id: '', qty: '', note: '' })); await load() } catch (e) { alert(e.response?.data?.msg || 'Unable to add empty cylinders') } }
   const handleBuyPriceChange = (key, value) => { setBuyPrices(current => ({ ...current, [key]: value })) }
@@ -111,6 +166,7 @@ export default function EmptyCylinders() {
       return a[0].localeCompare(b[0])
     })
   }, [rows])
+  const selectedShop = shops.find(shop => String(shop.id) === selectedShopId)
   const groupedRows = useMemo(() => {
     const groups = rows.reduce((acc, row) => {
       const shopName = row.shop_name || 'Unknown Shop'
@@ -130,17 +186,38 @@ export default function EmptyCylinders() {
   }
   return <div>
     <div className="mb-6 flex items-center gap-3"><Cylinder className="text-amber-600" size={30}/><div><h1 className="text-2xl font-black">Empty Cylinders</h1><p className="text-sm text-gray-500">Add starting or newly acquired empties, then refill them into gas stock.</p></div></div>
+    <div className="mb-6 flex flex-wrap gap-2" role="tablist" aria-label="Empty cylinders by shop">
+      {visibleShops.map(shop => (
+        <button
+          key={shop.id}
+          type="button"
+          role="tab"
+          aria-selected={String(shop.id) === selectedShopId}
+          onClick={() => {
+            setSelectedShopId(String(shop.id))
+            setForm(current => ({ ...current, shop_id: shop.id }))
+          }}
+          className={`rounded-lg px-4 py-2 text-sm font-bold transition-colors ${
+            String(shop.id) === selectedShopId
+              ? 'bg-amber-600 text-white'
+              : 'border border-gray-200 bg-white text-gray-600 hover:bg-amber-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300'
+          }`}
+        >
+          {shop.name}
+        </button>
+      ))}
+    </div>
     <div className="mb-6 flex flex-wrap items-center gap-3 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
-      <span className="text-xs font-black uppercase tracking-widest text-gray-500 dark:text-gray-400">Total Empties:</span>
+      <span className="text-xs font-black uppercase tracking-widest text-gray-500 dark:text-gray-400">{selectedShop?.name || 'Selected shop'} total empties:</span>
       {sizeSummary.map(([size, total]) => (
         <span key={size} className="inline-flex items-center rounded-lg border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs font-black text-amber-700 dark:border-amber-700 dark:bg-amber-900/40 dark:text-amber-300">
           {size} = {total}
         </span>
       ))}
     </div>
-    <form onSubmit={addEmpties} className="mb-6 rounded-2xl border border-gray-100 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-gray-800"><h2 className="mb-4 flex items-center gap-2 font-black"><Plus size={18} className="text-amber-600"/> Add empty cylinders</h2><div className="grid gap-3 md:grid-cols-4">{user?.role !== 'attendant' && <SearchableSelect options={shops} value={form.shop_id} onChange={e=>setForm({...form,shop_id:e.target.value})} placeholder="Choose shop..."/>}<SearchableSelect options={gasItems} value={form.item_id} onChange={e=>setForm({...form,item_id:e.target.value})} placeholder="Choose gas cylinder..."/><input className="rounded border p-3" type="number" min="1" step="1" value={form.qty} onChange={e=>setForm({...form,qty:e.target.value})} placeholder="Quantity"/><input className="rounded border p-3" value={form.note} onChange={e=>setForm({...form,note:e.target.value})} placeholder="Optional note"/></div><button className="mt-3 rounded-lg bg-amber-600 px-4 py-2 text-sm font-bold text-white">Add empties</button></form>
+    <form onSubmit={addEmpties} className="mb-6 rounded-2xl border border-gray-100 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-gray-800"><h2 className="mb-4 flex items-center gap-2 font-black"><Plus size={18} className="text-amber-600"/> Add empty cylinders</h2><div className="grid gap-3 md:grid-cols-4">{user?.role !== 'attendant' && <SearchableSelect options={visibleShops} value={selectedShopId} onChange={e=>{setSelectedShopId(String(e.target.value));setForm(current=>({...current,shop_id:e.target.value}))}} placeholder="Choose shop..."/>}<SearchableSelect options={gasItems} value={form.item_id} onChange={e=>setForm({...form,item_id:e.target.value})} placeholder="Choose gas cylinder..."/><input className="rounded border p-3" type="number" min="1" step="1" value={form.qty} onChange={e=>setForm({...form,qty:e.target.value})} placeholder="Quantity"/><input className="rounded border p-3" value={form.note} onChange={e=>setForm({...form,note:e.target.value})} placeholder="Optional note"/></div><button className="mt-3 rounded-lg bg-amber-600 px-4 py-2 text-sm font-bold text-white">Add empties</button></form>
     <div className="space-y-6">
-      {loading ? <div className="p-10 text-center text-gray-400">Loading empty cylinders...</div> : error ? <div className="p-10 text-center text-red-600">{error}</div> : Object.keys(groupedRows).length === 0 ? <div className="p-10 text-center text-gray-400">No empty-cylinder records yet. Use the form above to enter each shop's current balance.</div> : Object.entries(groupedRows).map(([shopName, shopRows]) => (
+      {loading ? <div className="p-10 text-center text-gray-400">Loading empty cylinders...</div> : error ? <div className="p-10 text-center text-red-600"><p>{error}</p><button type="button" onClick={() => load(selectedShopId)} className="mt-4 rounded-lg bg-blue-600 px-4 py-2 font-bold text-white">Retry</button></div> : Object.keys(groupedRows).length === 0 ? <div className="p-10 text-center text-gray-400">No empty-cylinder records for {selectedShop?.name || 'this shop'} yet. Use the form above to enter the current balance.</div> : Object.entries(groupedRows).map(([shopName, shopRows]) => (
         <div key={shopName} className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
           <button 
             onClick={() => toggleShop(shopName)}

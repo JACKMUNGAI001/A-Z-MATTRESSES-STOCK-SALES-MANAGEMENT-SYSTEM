@@ -3,6 +3,7 @@ import api from '../api/api';
 import { Truck, Store, Calendar, Package, User, SearchX, ChevronDown, ChevronUp, Trash2, Edit, X } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
 import { formatDate } from '../utils/helpers';
+import Pagination from '../components/Pagination';
 
 function MobileRestockCard({ movement, onEdit, onDelete, isAdmin }) {
   return (
@@ -55,8 +56,13 @@ function MobileRestockCard({ movement, onEdit, onDelete, isAdmin }) {
 export default function RestockHistory() {
   const { user } = useContext(AuthContext);
   const [history, setHistory] = useState([]);
+  const [pagination, setPagination] = useState(null);
+  const [page, setPage] = useState(1);
   const [shops, setShops] = useState([]);
+  const [selectedShopId, setSelectedShopId] = useState(user?.shop_id ? String(user.shop_id) : '');
+  const [shopsLoaded, setShopsLoaded] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [expandedShops, setExpandedShops] = useState({});
   const [editingMovement, setEditingMovement] = useState(null);
   const [editForm, setEditForm] = useState({ qty: '', buy_price: '' });
@@ -64,31 +70,85 @@ export default function RestockHistory() {
 
   useEffect(() => {
     fetchShops();
-    fetchHistory();
   }, []);
+
+  useEffect(() => {
+    if (selectedShopId && shopsLoaded) fetchHistory(page);
+  }, [page, selectedShopId, shopsLoaded]);
 
   const fetchShops = async () => {
     try {
       const response = await api.get('/shops');
-      setShops(response.data);
+      const shopsData = Array.isArray(response.data) ? response.data : [];
+      setShops(shopsData);
+      if (shopsData.length > 0) {
+        setSelectedShopId(current =>
+          shopsData.some(shop => String(shop.id) === current) ? current : String(shopsData[0].id)
+        );
+      } else {
+        setLoadError('No shops are available to show restock history.');
+        setLoading(false);
+      }
       // Initialize all shops as expanded
       const initialExpanded = {};
-      response.data.forEach(shop => {
+      shopsData.forEach(shop => {
         initialExpanded[shop.name] = true;
       });
       setExpandedShops(initialExpanded);
     } catch (err) {
-      console.error('Error fetching shops');
+      console.error('Error fetching shops', err);
+      setLoadError(err.response?.data?.msg || 'Unable to load shops for restock history.');
+      setLoading(false);
+    } finally {
+      setShopsLoaded(true);
     }
   };
 
-  const fetchHistory = async () => {
+  const fetchHistory = async (pageToLoad = page) => {
+    setLoading(true);
+    setLoadError('');
     try {
-      const response = await api.get('/stocks/history');
-      setHistory(response.data);
-      setLoading(false);
+      const selectedShop = shops.find(shop => String(shop.id) === selectedShopId);
+      const response = await api.get('/stocks/history', {
+        params: { page: pageToLoad, per_page: 25, shop_id: selectedShopId },
+      });
+      const responseItems = Array.isArray(response.data) ? response.data : response.data?.items;
+      const items = Array.isArray(response.data)
+        ? responseItems.filter(item => item.shop_name === selectedShop?.name)
+        : responseItems;
+      if (!Array.isArray(items)) {
+        throw new Error('The restock history API returned an unsupported response format.');
+      }
+
+      const responsePagination = response.data?.pagination;
+      if (
+        responsePagination &&
+        !Array.isArray(responsePagination) &&
+        Number.isInteger(responsePagination.page) &&
+        Number.isInteger(responsePagination.total_pages)
+      ) {
+        setHistory(items);
+        setPagination(responsePagination);
+        setPage(responsePagination.page);
+      } else {
+        const perPage = 25;
+        const totalPages = Math.max(Math.ceil(items.length / perPage), 1);
+        const safePage = Math.min(pageToLoad, totalPages);
+        setHistory(items.slice((safePage - 1) * perPage, safePage * perPage));
+        setPagination({
+          page: safePage,
+          per_page: perPage,
+          total: items.length,
+          total_pages: totalPages,
+        });
+        setPage(safePage);
+      }
     } catch (err) {
-      console.error('Error fetching restock history');
+      console.error('Error fetching restock history', err);
+      setHistory([]);
+      setPagination(null);
+      setLoadError(err.response?.data?.msg || err.message || 'Unable to load restock history. Please try again.');
+    } finally {
       setLoading(false);
     }
   };
@@ -156,7 +216,40 @@ export default function RestockHistory() {
         </div>
       </div>
 
-      {Object.keys(groupedHistory).length === 0 ? (
+      <div className="mb-6 flex flex-wrap gap-2" role="tablist" aria-label="Restock history by shop">
+        {shops.map(shop => (
+          <button
+            key={shop.id}
+            type="button"
+            role="tab"
+            aria-selected={String(shop.id) === selectedShopId}
+            onClick={() => {
+              setSelectedShopId(String(shop.id));
+              setPage(1);
+            }}
+            className={`rounded-lg px-4 py-2 text-sm font-bold transition-colors ${
+              String(shop.id) === selectedShopId
+                ? 'bg-orange-600 text-white'
+                : 'border border-gray-200 bg-white text-gray-600 hover:bg-orange-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300'
+            }`}
+          >
+            {shop.name}
+          </button>
+        ))}
+      </div>
+
+      {loadError ? (
+        <div className="rounded-2xl border border-red-100 bg-white p-8 text-center dark:border-red-900/40 dark:bg-gray-800">
+          <p className="mb-4 text-red-600 dark:text-red-400">{loadError}</p>
+          <button
+            type="button"
+            onClick={() => selectedShopId ? fetchHistory(page) : fetchShops()}
+            className="rounded-lg bg-blue-600 px-4 py-2 font-bold text-white hover:bg-blue-700"
+          >
+            Retry
+          </button>
+        </div>
+      ) : Object.keys(groupedHistory).length === 0 ? (
         <div className="bg-white dark:bg-gray-800 rounded-2xl p-12 text-center border border-gray-100 dark:border-gray-700 shadow-sm transition-colors">
           <SearchX size={48} className="mx-auto text-gray-300 dark:text-gray-600 mb-4" />
           <p className="text-gray-500 dark:text-gray-400 font-bold uppercase tracking-widest text-sm">No restock records found</p>
@@ -271,6 +364,7 @@ export default function RestockHistory() {
           ))}
         </div>
       )}
+      <Pagination pagination={pagination} onPageChange={setPage} />
 
       {/* Edit Modal */}
       {editingMovement && (

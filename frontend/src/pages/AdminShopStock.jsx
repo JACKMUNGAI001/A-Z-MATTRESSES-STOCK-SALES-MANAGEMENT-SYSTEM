@@ -5,6 +5,7 @@ import { Package, Trash2, Store, AlertCircle, Edit, X, Save, Search, CalendarX, 
 import { AuthContext } from "../context/AuthContext";
 import { SearchContext } from "../context/SearchContext";
 import { formatDate } from "../utils/helpers";
+import Pagination from "../components/Pagination";
 
 export default function AdminShopStock() {
   const { shopId } = useParams();
@@ -16,12 +17,18 @@ export default function AdminShopStock() {
   const [availableItems, setAvailableItems] = useState([]);
   const [editingStock, setEditingStock] = useState(null);
   const [expandedStockItems, setExpandedStockItems] = useState([]);
+  const [stockBatches, setStockBatches] = useState({});
+  const [loadingBatches, setLoadingBatches] = useState({});
+  const [batchErrors, setBatchErrors] = useState({});
   const [editFormData, setEditFormData] = useState({ qty: "", buy_price: "" });
 
   const toggleStockItemExpansion = (itemId) => {
-    setExpandedStockItems(prev => 
-      prev.includes(itemId) ? prev.filter(id => id !== itemId) : [...prev, itemId]
+    const isExpanded = expandedStockItems.includes(itemId);
+    setExpandedStockItems(prev => isExpanded
+      ? prev.filter(id => id !== itemId)
+      : [...prev, itemId]
     );
+    if (!isExpanded) fetchStockBatches(itemId, 1);
   };
 
   useEffect(() => {
@@ -48,6 +55,53 @@ export default function AdminShopStock() {
       console.error("Error fetching shop stock");
     } finally {
       setIsStockLoading(false);
+    }
+  };
+
+  const fetchStockBatches = async (itemId, page = 1) => {
+    setLoadingBatches(current => ({ ...current, [itemId]: true }));
+    setBatchErrors(current => ({ ...current, [itemId]: '' }));
+    try {
+      const response = await api.get(`/stocks/${shopId}/${itemId}/batches`, {
+        params: { page, per_page: 25 },
+      });
+      const items = Array.isArray(response.data) ? response.data : response.data?.items;
+      if (!Array.isArray(items)) {
+        throw new Error('The stock batches API returned an unsupported response format.');
+      }
+      const responsePagination = response.data?.pagination;
+      if (
+        responsePagination &&
+        !Array.isArray(responsePagination) &&
+        Number.isInteger(responsePagination.page) &&
+        Number.isInteger(responsePagination.total_pages)
+      ) {
+        setStockBatches(current => ({ ...current, [itemId]: { items, pagination: responsePagination } }));
+      } else {
+        const perPage = 25;
+        const totalPages = Math.max(Math.ceil(items.length / perPage), 1);
+        const safePage = Math.min(page, totalPages);
+        setStockBatches(current => ({
+          ...current,
+          [itemId]: {
+            items: items.slice((safePage - 1) * perPage, safePage * perPage),
+            pagination: {
+              page: safePage,
+              per_page: perPage,
+              total: items.length,
+              total_pages: totalPages,
+            },
+          },
+        }));
+      }
+    } catch (err) {
+      console.error("Error fetching stock batches", err);
+      setBatchErrors(current => ({
+        ...current,
+        [itemId]: err.response?.data?.msg || err.message || 'Unable to load stock batches.',
+      }));
+    } finally {
+      setLoadingBatches(current => ({ ...current, [itemId]: false }));
     }
   };
 
@@ -96,6 +150,7 @@ export default function AdminShopStock() {
       alert("Stock updated successfully!");
       setEditingStock(null);
       fetchShopStock();
+      fetchStockBatches(editingStock.item_id, 1);
     } catch (err) {
       alert(`Error updating stock: ${err.response?.data?.msg || err.message}`);
     }
@@ -238,7 +293,20 @@ export default function AdminShopStock() {
                                 <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-2">
                                   <Clock size={12} /> Stock Batches (FIFO Order)
                                 </h4>
-                                {stock.batches && stock.batches.length > 0 ? (
+                                {loadingBatches[stock.item_id] ? (
+                                  <p className="text-gray-400 italic text-xs">Loading batches...</p>
+                                ) : batchErrors[stock.item_id] ? (
+                                  <div className="text-xs text-red-600 dark:text-red-400">
+                                    <p>{batchErrors[stock.item_id]}</p>
+                                    <button
+                                      type="button"
+                                      onClick={() => fetchStockBatches(stock.item_id, stockBatches[stock.item_id]?.pagination?.page || 1)}
+                                      className="mt-2 font-bold underline"
+                                    >
+                                      Retry
+                                    </button>
+                                  </div>
+                                ) : stockBatches[stock.item_id]?.items?.length > 0 ? (
                                   <table className="w-full text-xs">
                                     <thead>
                                       <tr className="text-gray-400 font-bold">
@@ -249,7 +317,7 @@ export default function AdminShopStock() {
                                       </tr>
                                     </thead>
                                     <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-                                      {stock.batches.map(batch => (
+                                      {stockBatches[stock.item_id].items.map(batch => (
                                         <tr key={batch.id}>
                                           <td className="py-2 text-gray-500 font-mono">#{batch.id}</td>
                                           <td className="py-2 text-center font-black text-blue-600 dark:text-blue-400">{batch.qty}</td>
@@ -262,6 +330,10 @@ export default function AdminShopStock() {
                                 ) : (
                                   <p className="text-gray-400 italic text-xs">No active batches found for this item.</p>
                                 )}
+                                <Pagination
+                                  pagination={stockBatches[stock.item_id]?.pagination}
+                                  onPageChange={(nextPage) => fetchStockBatches(stock.item_id, nextPage)}
+                                />
                               </div>
                             </td>
                           </tr>

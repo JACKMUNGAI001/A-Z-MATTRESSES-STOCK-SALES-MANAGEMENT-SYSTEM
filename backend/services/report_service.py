@@ -11,6 +11,7 @@ from sqlalchemy import or_
 from sqlalchemy.orm import selectinload
 from datetime import datetime, timedelta
 from utils.timezone_utils import get_local_time
+from utils.pagination import paginate_query
 
 
 def get_global_financial_overview():
@@ -240,35 +241,37 @@ def get_stock_summary_by_category(shop_id=None):
     return summary
 
 
-def get_global_inventory():
-    """Return all shop stock in one grouped query (instead of one request per shop)."""
+def get_global_inventory(page=1, per_page=25):
+    """Return one page of grouped stock records across all shops."""
     from models.product import Item
     from models.shop import Shop
-    rows = db.session.query(
+    query = db.session.query(
         Shop.id.label("shop_id"), Shop.name.label("shop_name"),
         Item.id.label("item_id"), Item.name.label("item_name"),
         func.sum(ShopStock.quantity).label("qty")
     ).join(Shop, ShopStock.shop_id == Shop.id) \
      .join(Item, ShopStock.item_id == Item.id) \
      .group_by(Shop.id, Shop.name, Item.id, Item.name) \
-     .order_by(Shop.name.asc(), Item.name.asc()).all()
-    return [{
+     .order_by(Shop.name.asc(), Item.name.asc(), Shop.id.asc(), Item.id.asc())
+    rows, pagination = paginate_query(query, page, per_page)
+    items = [{
         "shop_id": row.shop_id,
         "shop_name": row.shop_name,
         "item_id": row.item_id,
         "item_name": row.item_name,
         "qty": int(row.qty or 0),
     } for row in rows]
+    return {"items": items, "pagination": pagination}
 
 
-def get_outstanding_credits(shop_id=None):
+def get_outstanding_credits(shop_id=None, page=1, per_page=25):
     """Return list of credit sales not fully paid with remaining balance."""
     from models.shop import Shop
     from models.user import User
     query = Sale.query.filter(Sale.sale_type == 'credit').filter(Sale.status != 'paid')
     if shop_id:
         query = query.filter(Sale.shop_id == shop_id)
-    sales = query.order_by(Sale.created_at.desc()).all()
+    sales, pagination = paginate_query(query.order_by(Sale.created_at.desc(), Sale.id.desc()), page, per_page)
     
     shop_ids = {s.shop_id for s in sales if s.shop_id}
     user_ids = {s.user_id for s in sales if s.user_id}
@@ -292,7 +295,7 @@ def get_outstanding_credits(shop_id=None):
             "created_at": s.created_at.isoformat(),
             "receipt_uuid": s.receipt_uuid,
         })
-    return results
+    return {"items": results, "pagination": pagination}
 
 
 def get_credits_summary(shop_id=None):
@@ -326,14 +329,18 @@ def get_credits_summary(shop_id=None):
         raise e
 
 
-def get_all_credit_sales(shop_id=None):
-    """Return all credit sales (paid and unpaid) serialized for UI."""
+def get_all_credit_sales(shop_id=None, page=1, per_page=25, status=None):
+    """Return one page of paid or unpaid credit sales serialized for UI."""
     from models.shop import Shop
     from models.user import User
     query = Sale.query.filter(Sale.sale_type == 'credit').options(selectinload(Sale.items)).order_by(Sale.created_at.desc(), Sale.id.desc())
     if shop_id:
         query = query.filter(Sale.shop_id == shop_id)
-    sales = query.all()
+    if status == "paid":
+        query = query.filter(Sale.status == "paid")
+    elif status == "unpaid":
+        query = query.filter(Sale.status != "paid")
+    sales, pagination = paginate_query(query, page, per_page)
     
     shop_ids = {s.shop_id for s in sales if s.shop_id}
     user_ids = {s.user_id for s in sales if s.user_id}
@@ -387,7 +394,7 @@ def get_all_credit_sales(shop_id=None):
             "items": serialized_items,
             "products": list(products_by_id.values()),
         })
-    return results
+    return {"items": results, "pagination": pagination}
     
 def get_dashboard_summary(shop_id=None):
     """

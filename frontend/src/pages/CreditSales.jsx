@@ -4,22 +4,67 @@ import { Wallet, FileText, Edit, Trash2 } from 'lucide-react'
 import { AuthContext } from '../context/AuthContext'
 import EditSaleModal from '../components/EditSaleModal'
 import MobileSaleCard from '../components/MobileSaleCard'
+import Pagination from '../components/Pagination'
 
 export default function CreditSales(){
   const [sales, setSales] = useState([])
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState('')
   const [editingSale, setEditingSale] = useState(null)
   const [activeSection, setActiveSection] = useState('unpaid')
+  const [pagination, setPagination] = useState(null)
+  const [page, setPage] = useState(1)
   const { user } = useContext(AuthContext)
 
-  useEffect(() => { fetchSales() }, [])
+  useEffect(() => {
+    setPage(1)
+    fetchSales(1)
+  }, [activeSection])
 
-  const fetchSales = async () => {
+  const fetchSales = async (pageToLoad = page) => {
     setLoading(true)
+    setLoadError('')
     try{
-      const res = await api.get('/reports/credit-sales')
-      setSales(res.data)
-    }catch(err){ console.error('Error fetching credit sales', err) }
+      const res = await api.get('/reports/credit-sales', {
+        params: { page: pageToLoad, per_page: 25, status: activeSection },
+      })
+      const responseItems = Array.isArray(res.data) ? res.data : res.data?.items
+      const responsePagination = res.data?.pagination
+      if (!Array.isArray(responseItems)) {
+        throw new Error('The credit sales API returned an unsupported response format.')
+      }
+
+      if (
+        responsePagination &&
+        !Array.isArray(responsePagination) &&
+        Number.isInteger(responsePagination.page) &&
+        Number.isInteger(responsePagination.total_pages)
+      ) {
+        setSales(responseItems)
+        setPagination(responsePagination)
+        setPage(responsePagination.page)
+      } else {
+        const matchingSales = responseItems.filter((sale) =>
+          activeSection === 'paid' ? sale.status === 'paid' : sale.status !== 'paid'
+        )
+        const perPage = 25
+        const totalPages = Math.max(Math.ceil(matchingSales.length / perPage), 1)
+        const safePage = Math.min(pageToLoad, totalPages)
+        setSales(matchingSales.slice((safePage - 1) * perPage, safePage * perPage))
+        setPagination({
+          page: safePage,
+          per_page: perPage,
+          total: matchingSales.length,
+          total_pages: totalPages,
+        })
+        setPage(safePage)
+      }
+    }catch(err){
+      console.error('Error fetching credit sales', err)
+      setSales([])
+      setPagination(null)
+      setLoadError(err.response?.data?.msg || err.message || 'Unable to load credit sales. Please try again.')
+    }
     finally{ setLoading(false) }
   }
 
@@ -51,9 +96,7 @@ export default function CreditSales(){
     }
   }
 
-  const unpaidSales = sales.filter((sale) => sale.status !== 'paid')
-  const paidSales = sales.filter((sale) => sale.status === 'paid')
-  const displayedSales = activeSection === 'unpaid' ? unpaidSales : paidSales
+  const displayedSales = sales
 
   const productSummary = (sale) => {
     const products = sale.products || sale.items || []
@@ -75,18 +118,29 @@ export default function CreditSales(){
           onClick={() => setActiveSection('unpaid')}
           className={`px-5 py-3 font-bold text-sm border-b-2 transition-colors ${activeSection === 'unpaid' ? 'border-amber-500 text-amber-600 dark:text-amber-400' : 'border-transparent text-gray-500 hover:text-gray-900 dark:hover:text-white'}`}
         >
-          Unpaid Sales ({unpaidSales.length})
+          Unpaid Sales
         </button>
         <button
           onClick={() => setActiveSection('paid')}
           className={`px-5 py-3 font-bold text-sm border-b-2 transition-colors ${activeSection === 'paid' ? 'border-green-500 text-green-600 dark:text-green-400' : 'border-transparent text-gray-500 hover:text-gray-900 dark:hover:text-white'}`}
         >
-          Paid Sales ({paidSales.length})
+          Paid Sales
         </button>
       </div>
       <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border p-4 overflow-x-auto">
         {loading ? (
           <div className="p-8 text-center">Loading...</div>
+        ) : loadError ? (
+          <div className="p-8 text-center">
+            <p className="mb-4 text-red-600 dark:text-red-400">{loadError}</p>
+            <button
+              type="button"
+              onClick={() => fetchSales(page)}
+              className="rounded-lg bg-blue-600 px-4 py-2 font-bold text-white hover:bg-blue-700"
+            >
+              Retry
+            </button>
+          </div>
         ) : displayedSales.length === 0 ? (
           <div className="p-8 text-center">No {activeSection} credit sales found.</div>
         ) : (
@@ -177,6 +231,7 @@ export default function CreditSales(){
           </>
         )}
       </div>
+      <Pagination pagination={pagination} onPageChange={(nextPage) => fetchSales(nextPage)} />
       {editingSale && (
         <EditSaleModal
           sale={editingSale}

@@ -8,13 +8,16 @@ import { Store, Plus, ChevronDown, ChevronUp, AlertTriangle, TrendingUp, History
 import { formatDate, formatPaymentMethod } from '../utils/helpers';
 import SearchableSelect from '../components/SearchableSelect';
 import useSubmissionLock from '../hooks/useSubmissionLock';
+import useDebouncedValue from '../hooks/useDebouncedValue';
 
 export default function ShopDetails() {
   const { shopId } = useParams();
   const { user } = useContext(AuthContext);
   const { searchQuery, searchType } = useContext(SearchContext);
+  const debouncedSearchQuery = useDebouncedValue(searchQuery);
   const [shop, setShop] = useState(null);
-  const [shopSales, setShopSales] = useState([]);
+  const [shopSalesCount, setShopSalesCount] = useState(0);
+  const [shopSalesTotal, setShopSalesTotal] = useState(0);
   const [shopDeposits, setShopDeposits] = useState([]);
   const [shopStock, setShopStock] = useState([]);
   const [availableItems, setAvailableItems] = useState([]);
@@ -49,12 +52,15 @@ export default function ShopDetails() {
 
   useEffect(() => {
     fetchShopDetails();
-    fetchShopSales();
     fetchShopDeposits();
     fetchShopStock();
     fetchAvailableItems();
     fetchShopSummaries();
   }, [shopId]);
+
+  useEffect(() => {
+    fetchShopSales();
+  }, [shopId, debouncedSearchQuery, searchType]);
 
   useEffect(() => {
     if (user?.role !== 'manager') return;
@@ -101,10 +107,23 @@ export default function ShopDetails() {
 
   const fetchShopSales = async () => {
     try {
-      const response = await api.get(`/sales/shop/${shopId}`);
-      setShopSales(response.data);
+      const response = await api.get(`/sales/shop/${shopId}`, {
+        params: {
+          page: 1,
+          per_page: 1,
+          search: searchType === 'date' ? undefined : debouncedSearchQuery || undefined,
+          date: searchType === 'date' ? debouncedSearchQuery || undefined : undefined,
+        },
+      });
+      if (Array.isArray(response.data)) {
+        setShopSalesCount(response.data.length);
+        setShopSalesTotal(response.data.reduce((total, sale) => total + Number(sale.total_amount || 0), 0));
+      } else {
+        setShopSalesCount(response.data?.pagination?.total || 0);
+        setShopSalesTotal(response.data?.summary_total || 0);
+      }
     } catch (err) {
-      console.error('Error fetching shop sales');
+      console.error('Error fetching shop sales', err);
     }
   };
 
@@ -248,13 +267,6 @@ export default function ShopDetails() {
     return new Intl.NumberFormat('en-KE', { style: 'currency', currency: 'KES', minimumFractionDigits: 0 }).format(val || 0);
   };
 
-  const filteredSales = searchQuery 
-    ? shopSales.filter(s => {
-        if (searchType === 'date') return new Date(s.created_at).toISOString().split('T')[0] === searchQuery;
-        return s.items?.some(item => item.item_name.toLowerCase().includes(searchQuery.toLowerCase()));
-      })
-    : shopSales;
-
   const filteredDeposits = searchQuery
     ? shopDeposits.filter(d => {
         if (searchType === 'date') return new Date(d.created_at).toISOString().split('T')[0] === searchQuery;
@@ -289,7 +301,7 @@ export default function ShopDetails() {
         {/* SHOP METRICS */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10 transition-colors">
           <Card title="Revenue (Filtered)" className="border-l-4 border-l-green-500">
-            {formatCurrency(filteredSales.reduce((acc, sale) => acc + (sale.total_amount || 0), 0))}
+            {formatCurrency(shopSalesTotal)}
           </Card>
           <Card title="Collections (Filtered)" className="border-l-4 border-l-blue-500">
             {formatCurrency(filteredDeposits.reduce((acc, dep) => acc + (dep.total_paid || 0), 0))}
@@ -491,7 +503,7 @@ export default function ShopDetails() {
               <TrendingUp size={28} className="text-blue-600" />
               <div>
                 <h3 className="text-lg font-black">Sales History</h3>
-                <p className="text-sm text-gray-500">{filteredSales.length} records</p>
+                <p className="text-sm text-gray-500">{shopSalesCount} records</p>
               </div>
             </div>
           </Link>

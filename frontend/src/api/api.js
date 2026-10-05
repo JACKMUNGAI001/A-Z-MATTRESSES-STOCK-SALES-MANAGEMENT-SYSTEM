@@ -9,16 +9,22 @@ const api = axios.create({
 let activeGetRequests = 0
 const loadingListeners = new Set()
 const referenceCache = new Map()
-const REFERENCE_CACHE_TTL = 5 * 60 * 1000
+const inFlightReferenceRequests = new Map()
+const REFERENCE_CACHE_TTL = 60 * 1000
+let referenceCacheGeneration = 0
 
-// These values change infrequently but are requested by many pages and modals.
-// Serving them from memory removes repeat round trips while mutations clear the
-// cache immediately, so stock and sales data are never served stale.
-const isReferenceRequest = (config) => {
+// Mutable transaction and stock endpoints are deliberately excluded.
+const isBrieflyCacheable = (config) => {
   const url = (config.url || '').replace(/\/$/, '')
-  return url === '/items' || url === '/shops'
+  return url === '/items' || url === '/shops' || url === '/suppliers' ||
+    /^\/suppliers\/\d+\/products$/.test(url)
 }
-const cacheKey = (config) => `${config.url}?${JSON.stringify(config.params || {})}`
+const cacheKey = (config) => [
+  config.baseURL,
+  (config.url || '').replace(/\/$/, ''),
+  JSON.stringify(config.params || {}),
+  config.headers?.Authorization || '',
+].join('|')
 
 const notifyLoadingListeners = () => {
   loadingListeners.forEach((listener) => listener(activeGetRequests > 0))
@@ -47,21 +53,48 @@ api.interceptors.request.use((config) => {
     notifyLoadingListeners()
   }
 
-  if ((config.method || 'get').toLowerCase() === 'get' && isReferenceRequest(config)) {
-    const cached = referenceCache.get(cacheKey(config))
+  const isGet = (config.method || 'get').toLowerCase() === 'get'
+  if (isGet && isBrieflyCacheable(config)) {
+    config.__cacheGeneration = referenceCacheGeneration
+    const key = cacheKey(config)
+    const cached = referenceCache.get(key)
     if (cached && Date.now() - cached.savedAt < REFERENCE_CACHE_TTL) {
       config.adapter = () => Promise.resolve({ data: cached.data, status: 200, statusText: 'OK', headers: {}, config })
+    } else {
+      const existingRequest = inFlightReferenceRequests.get(key)
+      if (existingRequest) {
+        config.adapter = () => existingRequest.then((response) => ({ ...response, config }))
+      } else {
+        const originalAdapter = axios.getAdapter(config.adapter || api.defaults.adapter)
+        const request = originalAdapter(config)
+        inFlightReferenceRequests.set(key, request)
+        config.adapter = () => request.then(
+          (response) => ({ ...response, config }),
+          (error) => { throw error }
+        ).finally(() => {
+          if (inFlightReferenceRequests.get(key) === request) inFlightReferenceRequests.delete(key)
+        })
+      }
     }
   }
 
-  if ((config.method || 'get').toLowerCase() !== 'get') referenceCache.clear()
+  if (!isGet) {
+    referenceCacheGeneration += 1
+    referenceCache.clear()
+    inFlightReferenceRequests.clear()
+  }
 
   return config
 })
 
 api.interceptors.response.use(
   (response) => {
-    if (isReferenceRequest(response.config)) referenceCache.set(cacheKey(response.config), { data: response.data, savedAt: Date.now() })
+    if (
+      isBrieflyCacheable(response.config) &&
+      response.config.__cacheGeneration === referenceCacheGeneration
+    ) {
+      referenceCache.set(cacheKey(response.config), { data: response.data, savedAt: Date.now() })
+    }
     stopGlobalLoading(response.config)
     return response
   },
@@ -73,6 +106,8 @@ api.interceptors.response.use(
     }
 
     if (error.response && error.response.status === 401) {
+      referenceCacheGeneration += 1
+      referenceCache.clear()
       localStorage.removeItem('token')
       localStorage.removeItem('user')
       window.location.href = '/login'
@@ -88,7 +123,7 @@ export const updateSupplier = (id, data) => api.put(`/suppliers/${id}`, data)
 export const deleteSupplier = (id) => api.delete(`/suppliers/${id}`)
 
 // Invoice APIs
-export const fetchSupplierInvoices = () => api.get('/suppliers/invoices')
+export const fetchSupplierInvoices = (params) => api.get('/suppliers/invoices', { params })
 export const createSupplierInvoice = (data) => api.post('/suppliers/invoices', data)
 export const fetchSupplierInvoiceDetails = (id) => api.get(`/suppliers/invoices/${id}`)
 export const updateSupplierInvoiceStatus = (id, status) => api.put(`/suppliers/invoices/${id}/status`, { status })

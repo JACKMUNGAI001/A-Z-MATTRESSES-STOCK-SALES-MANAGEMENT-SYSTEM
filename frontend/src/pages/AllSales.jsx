@@ -6,25 +6,74 @@ import { AuthContext } from "../context/AuthContext";
 import { SearchContext } from "../context/SearchContext";
 import EditSaleModal from "../components/EditSaleModal";
 import MobileSaleCard from "../components/MobileSaleCard";
+import Pagination from "../components/Pagination";
+import useDebouncedValue from "../hooks/useDebouncedValue";
 
 export default function AllSales() {
   const [sales, setSales] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState('');
   const [editingSale, setEditingSale] = useState(null);
+  const [pagination, setPagination] = useState(null);
+  const [page, setPage] = useState(1);
   const { user } = useContext(AuthContext);
   const { searchQuery, searchType } = useContext(SearchContext);
+  const debouncedSearchQuery = useDebouncedValue(searchQuery);
 
   useEffect(() => {
-    fetchSales();
-  }, []);
+    setPage(1);
+    fetchSales(1);
+  }, [debouncedSearchQuery, searchType]);
 
-  const fetchSales = async () => {
+  const fetchSales = async (pageToLoad = page) => {
     setLoading(true);
+    setLoadError('');
     try {
-      const response = await api.get("/sales/all");
-      setSales(response.data);
+      const params = {
+        page: pageToLoad,
+        per_page: 25,
+        search: searchType === 'date' ? undefined : debouncedSearchQuery || undefined,
+        date: searchType === 'date' ? debouncedSearchQuery || undefined : undefined,
+      };
+      const response = await api.get("/sales/all", { params });
+      if (Array.isArray(response.data)) {
+        // Keep the screen usable while an older API deployment is rolling forward.
+        const matchingSales = response.data.filter((sale) => {
+          if (!debouncedSearchQuery) return true;
+          if (searchType === 'date') {
+            return new Date(sale.created_at).toISOString().slice(0, 10) === debouncedSearchQuery;
+          }
+          const query = debouncedSearchQuery.toLowerCase();
+          return sale.shop_name?.toLowerCase().includes(query) ||
+            sale.items?.some((item) => item.item_name?.toLowerCase().includes(query));
+        });
+        const perPage = 25;
+        const totalPages = Math.max(Math.ceil(matchingSales.length / perPage), 1);
+        const safePage = Math.min(pageToLoad, totalPages);
+        setSales(matchingSales.slice((safePage - 1) * perPage, safePage * perPage));
+        setPagination({
+          page: safePage,
+          per_page: perPage,
+          total: matchingSales.length,
+          total_pages: totalPages,
+        });
+        setPage(safePage);
+      } else if (
+        Array.isArray(response.data?.items) &&
+        response.data.pagination &&
+        Array.isArray(response.data.pagination) === false
+      ) {
+        setSales(response.data.items);
+        setPagination(response.data.pagination);
+        setPage(response.data.pagination.page);
+      } else {
+        throw new Error('The sales API returned an unsupported response format.');
+      }
     } catch (err) {
-      console.error("Error fetching sales");
+      console.error("Error fetching sales", err);
+      setSales([]);
+      setPagination(null);
+      setLoadError(err.response?.data?.msg || err.message || 'Unable to load sales. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -63,18 +112,7 @@ export default function AllSales() {
     return new Intl.NumberFormat('en-KE', { style: 'currency', currency: 'KES', minimumFractionDigits: 0 }).format(val || 0);
   };
 
-  const filteredSales = searchQuery 
-    ? sales.filter(sale => {
-        if (searchType === 'date') {
-          const saleDate = new Date(sale.created_at).toISOString().split('T')[0];
-          return saleDate === searchQuery;
-        }
-        return (sale.shop_name && sale.shop_name.toLowerCase().includes(searchQuery.toLowerCase())) ||
-        sale.items?.some(item => 
-          item.item_name.toLowerCase().includes(searchQuery.toLowerCase())
-        )
-      })
-    : sales;
+  const filteredSales = sales;
 
   return (
     <>
@@ -95,13 +133,24 @@ export default function AllSales() {
               Transaction History {searchQuery && <span className="text-xs font-medium text-blue-500 bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded-full ml-2 transition-all">Searching: "{searchQuery}"</span>}
             </h2>
             <span className="bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-400 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest transition-all">
-              {filteredSales.length} {searchQuery ? 'Matching' : 'Total'} Records
+              {pagination?.total || 0} {searchQuery ? 'Matching' : 'Total'} Records
             </span>
           </div>
           
           <div className="overflow-x-auto max-h-[calc(100vh-300px)] overflow-y-auto custom-scrollbar">
             {loading ? (
               <div className="p-20 text-center text-gray-400 dark:text-gray-500 font-bold uppercase tracking-widest animate-pulse transition-colors">Retrieving sales data...</div>
+            ) : loadError ? (
+              <div className="p-12 text-center border-t border-gray-100 dark:border-gray-700">
+                <p className="mb-4 text-red-600 dark:text-red-400">{loadError}</p>
+                <button
+                  type="button"
+                  onClick={() => fetchSales(page)}
+                  className="rounded-lg bg-blue-600 px-4 py-2 font-bold text-white hover:bg-blue-700"
+                >
+                  Retry
+                </button>
+              </div>
             ) : filteredSales.length === 0 ? (
               <div className="p-20 text-center border-t border-gray-100 dark:border-gray-700 transition-colors">
                 <SearchX size={48} className="mx-auto text-gray-300 dark:text-gray-600 mb-4 transition-colors" />
@@ -224,6 +273,7 @@ export default function AllSales() {
               </>
             )}
           </div>
+          <Pagination pagination={pagination} onPageChange={(nextPage) => fetchSales(nextPage)} />
         </div>
 
         {editingSale && (

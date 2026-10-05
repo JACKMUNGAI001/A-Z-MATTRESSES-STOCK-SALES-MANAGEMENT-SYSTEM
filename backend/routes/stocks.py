@@ -1,6 +1,6 @@
 from flask import Blueprint, request
 from controllers.stock_controller import (
-    get_shop_stock, adjust_stock_controller, adjust_stock_bulk_controller,
+    get_shop_stock, get_shop_stock_batches, adjust_stock_controller, adjust_stock_bulk_controller,
     low_stock_alerts_controller, low_stock_count_controller, 
     low_stock_items_controller, delete_stock_controller, 
     get_restock_history_controller, delete_restock_controller,
@@ -32,6 +32,11 @@ def update_restock(movement_id):
 @jwt_required()
 def get_stocks(shop_id):
     return get_shop_stock(shop_id)
+
+@bp.route("/<int:shop_id>/<int:item_id>/batches", methods=["GET"])
+@jwt_required()
+def get_stock_batches(shop_id, item_id):
+    return get_shop_stock_batches(shop_id, item_id)
 
 @bp.route("/adjust", methods=["POST"])
 @jwt_required()

@@ -8,6 +8,7 @@ from datetime import datetime
 from sqlalchemy import func
 from utils.timezone_utils import get_local_time
 from utils.helpers import calculate_total_buy_price
+from utils.pagination import paginate_query
 
 
 def adjust_stock(shop_id, item_id, qty, movement_type="adjustment", user_id=None, buy_price=None, sell_price=None, override=False, price_unit=None):
@@ -282,12 +283,16 @@ def delete_stock(shop_id, item_id, user_id):
     db.session.commit()
     return True
 
-def get_restock_history(shop_id=None):
+def get_restock_history(shop_id=None, page=1, per_page=25):
     query = StockMovement.query.filter(StockMovement.movement_type.in_(['purchase_in', 'adjustment', 'transfer_in']))
     if shop_id:
         query = query.filter_by(shop_id=shop_id)
     
-    movements = query.order_by(StockMovement.created_at.desc()).all()
+    movements, pagination = paginate_query(
+        query.order_by(StockMovement.created_at.desc(), StockMovement.id.desc()),
+        page,
+        per_page,
+    )
     
     item_ids = {m.item_id for m in movements if m.item_id}
     shop_ids = {m.shop_id for m in movements if m.shop_id}
@@ -313,7 +318,7 @@ def get_restock_history(shop_id=None):
             "created_at": m.created_at.isoformat(),
             "reference": m.reference
         })
-    return out
+    return {"items": out, "pagination": pagination}
 
 def delete_restock_movement(movement_id):
     mv = StockMovement.query.get(movement_id)

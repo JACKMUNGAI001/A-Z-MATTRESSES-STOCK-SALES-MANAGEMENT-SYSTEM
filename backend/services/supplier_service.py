@@ -139,7 +139,7 @@ def create_supplier_invoice(supplier_id, invoice_number, items_data, status="Pen
     return inv
 
 def list_supplier_invoices():
-    return SupplierInvoice.query.all()
+    return SupplierInvoice.query
 
 def get_supplier_invoice(invoice_id):
     return SupplierInvoice.query.get(invoice_id)

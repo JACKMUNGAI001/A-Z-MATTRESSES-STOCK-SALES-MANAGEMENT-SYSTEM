@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react'
+import React, { useState, useEffect, useContext, useRef } from 'react'
 import { fetchSupplierInvoices, fetchSuppliers, createSupplierInvoice, fetchSupplierInvoiceDetails, updateSupplierInvoiceStatus, recordSupplierInvoicePayment } from '../api/api'
 import api from '../api/api'
 import Card from '../components/Card'
@@ -6,6 +6,8 @@ import { Plus, Eye, FileText, Calendar, DollarSign, Truck, Package, Search, Chec
 import { SearchContext } from '../context/SearchContext'
 import { formatDate } from '../utils/helpers'
 import SearchableSelect from '../components/SearchableSelect'
+import Pagination from '../components/Pagination'
+import useDebouncedValue from '../hooks/useDebouncedValue'
 
 export default function AdminSupplierInvoices() {
   const [invoices, setInvoices] = useState([])
@@ -13,13 +15,20 @@ export default function AdminSupplierInvoices() {
   const [supplierProducts, setSupplierProducts] = useState([])
   const [shops, setShops] = useState([])
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState('')
   const [showModal, setShowModal] = useState(false)
   const [showPaymentModal, setShowPaymentModal] = useState(false)
   const [selectedInvoiceForPayment, setSelectedInvoiceForPayment] = useState(null)
   const [paymentAmount, setPaymentAmount] = useState("")
   const [showDetails, setShowDetails] = useState(null)
   const [activeTab, setActiveTab] = useState('Pending')
+  const [pagination, setPagination] = useState(null)
+  const [page, setPage] = useState(1)
   const { searchQuery, searchType } = useContext(SearchContext)
+  const debouncedSearchQuery = useDebouncedValue(searchQuery)
+  const invoiceFilterKey = JSON.stringify([activeTab, debouncedSearchQuery, searchType])
+  const previousInvoiceFilterKey = useRef(null)
+  const invoiceRequestId = useRef(0)
   
   const [formData, setFormData] = useState({
     supplier_id: '',
@@ -31,8 +40,15 @@ export default function AdminSupplierInvoices() {
   })
 
   useEffect(() => {
-    loadData()
-  }, [])
+    if (previousInvoiceFilterKey.current !== invoiceFilterKey) {
+      previousInvoiceFilterKey.current = invoiceFilterKey
+      if (page !== 1) {
+        setPage(1)
+        return
+      }
+    }
+    loadData(page)
+  }, [page, invoiceFilterKey])
 
   // Fetch items for specific supplier when supplier changes
   useEffect(() => {
@@ -43,14 +59,62 @@ export default function AdminSupplierInvoices() {
     }
   }, [formData.supplier_id])
 
-  const loadData = async () => {
+  const loadData = async (pageToLoad = page) => {
+    const requestId = ++invoiceRequestId.current
+    setLoading(true)
+    setLoadError('')
     try {
       const [invRes, supRes, shopRes] = await Promise.all([
-        fetchSupplierInvoices(),
+        fetchSupplierInvoices({
+          page: pageToLoad,
+          per_page: 25,
+          status: activeTab,
+          search: searchType === 'date' ? undefined : debouncedSearchQuery || undefined,
+          date: searchType === 'date' ? debouncedSearchQuery || undefined : undefined,
+        }),
         fetchSuppliers(),
         api.get('/shops/')
       ])
-      setInvoices(invRes.data)
+      if (requestId !== invoiceRequestId.current) return
+
+      const invoiceItems = Array.isArray(invRes.data) ? invRes.data : invRes.data?.items
+      if (!Array.isArray(invoiceItems)) {
+        throw new Error('The supplier invoices API returned an unsupported response format.')
+      }
+      const responsePagination = invRes.data?.pagination
+      if (
+        responsePagination &&
+        !Array.isArray(responsePagination) &&
+        Number.isInteger(responsePagination.page) &&
+        Number.isInteger(responsePagination.total_pages)
+      ) {
+        setInvoices(invoiceItems)
+        setPagination(responsePagination)
+        setPage(responsePagination.page)
+      } else {
+        const query = debouncedSearchQuery.trim().toLowerCase()
+        const matchingInvoices = invoiceItems.filter((invoice) => {
+          const isPaid = String(invoice.status || '').toLowerCase() === 'paid'
+          if (activeTab === 'Paid' ? !isPaid : isPaid) return false
+          if (!query) return true
+          if (searchType === 'date') {
+            return invoice.received_date?.slice(0, 10) === debouncedSearchQuery
+          }
+          return String(invoice.invoice_number || '').toLowerCase().includes(query) ||
+            String(invoice.supplier_name || '').toLowerCase().includes(query)
+        })
+        const perPage = 25
+        const totalPages = Math.max(Math.ceil(matchingInvoices.length / perPage), 1)
+        const safePage = Math.min(pageToLoad, totalPages)
+        setInvoices(matchingInvoices.slice((safePage - 1) * perPage, safePage * perPage))
+        setPagination({
+          page: safePage,
+          per_page: perPage,
+          total: matchingInvoices.length,
+          total_pages: totalPages,
+        })
+        setPage(safePage)
+      }
       setSuppliers(supRes.data)
       setShops(shopRes.data)
       
@@ -62,9 +126,13 @@ export default function AdminSupplierInvoices() {
           }))
       }
     } catch (err) {
-      console.error(err)
+      if (requestId !== invoiceRequestId.current) return
+      console.error('Error loading supplier invoices', err)
+      setInvoices([])
+      setPagination(null)
+      setLoadError(err.response?.data?.msg || err.message || 'Unable to load supplier invoices. Please try again.')
     } finally {
-      setLoading(false)
+      if (requestId === invoiceRequestId.current) setLoading(false)
     }
   }
 
@@ -209,19 +277,7 @@ export default function AdminSupplierInvoices() {
     }
   }
 
-  const filteredInvoices = invoices.filter(inv => {
-    const statusMatch = inv.status === activeTab || (activeTab === 'Pending' && inv.status === 'Partial');
-    const searchMatch = searchQuery ? (
-      searchType === 'date' ? (
-        new Date(inv.received_date).toISOString().split('T')[0] === searchQuery
-      ) : (
-        inv.invoice_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        inv.supplier_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        inv.items?.some(item => item.item_name.toLowerCase().includes(searchQuery.toLowerCase()))
-      )
-    ) : true;
-    return statusMatch && searchMatch;
-  });
+  const filteredInvoices = invoices
 
   return (
     <>
@@ -256,6 +312,17 @@ export default function AdminSupplierInvoices() {
 
       {loading ? (
         <p className="dark:text-white">Loading...</p>
+      ) : loadError ? (
+        <Card className="p-8 text-center dark:bg-gray-800 dark:border-gray-700">
+          <p className="mb-4 text-red-600 dark:text-red-400">{loadError}</p>
+          <button
+            type="button"
+            onClick={() => loadData(page)}
+            className="rounded-lg bg-blue-600 px-4 py-2 font-bold text-white hover:bg-blue-700"
+          >
+            Retry
+          </button>
+        </Card>
       ) : (
         <Card className="overflow-hidden dark:bg-gray-800 dark:border-gray-700 transition-colors">
           <div className="overflow-x-auto max-h-[calc(100vh-300px)] overflow-y-auto custom-scrollbar">
@@ -338,6 +405,7 @@ export default function AdminSupplierInvoices() {
               </table>
             )}
           </div>
+          <Pagination pagination={pagination} onPageChange={setPage} />
         </Card>
       )}
 

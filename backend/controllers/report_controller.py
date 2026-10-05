@@ -15,6 +15,7 @@ from services.report_service import get_credits_summary, get_all_credit_sales
 from utils.timezone_utils import get_local_time
 from flask_jwt_extended import get_jwt_identity
 from utils.auth_utils import get_shop_id_for_attendant
+from utils.pagination import paginate_query, parse_pagination_args
 
 def global_financial_overview_controller():
     overview = get_global_financial_overview()
@@ -79,7 +80,8 @@ def stock_summary_by_category_controller():
     return jsonify(summary), 200
 
 def global_inventory_controller():
-    return jsonify(get_global_inventory()), 200
+    page, per_page = parse_pagination_args(request.args)
+    return jsonify(get_global_inventory(page, per_page)), 200
 
 def product_sales_analysis_controller():
     shop_id = request.args.get('shop_id', type=int)
@@ -92,11 +94,12 @@ def product_sales_analysis_controller():
 
 
 def outstanding_credits_controller():
+    page, per_page = parse_pagination_args(request.args)
     shop_id = request.args.get('shop_id', type=int)
     user_identity = get_jwt_identity()
     if user_identity.get("role") == "attendant":
         shop_id = get_shop_id_for_attendant()
-    results = get_outstanding_credits(shop_id)
+    results = get_outstanding_credits(shop_id, page, per_page)
     return jsonify(results), 200
 
 
@@ -110,9 +113,11 @@ def credits_summary_controller():
 
 
 def credit_sales_controller():
+    page, per_page = parse_pagination_args(request.args)
+    status = request.args.get("status")
     shop_id = request.args.get('shop_id', type=int)
     user_identity = get_jwt_identity()
     if user_identity.get("role") == "attendant":
         shop_id = get_shop_id_for_attendant()
-    sales = get_all_credit_sales(shop_id)
+    sales = get_all_credit_sales(shop_id, page, per_page, status)
     return jsonify(sales), 200

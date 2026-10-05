@@ -11,6 +11,7 @@ from sqlalchemy import func, or_
 from sqlalchemy.orm import selectinload
 from datetime import datetime, timedelta
 from utils.timezone_utils import get_local_time
+from utils.pagination import paginate_query
 import logging
 
 logger = logging.getLogger(__name__)
@@ -320,16 +321,38 @@ def _serialize_sales_bulk(sales):
     
     return [_serialize_sale(s, shop=shops.get(s.shop_id), attendant=users.get(s.user_id), items_map=items) for s in sales]
 
-def get_all_sales():
-    query = Sale.query.filter(or_(Sale.sale_type != 'credit', Sale.status == 'paid')).options(selectinload(Sale.items)).order_by(Sale.created_at.desc(), Sale.id.desc())
-    sales = query.all()
-    return _serialize_sales_bulk(sales)
+def _sales_history_query(shop_id=None, search=None, sale_date=None):
+    query = Sale.query.filter(or_(Sale.sale_type != 'credit', Sale.status == 'paid'))
+    if shop_id is not None:
+        query = query.filter(Sale.shop_id == shop_id)
+    if search:
+        pattern = f"%{search}%"
+        matching_sale_ids = db.session.query(SaleItem.sale_id).join(Item, SaleItem.item_id == Item.id).filter(Item.name.ilike(pattern))
+        matching_shop_ids = db.session.query(Shop.id).filter(Shop.name.ilike(pattern))
+        query = query.filter(or_(Sale.id.in_(matching_sale_ids), Sale.shop_id.in_(matching_shop_ids)))
+    if sale_date:
+        start_date = datetime.combine(sale_date, datetime.min.time())
+        end_date = datetime.combine(sale_date, datetime.max.time())
+        query = query.filter(Sale.created_at.between(start_date, end_date))
+    return query
 
+def _get_paginated_sales(query, page, per_page):
+    total_amount = float(query.with_entities(func.coalesce(func.sum(Sale.total_amount), 0)).scalar() or 0)
+    query = query.options(selectinload(Sale.items)).order_by(Sale.created_at.desc(), Sale.id.desc())
+    sales, pagination = paginate_query(query, page, per_page)
+    return {
+        "items": _serialize_sales_bulk(sales),
+        "pagination": pagination,
+        "summary_total": total_amount,
+    }
 
-def get_sales_by_shop(shop_id):
-    query = Sale.query.filter_by(shop_id=shop_id).filter(or_(Sale.sale_type != 'credit', Sale.status == 'paid')).options(selectinload(Sale.items)).order_by(Sale.created_at.desc(), Sale.id.desc())
-    sales = query.all()
-    return _serialize_sales_bulk(sales)
+def get_all_sales(page=1, per_page=25, search=None, sale_date=None):
+    query = _sales_history_query(search=search, sale_date=sale_date)
+    return _get_paginated_sales(query, page, per_page)
+
+def get_sales_by_shop(shop_id, page=1, per_page=25, search=None, sale_date=None):
+    query = _sales_history_query(shop_id=shop_id, search=search, sale_date=sale_date)
+    return _get_paginated_sales(query, page, per_page)
 
 def get_todays_sales(shop_id=None):
     today = get_local_time().date()

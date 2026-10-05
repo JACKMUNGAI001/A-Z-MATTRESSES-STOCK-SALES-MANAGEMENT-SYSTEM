@@ -13,6 +13,7 @@ from extensions import db
 from flask_jwt_extended import get_jwt_identity
 from utils.auth_utils import get_shop_id_for_attendant
 from utils.timezone_utils import get_local_time
+from utils.pagination import parse_pagination_args
 
 def manager_can_restock(identity):
     user = User.query.get(identity.get("id"))
@@ -23,7 +24,6 @@ def get_shop_stock(shop_id):
     # Use join(Item) to ensure we only see stock for existing products
     # Use group_by to aggregate potential duplicates
     from models.product import Item
-    from models.stock import StockBatch
     from sqlalchemy import func
 
     q = db.session.query(
@@ -33,37 +33,40 @@ def get_shop_stock(shop_id):
         func.max(ShopStock.buy_price).label('buy_price')
     ).join(Item, ShopStock.item_id == Item.id).filter(ShopStock.shop_id == shop_id).group_by(ShopStock.item_id, Item.name).order_by(Item.name.asc()).all()
 
-    batches = StockBatch.query.filter_by(shop_id=shop_id).filter(StockBatch.remaining_qty > 0).order_by(StockBatch.created_at.asc()).all()
-    batches_by_item = {}
-    for b in batches:
-        batches_by_item.setdefault(b.item_id, []).append(b)
-
     out = []
-    user_identity = get_jwt_identity()
-    user_role = user_identity.get("role")
+    is_admin = get_jwt_identity().get("role") == "admin"
 
     for s in q:
-        batch_list = []
-        for b in batches_by_item.get(s.item_id, []):
-            b_data = {
-                "id": b.id,
-                "qty": int(b.remaining_qty),
-                "created_at": b.created_at.isoformat()
-            }
-            if user_role == "admin":
-                b_data["buy_price"] = float(b.buy_price or 0)
-            batch_list.append(b_data)
-
         stock_data = {
             "item_id": s.item_id,
             "item_name": s.item_name,
             "qty": int(s.total_qty),
-            "batches": batch_list
         }
-        if user_role == "admin":
+        if is_admin:
             stock_data["buy_price"] = float(s.buy_price or 0)
         out.append(stock_data)
     return jsonify(out), 200
+
+def get_shop_stock_batches(shop_id, item_id):
+    from models.stock import StockBatch
+
+    page, per_page = parse_pagination_args(request.args)
+    query = StockBatch.query.filter_by(shop_id=shop_id, item_id=item_id) \
+        .filter(StockBatch.remaining_qty > 0) \
+        .order_by(StockBatch.created_at.asc(), StockBatch.id.asc())
+    batches, pagination = paginate_query(query, page, per_page)
+    is_admin = get_jwt_identity().get("role") == "admin"
+    items = []
+    for batch in batches:
+        item = {
+            "id": batch.id,
+            "qty": int(batch.remaining_qty),
+            "created_at": batch.created_at.isoformat(),
+        }
+        if is_admin:
+            item["buy_price"] = float(batch.buy_price or 0)
+        items.append(item)
+    return jsonify({"items": items, "pagination": pagination}), 200
 def adjust_stock_controller(identity):
     if identity.get("role") != "admin":
         return jsonify({"msg": "Only administrators can make individual stock adjustments"}), 403
@@ -241,6 +244,7 @@ def delete_stock_controller(shop_id, item_id):
         return jsonify({"msg": str(e)}), 400
 
 def get_restock_history_controller():
+    page, per_page = parse_pagination_args(request.args)
     shop_id = request.args.get("shop_id")
     if shop_id:
         try:
@@ -248,7 +252,7 @@ def get_restock_history_controller():
         except ValueError:
             return jsonify({"msg": "Invalid shop_id"}), 400
     
-    history = get_restock_history(shop_id)
+    history = get_restock_history(shop_id, page, per_page)
     return jsonify(history), 200
 
 def delete_restock_controller(movement_id):

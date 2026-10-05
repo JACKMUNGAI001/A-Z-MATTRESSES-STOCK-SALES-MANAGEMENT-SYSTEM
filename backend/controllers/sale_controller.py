@@ -9,6 +9,8 @@ from models.sale import Sale, SaleItem
 from extensions import db
 from flask_jwt_extended import get_jwt_identity
 from utils.auth_utils import get_shop_id_for_attendant
+from utils.pagination import parse_pagination_args
+from datetime import date
 
 def create_sale_controller():
     data = request.get_json() or {}
@@ -26,15 +28,31 @@ def create_sale_controller():
         return jsonify({"msg":str(e)}), 400
 
 def get_all_sales_controller():
+    page, per_page = parse_pagination_args(request.args)
+    search = request.args.get("search", "").strip() or None
+    sale_date = request.args.get("date")
+    if sale_date:
+        try:
+            sale_date = date.fromisoformat(sale_date)
+        except ValueError:
+            return jsonify({"msg": "date must use YYYY-MM-DD format"}), 400
     shop_id = get_shop_id_for_attendant()
     if shop_id:
-        sales = get_sales_by_shop(shop_id)
+        sales = get_sales_by_shop(shop_id, page, per_page, search, sale_date)
     else:
-        sales = get_all_sales()
+        sales = get_all_sales(page, per_page, search, sale_date)
     return jsonify(sales), 200
 
 def get_shop_sales_controller(shop_id):
-    sales = get_sales_by_shop(shop_id)
+    page, per_page = parse_pagination_args(request.args)
+    search = request.args.get("search", "").strip() or None
+    sale_date = request.args.get("date")
+    if sale_date:
+        try:
+            sale_date = date.fromisoformat(sale_date)
+        except ValueError:
+            return jsonify({"msg": "date must use YYYY-MM-DD format"}), 400
+    sales = get_sales_by_shop(shop_id, page, per_page, search, sale_date)
     return jsonify(sales), 200
 
 def todays_sales_controller():
