@@ -11,6 +11,7 @@ export default function AdminDashboard(){
   const [shops, setShops] = useState([])
   const [pendingAttendants, setPendingAttendants] = useState([])
   const [allAttendants, setAllAttendants] = useState([])
+  const [attendantLoadErrors, setAttendantLoadErrors] = useState({})
   const [managers, setManagers] = useState([])
   const [updatingManagerId, setUpdatingManagerId] = useState(null)
   const [salesSummary, setSalesSummary] = useState(null)
@@ -40,18 +41,34 @@ export default function AdminDashboard(){
   const fetchPendingAttendants = async () => {
     try {
       const response = await api.get('/admin/attendants/pending')
+      if (!Array.isArray(response.data)) {
+        throw new Error('The pending attendants API returned an unsupported response format.')
+      }
       setPendingAttendants(response.data)
+      setAttendantLoadErrors(current => ({ ...current, pending: '' }))
     } catch (err) {
-      console.error('Error fetching pending attendants')
+      console.error('Error fetching pending attendants', err)
+      setAttendantLoadErrors(current => ({
+        ...current,
+        pending: err.response?.data?.msg || err.message || 'Unable to load pending attendants.',
+      }))
     }
   }
 
   const fetchAllAttendants = async () => {
     try {
       const res = await api.get('/admin/attendants/all')
+      if (!Array.isArray(res.data)) {
+        throw new Error('The attendants API returned an unsupported response format.')
+      }
       setAllAttendants(res.data)
+      setAttendantLoadErrors(current => ({ ...current, all: '' }))
     } catch (err) {
-      console.error('Error fetching all attendants')
+      console.error('Error fetching all attendants', err)
+      setAttendantLoadErrors(current => ({
+        ...current,
+        all: err.response?.data?.msg || err.message || 'Unable to load attendants.',
+      }))
     }
   }
 
@@ -93,6 +110,7 @@ export default function AdminDashboard(){
     try {
       await api.patch(`/admin/attendants/${userId}/verify`, { is_verified: true, shop_id: shopId })
       alert('Attendant verified successfully!')
+      setPendingAttendants(current => current.filter(attendant => attendant.id !== userId))
       fetchPendingAttendants()
       fetchAllAttendants()
     } catch (err) {
@@ -308,13 +326,24 @@ export default function AdminDashboard(){
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 pb-20 mt-10">
+          {Object.entries(attendantLoadErrors).filter(([, error]) => error).map(([list, error]) => (
+            <div key={list} role="alert" className="lg:col-span-2 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-900/20 dark:text-red-300">
+              <span>{error}</span>
+              <button
+                type="button"
+                onClick={list === 'pending' ? fetchPendingAttendants : fetchAllAttendants}
+                className="font-bold underline"
+              >
+                Retry
+              </button>
+            </div>
+          ))}
           {/* PENDING ATTENDANTS */}
-          <div>
+          {pendingAttendants.length > 0 && <div>
             <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4 tracking-tight transition-colors text-sm uppercase tracking-widest text-gray-400 dark:text-gray-500 border-l-4 border-l-orange-600 pl-3">Pending Attendants</h3>
             <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden transition-colors">
-              {pendingAttendants.length === 0 ? (<div className="p-8 text-center text-gray-400 dark:text-gray-500 italic">No pending attendants.</div>) : (
-                <div className="divide-y divide-gray-50 dark:divide-gray-700">
-                  {pendingAttendants.map(attendant => (
+              <div className="divide-y divide-gray-50 dark:divide-gray-700">
+                {pendingAttendants.map(attendant => (
                     <div key={attendant.id} className="p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                       <div className="flex items-center gap-4">
                         <div className="w-12 h-12 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center text-gray-400 dark:text-gray-500"><UserCircle size={32} /></div>
@@ -327,19 +356,17 @@ export default function AdminDashboard(){
                         </select>
                       </div>
                     </div>
-                  ))}
-                </div>
-              )}
+                ))}
+              </div>
             </div>
-          </div>
+          </div>}
 
           {/* ALL ATTENDANTS */}
-          <div>
+          {allAttendants.length > 0 && <div>
             <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4 tracking-tight transition-colors text-sm uppercase tracking-widest text-gray-400 dark:text-gray-500 border-l-4 border-l-blue-600 pl-3">All Attendants</h3>
             <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden transition-colors">
-              {allAttendants.length === 0 ? (<div className="p-8 text-center text-gray-400 dark:text-gray-500 italic">No attendants registered.</div>) : (
-                <div className="divide-y divide-gray-50 dark:divide-gray-700">
-                  {allAttendants.map(attendant => (
+              <div className="divide-y divide-gray-50 dark:divide-gray-700">
+                {allAttendants.map(attendant => (
                     <div key={attendant.id} className="p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                       <div className="flex items-center gap-4">
                         <div className="relative"><div className="w-12 h-12 bg-blue-50 dark:bg-blue-900/30 rounded-full flex items-center justify-center text-blue-600 dark:text-blue-400"><UserCircle size={32} /></div>{attendant.is_verified && (<div className="absolute -top-1 -right-1 bg-white dark:bg-gray-800 rounded-full p-0.5 transition-colors"><ShieldCheck size={16} className="text-green-500" fill="currentColor" /></div>)}</div>
@@ -347,11 +374,10 @@ export default function AdminDashboard(){
                       </div>
                       <button onClick={() => handleRemoveAttendant(attendant.id)} className="w-full sm:w-auto bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 px-4 py-2 rounded-xl text-sm font-bold hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-2"><UserX size={16} /> Remove</button>
                     </div>
-                  ))}
-                </div>
-              )}
+                ))}
+              </div>
             </div>
-          </div>
+          </div>}
         </div>
     </>
   )
