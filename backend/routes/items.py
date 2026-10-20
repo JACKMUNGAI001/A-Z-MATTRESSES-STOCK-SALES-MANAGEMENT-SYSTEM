@@ -9,10 +9,11 @@ from controllers.item_controller import (
     delete_item_controller
 )
 from flask_jwt_extended import jwt_required
+from extensions import cache
 
 bp = Blueprint("items", __name__)
 
-bp.add_url_rule("/", "list_items", jwt_required()(list_items_controller), methods=["GET"])
+bp.add_url_rule("/", "list_items", jwt_required()(cache.cached(timeout=600, key_prefix="product_catalog")(list_items_controller)), methods=["GET"])
 bp.add_url_rule("/", "create_item", jwt_required()(create_item_controller), methods=["POST"])
 bp.add_url_rule("/categories", "list_categories", jwt_required()(list_categories_controller), methods=["GET"])
 bp.add_url_rule("/categories", "create_category", jwt_required()(create_category_controller), methods=["POST"])

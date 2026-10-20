@@ -1,7 +1,7 @@
 from flask import request, jsonify
 from services.product_service import create_item, list_items
 from models.product import Category, Item
-from extensions import db
+from extensions import db, cache
 from flask_jwt_extended import get_jwt_identity
 
 def list_items_controller():
@@ -35,6 +35,7 @@ def create_item_controller():
     if not all([name, category_id]):
         return jsonify({"msg":"name and category_id required"}), 400
     it = create_item(name, category_id, sku=data.get("sku"), brand=data.get("brand"), description=data.get("description"))
+    cache.clear()
     return jsonify({"id":it.id,"name":it.name}), 201
 
 def list_categories_controller():
@@ -55,6 +56,7 @@ def create_category_controller():
     category = Category(name=name)
     db.session.add(category)
     db.session.commit()
+    cache.clear()
     return jsonify({"id": category.id, "name": category.name}), 201
 
 def delete_category_controller(category_id):
@@ -82,6 +84,7 @@ def update_item_controller(item_id):
     item.brand = data.get("brand", item.brand)
     item.description = data.get("description", item.description)
     db.session.commit()
+    cache.clear()
     return jsonify({"msg": "Item updated", "id": item.id}), 200
 
 def delete_item_controller(item_id):
@@ -131,5 +134,7 @@ def delete_item_controller(item_id):
         db.session.rollback()
         print(f"Error deleting item {item_id}: {str(e)}")
         return jsonify({"msg": "Error deleting item due to database constraints", "error": str(e)}), 500
+
+    cache.clear()
 
     return jsonify({"msg": "Item and all associated records deleted successfully"}), 200

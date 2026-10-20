@@ -1,6 +1,6 @@
 from flask import Flask, jsonify, request
 from config import Config
-from extensions import db, migrate, jwt, cors
+from extensions import db, migrate, jwt, cors, cache
 from models.sale import ensure_sale_type_column, ensure_cylinder_schema
 
 def create_app():
@@ -15,6 +15,9 @@ def create_app():
         ensure_sale_type_column()
         ensure_cylinder_schema()
     cors.init_app(app, resources={r"/*": {"origins": "*"}})
+    app.config.setdefault("CACHE_TYPE", "SimpleCache")
+    app.config.setdefault("CACHE_DEFAULT_TIMEOUT", 600)
+    cache.init_app(app)
 
     # Register routes
     from routes import register_blueprints
@@ -23,7 +26,8 @@ def create_app():
     # Health check endpoint
     @app.route("/health")
     def health():
-        return jsonify({"status": "ok"}), 200
+        from datetime import datetime, timezone
+        return jsonify({"status": "ok", "timestamp": datetime.now(timezone.utc).isoformat()}), 200
 
     # Home route to stop 404s
     @app.route("/")

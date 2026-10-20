@@ -11,6 +11,8 @@ const loadingListeners = new Set()
 const referenceCache = new Map()
 const inFlightReferenceRequests = new Map()
 const REFERENCE_CACHE_TTL = 60 * 1000
+const PRODUCT_CACHE_TTL = 10 * 60 * 1000
+const PERSISTED_CACHE_PREFIX = 'reference-cache:'
 let referenceCacheGeneration = 0
 
 // Mutable transaction and stock endpoints are deliberately excluded.
@@ -19,12 +21,32 @@ const isBrieflyCacheable = (config) => {
   return url === '/items' || url === '/shops' || url === '/suppliers' ||
     /^\/suppliers\/\d+\/products$/.test(url)
 }
+const cacheTtl = (config) => (config.url || '').replace(/\/$/, '') === '/items'
+  ? PRODUCT_CACHE_TTL
+  : REFERENCE_CACHE_TTL
 const cacheKey = (config) => [
   config.baseURL,
   (config.url || '').replace(/\/$/, ''),
   JSON.stringify(config.params || {}),
   config.headers?.Authorization || '',
 ].join('|')
+
+const persistedCacheKey = (config) => `${PERSISTED_CACHE_PREFIX}${[
+  config.baseURL,
+  (config.url || '').replace(/\/$/, ''),
+  JSON.stringify(config.params || {}),
+].join('|')}`
+const readPersistedCache = (config) => {
+  const storageKey = persistedCacheKey(config)
+  try {
+    const cached = JSON.parse(localStorage.getItem(storageKey) || 'null')
+    if (cached && Date.now() - cached.savedAt < cacheTtl(config)) return cached
+    if (cached) localStorage.removeItem(storageKey)
+  } catch {
+    // Ignore unavailable or invalid browser storage and continue with the network.
+  }
+  return null
+}
 
 const notifyLoadingListeners = () => {
   loadingListeners.forEach((listener) => listener(activeGetRequests > 0))
@@ -58,7 +80,7 @@ api.interceptors.request.use((config) => {
     config.__cacheGeneration = referenceCacheGeneration
     const key = cacheKey(config)
     const cached = referenceCache.get(key)
-    if (cached && Date.now() - cached.savedAt < REFERENCE_CACHE_TTL) {
+    if (cached && Date.now() - cached.savedAt < cacheTtl(config)) {
       config.adapter = () => Promise.resolve({ data: cached.data, status: 200, statusText: 'OK', headers: {}, config })
     } else {
       const existingRequest = inFlightReferenceRequests.get(key)
@@ -82,6 +104,11 @@ api.interceptors.request.use((config) => {
     referenceCacheGeneration += 1
     referenceCache.clear()
     inFlightReferenceRequests.clear()
+    try {
+      Object.keys(localStorage).filter((key) => key.startsWith(PERSISTED_CACHE_PREFIX)).forEach((key) => localStorage.removeItem(key))
+    } catch {
+      // Storage may be disabled; in-memory invalidation still applies.
+    }
   }
 
   return config
@@ -93,13 +120,27 @@ api.interceptors.response.use(
       isBrieflyCacheable(response.config) &&
       response.config.__cacheGeneration === referenceCacheGeneration
     ) {
-      referenceCache.set(cacheKey(response.config), { data: response.data, savedAt: Date.now() })
+      const cached = { data: response.data, savedAt: Date.now() }
+      referenceCache.set(cacheKey(response.config), cached)
+      try {
+        localStorage.setItem(persistedCacheKey(response.config), JSON.stringify(cached))
+      } catch {
+        // Keep the in-memory cache usable when storage is full or unavailable.
+      }
     }
     stopGlobalLoading(response.config)
     return response
   },
   (error) => {
     stopGlobalLoading(error.config)
+    if ((error.config?.method || 'get').toLowerCase() === 'get' && isBrieflyCacheable(error.config)) {
+      const key = cacheKey(error.config)
+      const cached = referenceCache.get(key) || readPersistedCache(error.config)
+      if (cached && Date.now() - cached.savedAt < cacheTtl(error.config)) {
+        referenceCache.set(key, cached)
+        return Promise.resolve({ data: cached.data, status: 200, statusText: 'OK', headers: {}, config: error.config })
+      }
+    }
     // If the low_stock_items endpoint returns 500, return an empty list so UI can continue
     if (error.response && error.response.status === 500 && error.config && error.config.url && error.config.url.includes('low_stock_items')) {
       return Promise.resolve({ data: [] })
