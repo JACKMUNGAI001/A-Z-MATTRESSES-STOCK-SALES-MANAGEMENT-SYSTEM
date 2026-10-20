@@ -7,10 +7,17 @@ export default function ShopDeposits(){
   const { shopId } = useParams()
   const [deposits, setDeposits] = useState([])
   const [loading, setLoading] = useState(true)
+  const [depositsEnabled, setDepositsEnabled] = useState(true)
 
   useEffect(() => {
     const fetch = async () => {
       try {
+        const shopResponse = await api.get(`/shops/${shopId}`)
+        if (shopResponse.data.deposits_enabled === false) {
+          setDepositsEnabled(false)
+          setDeposits([])
+          return
+        }
         const res = await api.get(`/deposits/shop/${shopId}`)
         setDeposits(res.data)
       } catch (err){
@@ -23,7 +30,11 @@ export default function ShopDeposits(){
   return (
     <div className="p-6">
       <h1 className="text-2xl font-black mb-4">Customer Deposits</h1>
-      {loading ? <div className="p-6">Loading...</div> : (
+      {loading ? <div className="p-6">Loading...</div> : !depositsEnabled ? (
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-6 font-semibold text-amber-900 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-200">
+          Customer deposits are unavailable for gas-only shops.
+        </div>
+      ) : (
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border p-4 overflow-auto">
           {deposits.length === 0 ? <div className="p-10 text-center text-gray-400">No deposits yet.</div> : (
             <table className="w-full text-left">

@@ -303,9 +303,11 @@ export default function ShopDetails() {
           <Card title="Revenue (Filtered)" className="border-l-4 border-l-green-500">
             {formatCurrency(shopSalesTotal)}
           </Card>
-          <Card title="Collections (Filtered)" className="border-l-4 border-l-blue-500">
-            {formatCurrency(filteredDeposits.reduce((acc, dep) => acc + (dep.total_paid || 0), 0))}
-          </Card>
+          {shop.deposits_enabled !== false && (
+            <Card title="Collections (Filtered)" className="border-l-4 border-l-blue-500">
+              {formatCurrency(filteredDeposits.reduce((acc, dep) => acc + (dep.total_paid || 0), 0))}
+            </Card>
+          )}
           {user?.role === 'admin' && (
             <Card title="Stock Asset Value" className="border-l-4 border-l-purple-500">
               {formatCurrency(filteredStock.reduce((acc, s) => acc + ((s.buy_price || 0) * (s.qty || 0)), 0))}
@@ -508,7 +510,7 @@ export default function ShopDetails() {
             </div>
           </Link>
 
-          <Link to={`/admin/shops/${shopId}/deposits`} className="block bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 hover:shadow-lg transition-all">
+          {shop.deposits_enabled !== false && <Link to={`/admin/shops/${shopId}/deposits`} className="block bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 hover:shadow-lg transition-all">
             <div className="flex items-center gap-3">
               <History size={28} className="text-indigo-600" />
               <div>
@@ -516,7 +518,7 @@ export default function ShopDetails() {
                 <p className="text-sm text-gray-500">{filteredDeposits.length} records</p>
               </div>
             </div>
-          </Link>
+          </Link>}
 
           <Link to={`/admin/shops/${shopId}/low-stock`} className="block bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 hover:shadow-lg transition-all">
             <div className="flex items-center gap-3">

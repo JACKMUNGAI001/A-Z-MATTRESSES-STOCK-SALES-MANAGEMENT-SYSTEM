@@ -9,13 +9,17 @@ def shop_deposits_enabled(shop_id):
         shop_id = int(shop_id)
     except (TypeError, ValueError):
         return False
-    product_categories = db.session.query(Category.name).select_from(ShopStock).join(
+    products = db.session.query(Item.name, Category.name).select_from(ShopStock).join(
         Item, ShopStock.item_id == Item.id
     ).outerjoin(Category, Item.category_id == Category.id).filter(
         ShopStock.shop_id == shop_id
     ).distinct().all()
-    categories = [name.lower() if name else "" for (name,) in product_categories]
-    return not (bool(categories) and all("gas" in name for name in categories))
+    gas_products = [
+        "gas" in f"{item_name or ''} {category_name or ''}".lower()
+        or "kg" in f"{item_name or ''} {category_name or ''}".lower()
+        for item_name, category_name in products
+    ]
+    return not (bool(gas_products) and all(gas_products))
 
 def list_shops():
     shops = Shop.query.order_by(Shop.name.asc()).all()
