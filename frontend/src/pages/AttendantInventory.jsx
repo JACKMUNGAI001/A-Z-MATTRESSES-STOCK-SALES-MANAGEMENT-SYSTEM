@@ -34,6 +34,7 @@ export default function AttendantInventory(){
         <div className="bg-white dark:bg-gray-800 p-10 rounded-2xl shadow-sm border border-dashed border-gray-300 dark:border-gray-700 text-center text-gray-400 dark:text-gray-500">No stock items recorded for your shop yet.</div>
       ) : (
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden transition-colors">
+          <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-100 dark:divide-gray-700">
             <thead>
               <tr className="bg-gray-50/50 dark:bg-gray-900/50">
@@ -50,6 +51,7 @@ export default function AttendantInventory(){
               ))}
             </tbody>
           </table>
+          </div>
         </div>
       )}
     </div>

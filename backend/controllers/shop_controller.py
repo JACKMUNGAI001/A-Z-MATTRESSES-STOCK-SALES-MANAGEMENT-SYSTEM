@@ -1,17 +1,34 @@
 from flask import request, jsonify
 from models.shop import Shop
+from models.stock import ShopStock
+from models.product import Item, Category
 from extensions import db
+
+def shop_deposits_enabled(shop_id):
+    try:
+        shop_id = int(shop_id)
+    except (TypeError, ValueError):
+        return False
+    product_categories = db.session.query(Category.name).select_from(ShopStock).join(
+        Item, ShopStock.item_id == Item.id
+    ).outerjoin(Category, Item.category_id == Category.id).filter(
+        ShopStock.shop_id == shop_id
+    ).distinct().all()
+    categories = [name.lower() if name else "" for (name,) in product_categories]
+    return not (bool(categories) and all("gas" in name for name in categories))
 
 def list_shops():
     shops = Shop.query.order_by(Shop.name.asc()).all()
-    out = [{"id":s.id,"name":s.name,"address":s.address} for s in shops]
+    out = []
+    for shop in shops:
+        out.append({"id":shop.id,"name":shop.name,"address":shop.address,"deposits_enabled":shop_deposits_enabled(shop.id)})
     return jsonify(out), 200
 
 def get_shop_controller(shop_id):
     shop = Shop.query.get(shop_id)
     if not shop:
         return jsonify({"msg": "Shop not found"}), 404
-    return jsonify({"id":shop.id,"name":shop.name,"address":shop.address}), 200
+    return jsonify({"id":shop.id,"name":shop.name,"address":shop.address,"deposits_enabled":shop_deposits_enabled(shop.id)}), 200
 
 def create_shop():
     data = request.get_json() or {}

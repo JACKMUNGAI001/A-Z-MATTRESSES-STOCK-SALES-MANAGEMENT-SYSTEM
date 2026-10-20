@@ -90,6 +90,7 @@ export default function OutstandingCredits(){
         ) : credits.length === 0 ? (
           <div className="p-8 text-center">No outstanding credits.</div>
         ) : (
+          <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="text-xs text-gray-500 uppercase">
               <tr>
@@ -123,6 +124,7 @@ export default function OutstandingCredits(){
               ))}
             </tbody>
           </table>
+          </div>
         )}
         <Pagination pagination={pagination} onPageChange={setPage} />
       </div>

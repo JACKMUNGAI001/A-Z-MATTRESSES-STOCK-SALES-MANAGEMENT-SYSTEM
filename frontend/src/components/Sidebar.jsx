@@ -1,6 +1,7 @@
-import React, { useContext } from 'react'
+import React, { useContext, useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { AuthContext } from '../context/AuthContext'
+import api from '../api/api'
 import { 
   LayoutDashboard, 
   Store, 
@@ -22,10 +23,22 @@ export default function Sidebar({ role: propRole, onClose }){
   const location = useLocation();
   const { user } = useContext(AuthContext);
   const role = propRole || user?.role;
+  const [depositsAvailable, setDepositsAvailable] = useState(null);
+
+  useEffect(() => {
+    if (!user) return;
+    api.get('/shops').then(({ data }) => {
+      const eligible = data.filter(shop => shop.deposits_enabled !== false);
+      if (user.role === 'admin' || user.role === 'manager') setDepositsAvailable(eligible.length > 0);
+      else setDepositsAvailable(eligible.some(shop => String(shop.id) === String(user.shop_id)));
+    }).catch(() => setDepositsAvailable(true));
+  }, [user?.role, user?.shop_id]);
 
   const isActive = (path) => location.pathname === path;
 
-  const NavLink = ({ to, icon: Icon, children }) => (
+  const NavLink = ({ to, icon: Icon, children }) => {
+    if (to.includes('deposit') && depositsAvailable === false) return null;
+    return (
     <Link 
       to={to} 
       onClick={onClose}
@@ -38,10 +51,11 @@ export default function Sidebar({ role: propRole, onClose }){
       <Icon size={20} />
       <span className="font-medium">{children}</span>
     </Link>
-  );
+    );
+  };
 
   return (
-    <aside className="w-64 min-h-screen h-full bg-[#1e293b] text-white flex flex-col shadow-2xl overflow-y-auto">
+    <aside className="w-64 shrink-0 min-h-screen h-full bg-[#1e293b] text-white flex flex-col shadow-2xl overflow-y-auto">
       <div className="p-6 border-b border-gray-700 mb-4 flex justify-between items-center">
         <h2 className="text-xl font-bold tracking-tight">A-Z Mattresses and Gas</h2>
         <button onClick={onClose} className="lg:hidden p-1 text-gray-400 hover:text-white transition-colors">

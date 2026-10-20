@@ -9,11 +9,19 @@ from services.deposit_service import (
 from models.deposit import DepositSale
 from flask_jwt_extended import get_jwt_identity
 from utils.auth_utils import get_shop_id_for_attendant
+from controllers.shop_controller import shop_deposits_enabled
+from models.product import Item, Category
 
 def create_deposit_controller():
     data = request.get_json() or {}
     user = get_jwt_identity()
     try:
+        if not shop_deposits_enabled(data.get("shop_id")):
+            return jsonify({"msg": "Customer deposits are unavailable for gas-only shops."}), 400
+        item = Item.query.get(data.get("item_id"))
+        category = Category.query.get(item.category_id) if item and item.category_id else None
+        if category and "gas" in category.name.lower():
+            return jsonify({"msg": "Customer deposits are unavailable for gas products."}), 400
         dep, receipt_uuid = create_deposit(shop_id=data.get("shop_id"), item_id=data.get("item_id"),
                              buyer_name=data.get("buyer_name"), buyer_phone=data.get("buyer_phone"), selling_price=data.get("selling_price"),
                              created_by=user.get("id"), amount=data.get("amount"))

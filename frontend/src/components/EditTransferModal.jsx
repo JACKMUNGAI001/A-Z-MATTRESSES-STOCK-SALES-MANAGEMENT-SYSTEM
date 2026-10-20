@@ -114,7 +114,7 @@ export default function EditTransferModal({ transfer, onClose, onUpdate }) {
           </button>
         </div>
 
-        <div className="p-8 overflow-y-auto custom-scrollbar flex-1">
+        <div className="p-4 sm:p-8 overflow-y-auto custom-scrollbar flex-1">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2 space-y-6">
               {/* SHOPS SELECTION */}
@@ -177,7 +177,7 @@ export default function EditTransferModal({ transfer, onClose, onUpdate }) {
               </div>
 
               {/* ITEMS TABLE */}
-              <div className="border dark:border-gray-700 rounded-xl overflow-hidden">
+              <div className="border dark:border-gray-700 rounded-xl overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead className="bg-gray-50 dark:bg-gray-900 transition-colors">
                     <tr>

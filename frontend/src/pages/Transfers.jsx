@@ -186,7 +186,7 @@ export default function Transfers() {
 
               {/* ITEMS LIST TABLE */}
               {itemsList.length > 0 && (
-                <div className="mt-6 border border-gray-100 dark:border-gray-700 rounded-xl overflow-hidden bg-white dark:bg-gray-800">
+                <div className="mt-6 border border-gray-100 dark:border-gray-700 rounded-xl overflow-x-auto bg-white dark:bg-gray-800">
                   <table className="w-full text-left">
                     <thead className="bg-gray-50 dark:bg-gray-900/50">
                       <tr>

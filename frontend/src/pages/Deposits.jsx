@@ -17,6 +17,8 @@ export default function Deposits() {
     shop_id: user?.shop_id || "",
   });
   const [shops, setShops] = useState([]);
+  const [shopsLoaded, setShopsLoaded] = useState(false);
+  const [shopDepositsEnabled, setShopDepositsEnabled] = useState(true);
   const [lastReceipt, setLastReceipt] = useState(null);
   const { isSubmitting: isCreatingDeposit, run: runDepositCreation } = useSubmissionLock();
 
@@ -24,7 +26,7 @@ export default function Deposits() {
     const fetchItems = async () => {
       try {
         const response = await api.get("/items");
-        setApiItems(response.data);
+        setApiItems(response.data.filter(item => !item.category_name?.toLowerCase().includes('gas')));
       } catch (err) {
         console.error("Error fetching items");
       }
@@ -35,15 +37,22 @@ export default function Deposits() {
       const fetchShops = async () => {
         try {
           const response = await api.get("/shops");
-          setShops(response.data);
-          if (!formData.shop_id && response.data.length > 0) {
-            setFormData(prev => ({ ...prev, shop_id: response.data[0].id }));
+          const eligibleShops = response.data.filter(shop => shop.deposits_enabled !== false);
+          setShops(eligibleShops);
+          setShopsLoaded(true);
+          if (eligibleShops.length > 0 && !eligibleShops.some(shop => String(shop.id) === String(formData.shop_id))) {
+            setFormData(prev => ({ ...prev, shop_id: eligibleShops[0].id }));
           }
         } catch (err) {
+          setShopsLoaded(true);
           console.error("Error fetching shops");
         }
       };
       fetchShops();
+    } else if (user?.shop_id) {
+      api.get(`/shops/${user.shop_id}`).then(response => {
+        setShopDepositsEnabled(response.data.deposits_enabled !== false);
+      }).catch(() => {});
     }
   }, [user]);
 
@@ -51,6 +60,11 @@ export default function Deposits() {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
+
+  const selectedShop = shops.find(shop => String(shop.id) === String(formData.shop_id));
+  const canCreateDeposit = user?.role === 'admin' || user?.role === 'manager'
+    ? (selectedShop ? selectedShop.deposits_enabled !== false : !shopsLoaded)
+    : shopDepositsEnabled;
 
   const handleCreateDeposit = async (e) => {
     e.preventDefault();
@@ -80,7 +94,11 @@ export default function Deposits() {
 
   return (
     <>
-        <div className="max-w-4xl">
+        {!canCreateDeposit ? (
+          <div className="max-w-4xl rounded-2xl border border-amber-200 bg-amber-50 p-6 font-semibold text-amber-900 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-200">
+            Customer deposits are unavailable for gas-only shops.
+          </div>
+        ) : <div className="max-w-4xl">
           {(user?.role === 'manager' || user?.role === 'admin') && (
             <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 mb-8 transition-colors">
               <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-6 flex items-center gap-2">
@@ -211,7 +229,7 @@ export default function Deposits() {
               </a>
             </div>
           )}
-        </div>
+        </div>}
       </>
   );
 }

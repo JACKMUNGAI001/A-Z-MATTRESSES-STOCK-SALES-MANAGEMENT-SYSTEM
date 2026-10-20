@@ -119,7 +119,7 @@ export default function EditSaleModal({ sale, onClose, onUpdate }) {
           </button>
         </div>
 
-        <div className="p-8 overflow-y-auto custom-scrollbar flex-1">
+        <div className="p-4 sm:p-8 overflow-y-auto custom-scrollbar flex-1">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2 space-y-6">
               <div className="bg-gray-50 dark:bg-gray-900/50 p-6 rounded-xl border border-gray-100 dark:border-gray-700">
@@ -162,7 +162,7 @@ export default function EditSaleModal({ sale, onClose, onUpdate }) {
                 </button>
               </div>
 
-              <div className="border dark:border-gray-700 rounded-xl overflow-hidden">
+              <div className="border dark:border-gray-700 rounded-xl overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead className="bg-gray-50 dark:bg-gray-900 transition-colors">
                     <tr>

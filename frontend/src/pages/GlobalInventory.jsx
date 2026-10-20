@@ -144,7 +144,7 @@ export default function GlobalInventory(){
                    </h4>
                    <span className="bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-400 px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-widest">{shopStock.length} items on this page</span>
                 </div>
-                <div className="flex-1 overflow-y-auto max-h-[350px] custom-scrollbar">
+                <div className="flex-1 overflow-auto max-h-[350px] custom-scrollbar">
                    {shopStock.length === 0 ? (
                      <div className="p-10 text-center flex flex-col items-center gap-2">
                        <SearchX size={24} className="text-gray-200 dark:text-gray-700" />

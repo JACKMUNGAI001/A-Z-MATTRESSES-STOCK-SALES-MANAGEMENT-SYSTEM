@@ -17,8 +17,14 @@ export default function AttendantDashboard(){
   const [lowStockCount, setLowStockCount] = useState(0);
   const [depositCustomersCount, setDepositCustomersCount] = useState(0);
   const [stockSummary, setStockSummary] = useState(null);
+  const [depositsEnabled, setDepositsEnabled] = useState(true);
 
   useEffect(() => {
+    if (user?.shop_id) {
+      api.get(`/shops/${user.shop_id}`)
+        .then(({ data }) => setDepositsEnabled(data.deposits_enabled !== false))
+        .catch(() => {});
+    }
     if (user?.shop_id) {
       fetchShopStock(user.shop_id);
     }
@@ -107,7 +113,7 @@ export default function AttendantDashboard(){
         </div>
 
         {/* DEPOSITS SUMMARY */}
-        <div className="mb-10">
+        {depositsEnabled && <div className="mb-10">
           <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4 tracking-tight border-l-4 border-l-indigo-600 pl-3 text-sm uppercase tracking-widest text-gray-400 dark:text-gray-500 transition-colors">Deposit Collections</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6">
             <Link to="/attendant/deposits/today" className="no-underline group">
@@ -131,7 +137,7 @@ export default function AttendantDashboard(){
                 </Card>
             </Link>
           </div>
-        </div>
+        </div>}
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6 mb-10">
           <Link to="/attendant/low-stock" className="no-underline group">
@@ -140,12 +146,12 @@ export default function AttendantDashboard(){
                 <Package className="text-orange-200 dark:text-orange-900/30 group-hover:text-orange-400 dark:group-hover:text-orange-500 transition-colors" size={32} />
               </Card>
           </Link>
-          <Link to="/attendant/deposits" className="no-underline group">
+          {depositsEnabled && <Link to="/attendant/deposits" className="no-underline group">
               <Card title="Manage Active Deposits" interactive={true} className="border-l-4 border-l-indigo-500 flex justify-between items-center !p-5 sm:!p-6">
                 <span className="text-2xl sm:text-3xl">{depositCustomersCount} <span className="text-sm font-bold uppercase">Accounts</span></span>
                 <Users className="text-indigo-200 dark:text-indigo-900/30 group-hover:text-indigo-400 dark:group-hover:text-indigo-500 transition-colors" size={32} />
               </Card>
-          </Link>
+          </Link>}
           <Link to="/pos/credit" className="no-underline group">
               <Card title="Record Credit Sale" interactive={true} className="border-l-4 border-l-amber-500 flex justify-between items-center !p-5 sm:!p-6">
                 <span className="text-sm font-bold uppercase">Customer Credit</span>

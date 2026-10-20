@@ -18,7 +18,7 @@ export default function Header({ onMenuClick }) {
   };
 
   return (
-    <header className="bg-transparent mb-8 flex justify-between items-center gap-4">
+    <header className="bg-transparent mb-8 flex flex-wrap justify-between items-center gap-3 sm:gap-4">
       <div className="flex items-center gap-3 md:gap-6">
         <button
           onClick={onMenuClick}
@@ -65,7 +65,7 @@ export default function Header({ onMenuClick }) {
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     autoFocus
-                    className="pl-10 pr-2 py-1.5 bg-transparent rounded-lg text-sm text-gray-700 dark:text-gray-200 focus:outline-none transition-all w-32 sm:w-48 md:w-64"
+                    className="pl-10 pr-2 py-1.5 bg-transparent rounded-lg text-sm text-gray-700 dark:text-gray-200 focus:outline-none transition-all w-24 sm:w-48 md:w-64"
                   />
                 </div>
               </div>
