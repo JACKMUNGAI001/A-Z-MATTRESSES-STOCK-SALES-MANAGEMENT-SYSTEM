@@ -1,5 +1,6 @@
 from extensions import db
 from models.user import User
+from sqlalchemy.orm import joinedload
 
 def register_user(name, email, password, role="attendant", shop_id=None):
     if User.query.filter_by(email=email).first():
@@ -11,4 +12,4 @@ def register_user(name, email, password, role="attendant", shop_id=None):
     return u
 
 def get_user_by_email(email):
-    return User.query.filter_by(email=email).first()
+    return User.query.options(joinedload(User.shop)).filter_by(email=email).first()

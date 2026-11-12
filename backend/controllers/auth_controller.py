@@ -3,7 +3,6 @@ from services.auth_service import register_user, get_user_by_email
 from extensions import db
 from flask_jwt_extended import create_access_token, get_jwt_identity
 from models.user import User
-from models.shop import Shop
 
 def register():
     data = request.get_json() or {}
@@ -31,11 +30,7 @@ def login():
     if u.role == "attendant" and not u.is_verified:
         return jsonify({"msg":"account not verified by admin"}), 403
     
-    shop_name = None
-    if u.shop_id:
-        shop = Shop.query.get(u.shop_id)
-        if shop:
-            shop_name = shop.name
+    shop_name = u.shop.name if u.shop else None
 
     token = create_access_token(identity={"id":u.id,"role":u.role, "shop_id": u.shop_id})
     return jsonify({"access_token": token, "user": {"id":u.id,"name":u.name,"email":u.email,"role":u.role, "shop_id": u.shop_id, "shop_name": shop_name}}), 200

@@ -241,34 +241,28 @@ def get_low_stock_items(threshold=2, shop_id=None):
     query = db.session.query(
         ShopStock.item_id,
         ShopStock.shop_id,
+        Item.name.label('item_name'),
+        Shop.name.label('shop_name'),
         func.sum(ShopStock.quantity).label('qty'),
         func.max(ShopStock.buy_price).label('buy_price')
-    ).join(Item).group_by(ShopStock.shop_id, ShopStock.item_id).having(func.sum(ShopStock.quantity) <= threshold)
+    ).join(Item, ShopStock.item_id == Item.id) \
+     .join(Shop, ShopStock.shop_id == Shop.id) \
+     .group_by(ShopStock.shop_id, ShopStock.item_id, Item.name, Shop.name) \
+     .having(func.sum(ShopStock.quantity) <= threshold)
     
     if shop_id:
         query = query.filter(ShopStock.shop_id == shop_id)
     
     low_stock = query.order_by(Item.name.asc()).all()
     
-    item_ids = {s.item_id for s in low_stock}
-    shop_ids = {s.shop_id for s in low_stock}
-    
-    items = {i.id: i for i in Item.query.filter(Item.id.in_(item_ids)).all()} if item_ids else {}
-    shops = {s.id: s for s in Shop.query.filter(Shop.id.in_(shop_ids)).all()} if shop_ids else {}
-    
-    out = []
-    for s in low_stock:
-        item = items.get(s.item_id)
-        shop = shops.get(s.shop_id)
-        out.append({
+    return [{
             "item_id":s.item_id,
-            "item_name": item.name if item else "N/A",
+            "item_name": s.item_name or "N/A",
             "shop_id":s.shop_id,
-            "shop_name": shop.name if shop else "N/A",
+            "shop_name": s.shop_name or "N/A",
             "qty":int(s.qty),
             "buy_price":float(s.buy_price or 0)
-        })
-    return out
+        } for s in low_stock]
 
 def delete_stock(shop_id, item_id, user_id):
     stock = ShopStock.query.filter_by(shop_id=shop_id, item_id=item_id).first()

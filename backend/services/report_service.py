@@ -268,27 +268,23 @@ def get_outstanding_credits(shop_id=None, page=1, per_page=25):
     """Return list of credit sales not fully paid with remaining balance."""
     from models.shop import Shop
     from models.user import User
-    query = Sale.query.filter(Sale.sale_type == 'credit').filter(Sale.status != 'paid')
+    query = db.session.query(
+        Sale, Shop.name.label('shop_name'), User.name.label('attendant_name')
+    ).outerjoin(Shop, Sale.shop_id == Shop.id) \
+     .outerjoin(User, Sale.user_id == User.id) \
+     .filter(Sale.sale_type == 'credit', Sale.status != 'paid')
     if shop_id:
         query = query.filter(Sale.shop_id == shop_id)
-    sales, pagination = paginate_query(query.order_by(Sale.created_at.desc(), Sale.id.desc()), page, per_page)
-    
-    shop_ids = {s.shop_id for s in sales if s.shop_id}
-    user_ids = {s.user_id for s in sales if s.user_id}
-    
-    shops = {s.id: s for s in Shop.query.filter(Shop.id.in_(shop_ids)).all()} if shop_ids else {}
-    users = {u.id: u for u in User.query.filter(User.id.in_(user_ids)).all()} if user_ids else {}
-    
+    rows, pagination = paginate_query(query.order_by(Sale.created_at.desc(), Sale.id.desc()), page, per_page)
+
     results = []
-    for s in sales:
+    for s, shop_name, attendant_name in rows:
         rem = float(s.total_amount or 0) - float(s.paid_amount or 0)
-        shop = shops.get(s.shop_id)
-        user = users.get(s.user_id)
         results.append({
             "id": s.id,
             "shop_id": s.shop_id,
-            "shop_name": shop.name if shop else 'N/A',
-            "attendant_name": user.name if user else 'N/A',
+            "shop_name": shop_name or 'N/A',
+            "attendant_name": attendant_name or 'N/A',
             "total_amount": float(s.total_amount or 0),
             "paid_amount": float(s.paid_amount or 0),
             "remaining": rem,

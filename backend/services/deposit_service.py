@@ -9,6 +9,8 @@ from models.user import User
 from models.product import Item
 from services.receipt_service import create_receipt
 from utils.timezone_utils import get_local_time
+from sqlalchemy import func
+from sqlalchemy.orm import joinedload
 
 def _generate_deposit_receipt_html(deposit, shop, attendant, payment, total_paid, balance):
     attendant_name = attendant.name if attendant else "N/A"
@@ -146,38 +148,32 @@ def get_deposit_customers_count(shop_id=None):
     return {"count": query.count()}
 
 def get_deposit_customers(shop_id=None):
-    query = DepositSale.query.filter_by(status='active')
+    payments_by_deposit = db.session.query(
+        DepositPayment.deposit_id.label("deposit_id"),
+        func.coalesce(func.sum(DepositPayment.amount), 0).label("total_paid"),
+    ).group_by(DepositPayment.deposit_id).subquery()
+
+    query = db.session.query(
+        DepositSale, Item.name.label("item_name"), Shop.name.label("shop_name"),
+        func.coalesce(payments_by_deposit.c.total_paid, 0).label("total_paid"),
+    ).outerjoin(Item, DepositSale.item_id == Item.id) \
+     .outerjoin(Shop, DepositSale.shop_id == Shop.id) \
+     .outerjoin(payments_by_deposit, payments_by_deposit.c.deposit_id == DepositSale.id) \
+     .filter(DepositSale.status == 'active')
     if shop_id:
-        query = query.filter_by(shop_id=shop_id)
-    
+        query = query.filter(DepositSale.shop_id == shop_id)
+
     customers = query.all()
-    
-    deposit_ids = [c.id for c in customers]
-    shop_ids = {c.shop_id for c in customers if c.shop_id}
-    
-    payments = DepositPayment.query.filter(DepositPayment.deposit_id.in_(deposit_ids)).all()
-    payments_by_deposit = {}
-    for p in payments:
-        payments_by_deposit.setdefault(p.deposit_id, []).append(p)
-    
-    shops = {s.id: s for s in Shop.query.filter(Shop.id.in_(shop_ids)).all()} if shop_ids else {}
-    
-    out = []
-    for c in customers:
-        all_payments = payments_by_deposit.get(c.id, [])
-        total_paid = sum(float(p.amount) for p in all_payments)
-        shop = shops.get(c.shop_id)
-        out.append({
+    return [{
             "id": c.id,
             "buyer_name": c.buyer_name,
             "buyer_phone": c.buyer_phone,
-            "item_name": c.item.name if c.item else "N/A",
+            "item_name": item_name or "N/A",
             "selling_price": float(c.selling_price),
-            "total_paid": total_paid,
-            "balance": float(c.selling_price) - total_paid,
-            "shop_name": shop.name if shop else "N/A"
-        })
-    return out
+            "total_paid": float(total_paid or 0),
+            "balance": float(c.selling_price) - float(total_paid or 0),
+            "shop_name": shop_name or "N/A"
+        } for c, item_name, shop_name, total_paid in customers]
 
 def _serialize_payment(p):
     dep = DepositSale.query.get(p.deposit_id)
@@ -238,11 +234,11 @@ def _serialize_deposits_bulk(deposits):
     return [_serialize_deposit(d, shop=shops.get(d.shop_id), all_payments=payments_by_deposit.get(d.id)) for d in deposits]
 
 def get_all_deposits():
-    deposits = DepositSale.query.order_by(DepositSale.created_at.desc()).all()
+    deposits = DepositSale.query.options(joinedload(DepositSale.item)).order_by(DepositSale.created_at.desc()).all()
     return _serialize_deposits_bulk(deposits)
 
 def get_deposits_by_shop_id(shop_id):
-    deposits = DepositSale.query.filter_by(shop_id=shop_id).order_by(DepositSale.created_at.desc()).all()
+    deposits = DepositSale.query.options(joinedload(DepositSale.item)).filter_by(shop_id=shop_id).order_by(DepositSale.created_at.desc()).all()
     return _serialize_deposits_bulk(deposits)
 
 def get_todays_deposit_payments(shop_id=None):
